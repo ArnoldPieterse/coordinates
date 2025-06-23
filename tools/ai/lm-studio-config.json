@@ -1,0 +1,50 @@
+{
+  "server": {
+    "port": 1234,
+    "host": "localhost"
+  },
+  "model": {
+    "preferredModel": "llama-3-8b-instruct",
+    "generation": {
+      "maxTokens": 256,
+      "temperature": 0.7,
+      "topP": 0.9,
+      "topK": 40,
+      "repeatPenalty": 1.1,
+      "frequencyPenalty": 0.1,
+      "presencePenalty": 0.1
+    },
+    "context": {
+      "maxLength": 2048,
+      "slidingWindow": 1024
+    },
+    "hardware": {
+      "gpuLayers": 35,
+      "cpuThreads": 8,
+      "batchSize": 1,
+      "memoryMode": "balanced"
+    }
+  },
+  "scenarios": {
+    "gameScenario": {
+      "systemPrompt": "You are an AI assistant for a space shooter game. Provide concise, creative responses for game scenarios, NPCs, quests, and story elements. Keep responses under 200 words and focus on actionable game content.",
+      "maxTokens": 150,
+      "temperature": 0.8
+    },
+    "npcGeneration": {
+      "systemPrompt": "Generate concise NPC descriptions and dialogue for a space shooter game. Focus on personality, appearance, and role. Keep responses under 100 words.",
+      "maxTokens": 100,
+      "temperature": 0.7
+    },
+    "questDesign": {
+      "systemPrompt": "Design brief, engaging quests for a space shooter game. Include objectives, rewards, and challenges. Keep responses under 150 words.",
+      "maxTokens": 120,
+      "temperature": 0.6
+    },
+    "storyGeneration": {
+      "systemPrompt": "Create short, compelling story elements for a space shooter game. Focus on plot hooks, character motivations, and world-building. Keep responses under 200 words.",
+      "maxTokens": 180,
+      "temperature": 0.8
+    }
+  }
+}

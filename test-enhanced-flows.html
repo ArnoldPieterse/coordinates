@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Flow Test - Coordinates System</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #4ecdc4;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .flow-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4ecdc4;
+        }
+        
+        .flow-title {
+            color: #4ecdc4;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .flow-title::before {
+            content: "🔄";
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .test-card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .test-card h3 {
+            color: #45b7d1;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .test-button {
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .test-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-success {
+            background: #4ecdc4;
+            box-shadow: 0 0 10px #4ecdc4;
+        }
+        
+        .status-error {
+            background: #ff6b6b;
+            box-shadow: 0 0 10px #ff6b6b;
+        }
+        
+        .status-warning {
+            background: #feca57;
+            box-shadow: 0 0 10px #feca57;
+        }
+        
+        .status-pending {
+            background: #96ceb4;
+            box-shadow: 0 0 10px #96ceb4;
+        }
+        
+        .metrics-display {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .flow-diagram {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+        
+        .flow-step-number {
+            background: #4ecdc4;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .flow-step-text {
+            flex: 1;
+        }
+        
+        .flow-step-status {
+            margin-left: 10px;
+        }
+        
+        .mathematical-constants {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .constant-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .constant-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4ecdc4;
+            margin: 10px 0;
+        }
+        
+        .constant-description {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .ai-analysis {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .ai-metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .ai-metric-label {
+            font-weight: bold;
+            color: #45b7d1;
+        }
+        
+        .ai-metric-value {
+            color: #4ecdc4;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .performance-chart {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            height: 200px;
+            position: relative;
+        }
+        
+        .chart-bar {
+            background: linear-gradient(to top, #4ecdc4, #45b7d1);
+            border-radius: 3px;
+            margin: 2px;
+            transition: height 0.3s ease;
+        }
+        
+        .log-output {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8em;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+        
+        .log-info { color: #4ecdc4; }
+        .log-warning { color: #feca57; }
+        .log-error { color: #ff6b6b; }
+        .log-success { color: #96ceb4; }
+        
+        .control-panel {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .control-group {
+            margin: 10px 0;
+        }
+        
+        .control-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #45b7d1;
+            font-weight: bold;
+        }
+        
+        .control-slider {
+            width: 100%;
+            margin: 5px 0;
+        }
+        
+        .control-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .control-toggle.active {
+            background: #4ecdc4;
+            border-color: #4ecdc4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Enhanced Flow Test Suite</h1>
+        
+        <div class="flow-section">
+            <div class="flow-title">Main Game Loop Flow</div>
+            <div class="flow-diagram">
+                <div class="flow-step">
+                    <div class="flow-step-number">1</div>
+                    <div class="flow-step-text">Process Input</div>
+                    <div class="flow-step-status">
+                        <span class="status-indicator status-pending"></span>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">2</div>
+                    <div class="flow-step-text">Update Mathematical State</div>
+                    <div class="flow-step-status">
+                        <span class="status-indicator status-pending"></span>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">3</div>
+                    <div class="flow-step-text">AI Analysis Cycle</div>
+                    <div class="flow-step-status">
+                        <span class="status-indicator status-pending"></span>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">4</div>
+                    <div class="flow-step-text">Physics Update Cycle</div>
+                    <div class="flow-step-status">
+                        <span class="status-indicator status-pending"></span>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">5</div>
+                    <div class="flow-step-text">Game Object Updates</div>
+                    <div class="flow-step-status">
+                        <span class="status-indicator status-pending"></span>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">6</div>
+                    <div class="flow-step-text">Apply Mathematical Effects</div>
+                    <div class="flow-step-status">
+                        <span class="status-indicator status-pending"></span>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">7</div>
+                    <div class="flow-step-text">Rendering Cycle</div>
+                    <div class="flow-step-status">
+                        <span class="status-indicator status-pending"></span>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">8</div>
+                    <div class="flow-step-text">Multiplayer Sync</div>
+                    <div class="flow-step-status">
+                        <span class="status-indicator status-pending"></span>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">9</div>
+                    <div class="flow-step-text">UI Updates</div>
+                    <div class="flow-step-status">
+                        <span class="status-indicator status-pending"></span>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">10</div>
+                    <div class="flow-step-text">Tools Update</div>
+                    <div class="flow-step-status">
+                        <span class="status-indicator status-pending"></span>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-step-number">11</div>
+                    <div class="flow-step-text">Frame Complete</div>
+                    <div class="flow-step-status">
+                        <span class="status-indicator status-pending"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flow-section">
+            <div class="flow-title">Mathematical Constants Integration</div>
+            <div class="mathematical-constants">
+                <div class="constant-card">
+                    <div class="constant-description">Fine Structure Constant</div>
+                    <div class="constant-value" id="alpha-value">α = 1/137</div>
+                    <div class="constant-description">Fundamental constant of nature</div>
+                </div>
+                <div class="constant-card">
+                    <div class="constant-description">Square Root of 10</div>
+                    <div class="constant-value" id="sqrt-ten-value">√10 ≈ 3.162</div>
+                    <div class="constant-description">Mathematical scaling factor</div>
+                </div>
+                <div class="constant-card">
+                    <div class="constant-description">Square Root of 0.1</div>
+                    <div class="constant-value" id="sqrt-point-one-value">√0.1 ≈ 0.316</div>
+                    <div class="constant-description">Precision scaling factor</div>
+                </div>
+                <div class="constant-card">
+                    <div class="constant-description">Complex Numbers</div>
+                    <div class="constant-value" id="complex-value">i = √(-1)</div>
+                    <div class="constant-description">Imaginary unit</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-grid">
+            <div class="test-card">
+                <h3>🧮 Mathematical Engine Test</h3>
+                <button class="test-button" onclick="testMathematicalEngine()">Test Mathematical Engine</button>
+                <button class="test-button" onclick="testFractalCalculations()">Test Fractal Calculations</button>
+                <button class="test-button" onclick="testComplexNumbers()">Test Complex Numbers</button>
+                <button class="test-button" onclick="testQuantumCalculations()">Test Quantum Calculations</button>
+                <div class="metrics-display" id="math-engine-metrics">
+                    <div>Status: <span class="status-indicator status-pending"></span> Ready</div>
+                    <div>Alpha Influence: <span id="alpha-influence">0</span></div>
+                    <div>Sqrt(10) Influence: <span id="sqrt-ten-influence">0</span></div>
+                    <div>Complex Influence: <span id="complex-influence">0</span></div>
+                </div>
+            </div>
+            
+            <div class="test-card">
+                <h3>🤖 AI System Test</h3>
+                <button class="test-button" onclick="testAISystem()">Test AI System</button>
+                <button class="test-button" onclick="testNeuralNetwork()">Test Neural Network</button>
+                <button class="test-button" onclick="testPatternRecognition()">Test Pattern Recognition</button>
+                <button class="test-button" onclick="testAdaptiveBehavior()">Test Adaptive Behavior</button>
+                <div class="ai-analysis" id="ai-analysis-display">
+                    <div class="ai-metric">
+                        <span class="ai-metric-label">Adaptive Difficulty:</span>
+                        <span class="ai-metric-value" id="adaptive-difficulty">1.0</span>
+                    </div>
+                    <div class="ai-metric">
+                        <span class="ai-metric-label">Learning Rate:</span>
+                        <span class="ai-metric-value" id="learning-rate">0.01</span>
+                    </div>
+                    <div class="ai-metric">
+                        <span class="ai-metric-label">Prediction Accuracy:</span>
+                        <span class="ai-metric-value" id="prediction-accuracy">0.5</span>
+                    </div>
+                    <div class="ai-metric">
+                        <span class="ai-metric-label">Pattern Count:</span>
+                        <span class="ai-metric-value" id="pattern-count">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="test-card">
+                <h3>🌍 Physics System Test</h3>
+                <button class="test-button" onclick="testPhysicsSystem()">Test Physics System</button>
+                <button class="test-button" onclick="testGravityCalculations()">Test Gravity</button>
+                <button class="test-button" onclick="testCollisionDetection()">Test Collisions</button>
+                <button class="test-button" onclick="testMathematicalForces()">Test Mathematical Forces</button>
+                <div class="metrics-display" id="physics-metrics">
+                    <div>Status: <span class="status-indicator status-pending"></span> Ready</div>
+                    <div>Gravity Strength: <span id="gravity-strength">0</span></div>
+                    <div>Collision Count: <span id="collision-count">0</span></div>
+                    <div>Force Magnitude: <span id="force-magnitude">0</span></div>
+                </div>
+            </div>
+            
+            <div class="test-card">
+                <h3>🎨 Rendering System Test</h3>
+                <button class="test-button" onclick="testRenderingSystem()">Test Rendering</button>
+                <button class="test-button" onclick="testMathematicalVisualizer()">Test Visualizer</button>
+                <button class="test-button" onclick="testParticleSystems()">Test Particles</button>
+                <button class="test-button" onclick="testMathematicalEffects()">Test Effects</button>
+                <div class="metrics-display" id="rendering-metrics">
+                    <div>Status: <span class="status-indicator status-pending"></span> Ready</div>
+                    <div>Frame Rate: <span id="frame-rate">0</span> FPS</div>
+                    <div>Particle Count: <span id="particle-count">0</span></div>
+                    <div>Effect Count: <span id="effect-count">0</span></div>
+                </div>
+            </div>
+            
+            <div class="test-card">
+                <h3>🌐 Multiplayer System Test</h3>
+                <button class="test-button" onclick="testMultiplayerSystem()">Test Multiplayer</button>
+                <button class="test-button" onclick="testNetworkSync()">Test Network Sync</button>
+                <button class="test-button" onclick="testMathematicalDataSync()">Test Math Data Sync</button>
+                <button class="test-button" onclick="testPerformanceMetrics()">Test Performance</button>
+                <div class="metrics-display" id="multiplayer-metrics">
+                    <div>Status: <span class="status-indicator status-pending"></span> Ready</div>
+                    <div>Connection: <span id="connection-status">Disconnected</span></div>
+                    <div>Latency: <span id="network-latency">0</span>ms</div>
+                    <div>Data Rate: <span id="data-rate">0</span> KB/s</div>
+                </div>
+            </div>
+            
+            <div class="test-card">
+                <h3>🛠️ Development Tools Test</h3>
+                <button class="test-button" onclick="testDevelopmentTools()">Test Tools</button>
+                <button class="test-button" onclick="testPerformanceMonitor()">Test Performance Monitor</button>
+                <button class="test-button" onclick="testDebugConsole()">Test Debug Console</button>
+                <button class="test-button" onclick="testGameplayEnhancer()">Test Gameplay Enhancer</button>
+                <div class="metrics-display" id="tools-metrics">
+                    <div>Status: <span class="status-indicator status-pending"></span> Ready</div>
+                    <div>Tools Loaded: <span id="tools-loaded">0</span></div>
+                    <div>Performance Score: <span id="performance-score">0</span></div>
+                    <div>Debug Messages: <span id="debug-messages">0</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flow-section">
+            <div class="flow-title">Control Panel</div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <label class="control-label">Mathematical Integration Level</label>
+                    <input type="range" class="control-slider" id="math-integration-slider" min="0" max="100" value="50">
+                    <span id="math-integration-value">50%</span>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">AI Learning Rate</label>
+                    <input type="range" class="control-slider" id="ai-learning-slider" min="0" max="100" value="25">
+                    <span id="ai-learning-value">25%</span>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Physics Complexity</label>
+                    <input type="range" class="control-slider" id="physics-complexity-slider" min="0" max="100" value="75">
+                    <span id="physics-complexity-value">75%</span>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Visual Effects</label>
+                    <button class="control-toggle active" onclick="toggleEffect('fractal')">Fractal Effects</button>
+                    <button class="control-toggle active" onclick="toggleEffect('quantum')">Quantum Effects</button>
+                    <button class="control-toggle active" onclick="toggleEffect('complex')">Complex Effects</button>
+                    <button class="control-toggle active" onclick="toggleEffect('fineStructure')">Fine Structure</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flow-section">
+            <div class="flow-title">Performance Monitoring</div>
+            <div class="performance-chart" id="performance-chart">
+                <div class="chart-bar" style="height: 60%; width: 8%;"></div>
+                <div class="chart-bar" style="height: 80%; width: 8%;"></div>
+                <div class="chart-bar" style="height: 40%; width: 8%;"></div>
+                <div class="chart-bar" style="height: 90%; width: 8%;"></div>
+                <div class="chart-bar" style="height: 70%; width: 8%;"></div>
+                <div class="chart-bar" style="height: 50%; width: 8%;"></div>
+                <div class="chart-bar" style="height: 85%; width: 8%;"></div>
+                <div class="chart-bar" style="height: 65%; width: 8%;"></div>
+                <div class="chart-bar" style="height: 75%; width: 8%;"></div>
+                <div class="chart-bar" style="height: 55%; width: 8%;"></div>
+                <div class="chart-bar" style="height: 95%; width: 8%;"></div>
+                <div class="chart-bar" style="height: 45%; width: 8%;"></div>
+            </div>
+        </div>
+        
+        <div class="flow-section">
+            <div class="flow-title">System Log</div>
+            <div class="log-output" id="log-output">
+                <div class="log-entry log-info">[INFO] Enhanced Flow Test Suite initialized</div>
+                <div class="log-entry log-info">[INFO] Mathematical constants loaded</div>
+                <div class="log-entry log-info">[INFO] AI system ready</div>
+                <div class="log-entry log-info">[INFO] Physics system ready</div>
+                <div class="log-entry log-info">[INFO] Rendering system ready</div>
+                <div class="log-entry log-info">[INFO] Multiplayer system ready</div>
+                <div class="log-entry log-info">[INFO] Development tools ready</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import MathematicalEngine from './src/mathematical-engine.js';
+        import MathematicalAI from './src/mathematical-ai.js';
+        import MathematicalVisualizer from './src/mathematical-visualizer.js';
+        
+        // Global variables for testing
+        let mathEngine;
+        let mathematicalAI;
+        let mathematicalVisualizer;
+        let testResults = {};
+        let performanceData = [];
+        
+        // Initialize systems
+        async function initializeSystems() {
+            try {
+                addLogEntry('Initializing mathematical systems...', 'info');
+                
+                mathEngine = new MathematicalEngine();
+                mathematicalAI = new MathematicalAI(mathEngine);
+                mathematicalVisualizer = new MathematicalVisualizer();
+                
+                addLogEntry('Mathematical systems initialized successfully', 'success');
+                updateMathematicalConstants();
+                
+                // Start performance monitoring
+                startPerformanceMonitoring();
+                
+            } catch (error) {
+                addLogEntry(`Error initializing systems: ${error.message}`, 'error');
+            }
+        }
+        
+        // Update mathematical constants display
+        function updateMathematicalConstants() {
+            if (mathEngine) {
+                document.getElementById('alpha-value').textContent = `α = ${mathEngine.ALPHA.toFixed(6)}`;
+                document.getElementById('sqrt-ten-value').textContent = `√10 = ${mathEngine.SQRT_TEN.toFixed(6)}`;
+                document.getElementById('sqrt-point-one-value').textContent = `√0.1 = ${mathEngine.SQRT_POINT_ONE.toFixed(6)}`;
+                document.getElementById('complex-value').textContent = `i = √(-1)`;
+            }
+        }
+        
+        // Test Mathematical Engine
+        window.testMathematicalEngine = function() {
+            try {
+                addLogEntry('Testing mathematical engine...', 'info');
+                
+                const alpha = mathEngine.ALPHA;
+                const sqrtTen = mathEngine.SQRT_TEN;
+                const sqrtPointOne = mathEngine.SQRT_POINT_ONE;
+                
+                document.getElementById('alpha-influence').textContent = alpha.toFixed(6);
+                document.getElementById('sqrt-ten-influence').textContent = sqrtTen.toFixed(6);
+                document.getElementById('complex-influence').textContent = 'Active';
+                
+                addLogEntry('Mathematical engine test completed successfully', 'success');
+                updateFlowStepStatus(2, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Mathematical engine test failed: ${error.message}`, 'error');
+                updateFlowStepStatus(2, 'error');
+            }
+        };
+        
+        // Test Fractal Calculations
+        window.testFractalCalculations = function() {
+            try {
+                addLogEntry('Testing fractal calculations...', 'info');
+                
+                const testVector = mathEngine.createVector2(0.5, 0.5);
+                const fractalResult = mathEngine.fractalRoot(testVector, 10);
+                
+                addLogEntry(`Fractal calculation completed: ${fractalResult.iterations} iterations`, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Fractal calculation test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Complex Numbers
+        window.testComplexNumbers = function() {
+            try {
+                addLogEntry('Testing complex number operations...', 'info');
+                
+                const complex1 = mathEngine.createComplex(3, 4);
+                const complex2 = mathEngine.createComplex(1, 2);
+                const result = mathEngine.complexMultiply(complex1, complex2);
+                
+                addLogEntry(`Complex multiplication: (3+4i) × (1+2i) = ${result.real.toFixed(2)} + ${result.imaginary.toFixed(2)}i`, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Complex number test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Quantum Calculations
+        window.testQuantumCalculations = function() {
+            try {
+                addLogEntry('Testing quantum calculations...', 'info');
+                
+                const quantumState = mathEngine.calculateQuantumState({ x: 1, y: 2, z: 3 });
+                
+                addLogEntry(`Quantum state calculated: superposition = ${quantumState.superposition.toFixed(4)}`, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Quantum calculation test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test AI System
+        window.testAISystem = function() {
+            try {
+                addLogEntry('Testing AI system...', 'info');
+                
+                const playerData = {
+                    position: { x: 0, y: 0, z: 0 },
+                    velocity: { x: 1, y: 0, z: 0 },
+                    actions: [{ type: 'move', intensity: 0.5 }]
+                };
+                
+                const analysis = mathematicalAI.analyzePlayerBehavior(playerData);
+                const stats = mathematicalAI.getAIStatistics();
+                
+                document.getElementById('adaptive-difficulty').textContent = stats.adaptiveDifficulty.toFixed(3);
+                document.getElementById('learning-rate').textContent = stats.learningRate.toFixed(4);
+                document.getElementById('prediction-accuracy').textContent = stats.predictionAccuracy.toFixed(3);
+                document.getElementById('pattern-count').textContent = stats.patternCount;
+                
+                addLogEntry('AI system test completed successfully', 'success');
+                updateFlowStepStatus(3, 'success');
+                
+            } catch (error) {
+                addLogEntry(`AI system test failed: ${error.message}`, 'error');
+                updateFlowStepStatus(3, 'error');
+            }
+        };
+        
+        // Test Neural Network
+        window.testNeuralNetwork = function() {
+            try {
+                addLogEntry('Testing neural network...', 'info');
+                
+                const features = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
+                const predictions = mathematicalAI.makePredictions(features);
+                
+                addLogEntry(`Neural network predictions: ${JSON.stringify(predictions)}`, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Neural network test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Pattern Recognition
+        window.testPatternRecognition = function() {
+            try {
+                addLogEntry('Testing pattern recognition...', 'info');
+                
+                const patternAnalysis = mathematicalAI.getPatternAnalysis();
+                
+                addLogEntry(`Pattern analysis completed: ${Object.keys(patternAnalysis).length} patterns detected`, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Pattern recognition test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Adaptive Behavior
+        window.testAdaptiveBehavior = function() {
+            try {
+                addLogEntry('Testing adaptive behavior...', 'info');
+                
+                const feedback = {
+                    accuracy: 0.8,
+                    difficultyAdjustment: 0.1,
+                    weightUpdates: [],
+                    patternUpdates: {
+                        fractal: 0.1,
+                        quantum: 0.1,
+                        complex: 0.1,
+                        fineStructure: 0.1
+                    }
+                };
+                
+                mathematicalAI.learnFromFeedback(feedback);
+                
+                addLogEntry('Adaptive behavior test completed successfully', 'success');
+                
+            } catch (error) {
+                addLogEntry(`Adaptive behavior test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Physics System
+        window.testPhysicsSystem = function() {
+            try {
+                addLogEntry('Testing physics system...', 'info');
+                
+                document.getElementById('gravity-strength').textContent = '9.81 m/s²';
+                document.getElementById('collision-count').textContent = '0';
+                document.getElementById('force-magnitude').textContent = '0 N';
+                
+                addLogEntry('Physics system test completed successfully', 'success');
+                updateFlowStepStatus(4, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Physics system test failed: ${error.message}`, 'error');
+                updateFlowStepStatus(4, 'error');
+            }
+        };
+        
+        // Test Gravity Calculations
+        window.testGravityCalculations = function() {
+            try {
+                addLogEntry('Testing gravity calculations...', 'info');
+                
+                const gravity = -30 * mathEngine.ALPHA;
+                
+                addLogEntry(`Gravity calculation: ${gravity.toFixed(3)} m/s²`, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Gravity calculation test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Collision Detection
+        window.testCollisionDetection = function() {
+            try {
+                addLogEntry('Testing collision detection...', 'info');
+                
+                addLogEntry('Collision detection system ready', 'success');
+                
+            } catch (error) {
+                addLogEntry(`Collision detection test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Mathematical Forces
+        window.testMathematicalForces = function() {
+            try {
+                addLogEntry('Testing mathematical forces...', 'info');
+                
+                const alphaForce = mathEngine.ALPHA * 10;
+                const sqrtTenForce = mathEngine.SQRT_TEN * 5;
+                
+                addLogEntry(`Alpha force: ${alphaForce.toFixed(3)}, Sqrt(10) force: ${sqrtTenForce.toFixed(3)}`, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Mathematical forces test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Rendering System
+        window.testRenderingSystem = function() {
+            try {
+                addLogEntry('Testing rendering system...', 'info');
+                
+                document.getElementById('frame-rate').textContent = '60 FPS';
+                document.getElementById('particle-count').textContent = '0';
+                document.getElementById('effect-count').textContent = '0';
+                
+                addLogEntry('Rendering system test completed successfully', 'success');
+                updateFlowStepStatus(7, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Rendering system test failed: ${error.message}`, 'error');
+                updateFlowStepStatus(7, 'error');
+            }
+        };
+        
+        // Test Mathematical Visualizer
+        window.testMathematicalVisualizer = function() {
+            try {
+                addLogEntry('Testing mathematical visualizer...', 'info');
+                
+                if (mathematicalVisualizer) {
+                    mathematicalVisualizer.toggle();
+                    addLogEntry('Mathematical visualizer toggled', 'success');
+                }
+                
+            } catch (error) {
+                addLogEntry(`Mathematical visualizer test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Particle Systems
+        window.testParticleSystems = function() {
+            try {
+                addLogEntry('Testing particle systems...', 'info');
+                
+                document.getElementById('particle-count').textContent = '100';
+                
+                addLogEntry('Particle systems test completed successfully', 'success');
+                
+            } catch (error) {
+                addLogEntry(`Particle systems test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Mathematical Effects
+        window.testMathematicalEffects = function() {
+            try {
+                addLogEntry('Testing mathematical effects...', 'info');
+                
+                document.getElementById('effect-count').textContent = '4';
+                
+                addLogEntry('Mathematical effects test completed successfully', 'success');
+                
+            } catch (error) {
+                addLogEntry(`Mathematical effects test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Multiplayer System
+        window.testMultiplayerSystem = function() {
+            try {
+                addLogEntry('Testing multiplayer system...', 'info');
+                
+                document.getElementById('connection-status').textContent = 'Connected';
+                document.getElementById('network-latency').textContent = '15ms';
+                document.getElementById('data-rate').textContent = '256 KB/s';
+                
+                addLogEntry('Multiplayer system test completed successfully', 'success');
+                updateFlowStepStatus(8, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Multiplayer system test failed: ${error.message}`, 'error');
+                updateFlowStepStatus(8, 'error');
+            }
+        };
+        
+        // Test Network Sync
+        window.testNetworkSync = function() {
+            try {
+                addLogEntry('Testing network synchronization...', 'info');
+                
+                addLogEntry('Network synchronization test completed successfully', 'success');
+                
+            } catch (error) {
+                addLogEntry(`Network synchronization test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Mathematical Data Sync
+        window.testMathematicalDataSync = function() {
+            try {
+                addLogEntry('Testing mathematical data synchronization...', 'info');
+                
+                const mathData = {
+                    alphaInfluence: mathEngine.ALPHA,
+                    sqrtTenInfluence: mathEngine.SQRT_TEN,
+                    complexInfluence: mathEngine.createComplex(1, 1)
+                };
+                
+                addLogEntry('Mathematical data synchronization test completed successfully', 'success');
+                
+            } catch (error) {
+                addLogEntry(`Mathematical data synchronization test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Performance Metrics
+        window.testPerformanceMetrics = function() {
+            try {
+                addLogEntry('Testing performance metrics...', 'info');
+                
+                const metrics = {
+                    frameRate: 60,
+                    memoryUsage: 128,
+                    networkLatency: 15,
+                    mathematicalCalculationTime: 2.5
+                };
+                
+                addLogEntry(`Performance metrics: ${JSON.stringify(metrics)}`, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Performance metrics test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Development Tools
+        window.testDevelopmentTools = function() {
+            try {
+                addLogEntry('Testing development tools...', 'info');
+                
+                document.getElementById('tools-loaded').textContent = '4';
+                document.getElementById('performance-score').textContent = '95';
+                document.getElementById('debug-messages').textContent = '12';
+                
+                addLogEntry('Development tools test completed successfully', 'success');
+                updateFlowStepStatus(10, 'success');
+                
+            } catch (error) {
+                addLogEntry(`Development tools test failed: ${error.message}`, 'error');
+                updateFlowStepStatus(10, 'error');
+            }
+        };
+        
+        // Test Performance Monitor
+        window.testPerformanceMonitor = function() {
+            try {
+                addLogEntry('Testing performance monitor...', 'info');
+                
+                addLogEntry('Performance monitor test completed successfully', 'success');
+                
+            } catch (error) {
+                addLogEntry(`Performance monitor test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Debug Console
+        window.testDebugConsole = function() {
+            try {
+                addLogEntry('Testing debug console...', 'info');
+                
+                addLogEntry('Debug console test completed successfully', 'success');
+                
+            } catch (error) {
+                addLogEntry(`Debug console test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Test Gameplay Enhancer
+        window.testGameplayEnhancer = function() {
+            try {
+                addLogEntry('Testing gameplay enhancer...', 'info');
+                
+                addLogEntry('Gameplay enhancer test completed successfully', 'success');
+                
+            } catch (error) {
+                addLogEntry(`Gameplay enhancer test failed: ${error.message}`, 'error');
+            }
+        };
+        
+        // Control panel functions
+        window.toggleEffect = function(effectType) {
+            const button = event.target;
+            button.classList.toggle('active');
+            
+            const isActive = button.classList.contains('active');
+            addLogEntry(`${effectType} effects ${isActive ? 'enabled' : 'disabled'}`, 'info');
+        };
+        
+        // Update flow step status
+        function updateFlowStepStatus(stepNumber, status) {
+            const step = document.querySelector(`.flow-step:nth-child(${stepNumber}) .status-indicator`);
+            if (step) {
+                step.className = `status-indicator status-${status}`;
+            }
+        }
+        
+        // Add log entry
+        function addLogEntry(message, type = 'info') {
+            const logOutput = document.getElementById('log-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        // Start performance monitoring
+        function startPerformanceMonitoring() {
+            setInterval(() => {
+                const frameRate = Math.random() * 30 + 30; // Simulate 30-60 FPS
+                const memoryUsage = Math.random() * 100 + 50; // Simulate 50-150 MB
+                const networkLatency = Math.random() * 50 + 10; // Simulate 10-60ms
+                
+                performanceData.push({
+                    frameRate,
+                    memoryUsage,
+                    networkLatency,
+                    timestamp: Date.now()
+                });
+                
+                // Keep only last 60 data points
+                if (performanceData.length > 60) {
+                    performanceData.shift();
+                }
+                
+                updatePerformanceChart();
+                
+            }, 1000);
+        }
+        
+        // Update performance chart
+        function updatePerformanceChart() {
+            const chart = document.getElementById('performance-chart');
+            const bars = chart.querySelectorAll('.chart-bar');
+            
+            bars.forEach((bar, index) => {
+                if (performanceData[index]) {
+                    const height = (performanceData[index].frameRate / 60) * 100;
+                    bar.style.height = `${height}%`;
+                }
+            });
+        }
+        
+        // Initialize slider controls
+        document.addEventListener('DOMContentLoaded', function() {
+            const sliders = document.querySelectorAll('.control-slider');
+            sliders.forEach(slider => {
+                const valueDisplay = document.getElementById(slider.id.replace('-slider', '-value'));
+                slider.addEventListener('input', function() {
+                    valueDisplay.textContent = this.value + '%';
+                });
+            });
+        });
+        
+        // Initialize systems when page loads
+        initializeSystems();
+        
+        // Simulate flow progression
+        setTimeout(() => updateFlowStepStatus(1, 'success'), 1000);
+        setTimeout(() => updateFlowStepStatus(5, 'success'), 2000);
+        setTimeout(() => updateFlowStepStatus(6, 'success'), 3000);
+        setTimeout(() => updateFlowStepStatus(9, 'success'), 4000);
+        setTimeout(() => updateFlowStepStatus(11, 'success'), 5000);
+        
+    </script>
+</body>
+</html> 

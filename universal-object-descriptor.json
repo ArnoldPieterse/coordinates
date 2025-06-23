@@ -1,0 +1,315 @@
+{
+  "name": "Universal Object Library",
+  "description": "A comprehensive descriptor system that can generate any object type through hierarchical, fractal-like parameter encoding. Inspired by the Library of Babel concept.",
+  "version": "1.0",
+  "seed": 42,
+  "universal": {
+    "objectTypes": {
+      "tree": {
+        "category": "organic",
+        "subcategory": "vegetation",
+        "components": ["trunk", "branches", "leaves", "roots"],
+        "materials": ["wood", "bark", "foliage"],
+        "behaviors": ["growth", "wind_response", "seasonal_change"]
+      },
+      "house": {
+        "category": "architectural",
+        "subcategory": "residential",
+        "components": ["foundation", "walls", "roof", "windows", "doors"],
+        "materials": ["concrete", "brick", "wood", "glass", "metal"],
+        "behaviors": ["structural_integrity", "thermal_insulation", "weather_resistance"]
+      },
+      "car": {
+        "category": "mechanical",
+        "subcategory": "transportation",
+        "components": ["chassis", "body", "wheels", "engine", "lights"],
+        "materials": ["steel", "plastic", "rubber", "glass"],
+        "behaviors": ["movement", "acceleration", "braking", "steering"]
+      },
+      "npc": {
+        "category": "biological",
+        "subcategory": "humanoid",
+        "components": ["body", "head", "arms", "legs", "clothing"],
+        "materials": ["flesh", "bone", "fabric", "metal"],
+        "behaviors": ["movement", "interaction", "emotion", "ai_response"]
+      },
+      "building": {
+        "category": "architectural",
+        "subcategory": "commercial",
+        "components": ["foundation", "structure", "facade", "interior"],
+        "materials": ["concrete", "steel", "glass", "stone"],
+        "behaviors": ["occupancy", "maintenance", "security"]
+      },
+      "vehicle": {
+        "category": "mechanical",
+        "subcategory": "transportation",
+        "components": ["frame", "body", "propulsion", "control"],
+        "materials": ["metal", "composite", "plastic"],
+        "behaviors": ["motion", "control", "energy_consumption"]
+      },
+      "creature": {
+        "category": "biological",
+        "subcategory": "animal",
+        "components": ["body", "head", "limbs", "appendages"],
+        "materials": ["flesh", "bone", "scale", "fur"],
+        "behaviors": ["movement", "hunting", "reproduction", "social"]
+      },
+      "machine": {
+        "category": "mechanical",
+        "subcategory": "industrial",
+        "components": ["frame", "mechanism", "power", "control"],
+        "materials": ["metal", "plastic", "electronic"],
+        "behaviors": ["operation", "maintenance", "automation"]
+      },
+      "kameeldoring_tree": {
+        "category": "organic",
+        "subcategory": "vegetation",
+        "components": ["trunk", "branches", "leaves", "flowers"],
+        "materials": ["wood", "bark", "foliage", "flower"],
+        "behaviors": ["growth", "wind_response"]
+      }
+    },
+    "parameters": {
+      "dimensions": {
+        "length": {"min": 0.1, "max": 100, "default": 5, "variance": 0.2},
+        "width": {"min": 0.1, "max": 50, "default": 3, "variance": 0.2},
+        "height": {"min": 0.1, "max": 100, "default": 4, "variance": 0.2},
+        "depth": {"min": 0.1, "max": 50, "default": 3, "variance": 0.2}
+      },
+      "geometry": {
+        "type": ["box", "sphere", "cylinder", "capsule", "cone", "pyramid", "custom"],
+        "segments": {"min": 3, "max": 32, "default": 8},
+        "sections": {"min": 1, "max": 20, "default": 1},
+        "taper": {"min": 0, "max": 1, "default": 0.8},
+        "twist": {"min": 0, "max": 360, "default": 0}
+      },
+      "materials": {
+        "type": ["lambert", "phong", "basic", "standard", "physical"],
+        "color": {
+          "palette": {
+            "natural": ["0x8B4513", "0x228B22", "0x2F4F4F", "0xF5DEB3", "0x696969"],
+            "artificial": ["0xFF0000", "0x00FF00", "0x0000FF", "0xFFFF00", "0xFF00FF"],
+            "neutral": ["0xFFFFFF", "0x000000", "0x808080", "0xC0C0C0", "0x404040"]
+          }
+        },
+        "texture": ["none", "wood", "metal", "stone", "fabric", "plastic"],
+        "opacity": {"min": 0, "max": 1, "default": 1},
+        "transparent": {"default": false}
+      },
+      "physics": {
+        "mass": {"min": 0.1, "max": 1000, "default": 1},
+        "friction": {"min": 0, "max": 1, "default": 0.5},
+        "bounciness": {"min": 0, "max": 1, "default": 0.3},
+        "collision": ["box", "sphere", "capsule", "mesh", "none"]
+      },
+      "behavior": {
+        "movement": ["static", "kinematic", "dynamic", "scripted"],
+        "interaction": ["none", "collision", "trigger", "pickup", "use"],
+        "ai": ["none", "patrol", "follow", "attack", "flee", "wander"],
+        "animation": ["none", "idle", "walk", "run", "attack", "custom"]
+      }
+    },
+    "hierarchy": {
+      "maxLevels": 8,
+      "branching": {
+        "min": 1,
+        "max": 10,
+        "default": 3
+      },
+      "positioning": {
+        "relative": true,
+        "absolute": false,
+        "constraints": ["parent", "world", "surface"]
+      }
+    }
+  },
+  "objects": [
+    {
+      "id": "tree_001",
+      "type": "tree",
+      "position": [20, 0, -20],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1],
+      "hierarchy": {
+        "levels": 4,
+        "branches": [1, 3, 4, 2],
+        "angles": [0, 35, 45, 60],
+        "lengths": [8, 4, 2, 1],
+        "radii": [0.8, 0.4, 0.2, 0.1]
+      },
+      "materials": {
+        "trunk": {"color": "0x8B4513", "texture": "wood"},
+        "branches": {"color": "0x8B4513", "texture": "wood"},
+        "leaves": {"color": "0x228B22", "texture": "foliage", "transparent": true}
+      },
+      "behavior": {
+        "movement": "static",
+        "interaction": "collision",
+        "ai": "none"
+      }
+    },
+    {
+      "id": "house_001",
+      "type": "house",
+      "position": [-20, 0, 20],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1],
+      "hierarchy": {
+        "levels": 4,
+        "branches": [1, 1, 1, 2],
+        "angles": [0, 0, 45, 90],
+        "lengths": [8, 6, 4, 2],
+        "radii": [2, 1.5, 1, 0.5]
+      },
+      "materials": {
+        "foundation": {"color": "0x696969", "texture": "concrete"},
+        "walls": {"color": "0xF5DEB3", "texture": "brick"},
+        "roof": {"color": "0x8B4513", "texture": "shingles"},
+        "windows": {"color": "0x87CEEB", "texture": "glass", "transparent": true}
+      },
+      "behavior": {
+        "movement": "static",
+        "interaction": "collision",
+        "ai": "none"
+      }
+    },
+    {
+      "id": "car_001",
+      "type": "car",
+      "position": [30, 0, 30],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1],
+      "hierarchy": {
+        "levels": 4,
+        "branches": [1, 1, 4, 2],
+        "angles": [0, 0, 0, 0],
+        "lengths": [6, 4, 1, 0.5],
+        "radii": [1.5, 1, 0.3, 0.1]
+      },
+      "materials": {
+        "chassis": {"color": "0x2F4F4F", "texture": "metal"},
+        "body": {"color": "0xFF0000", "texture": "paint"},
+        "wheels": {"color": "0x000000", "texture": "rubber"},
+        "lights": {"color": "0xFFFF00", "texture": "glass"}
+      },
+      "behavior": {
+        "movement": "static",
+        "interaction": "collision",
+        "ai": "none"
+      }
+    },
+    {
+      "id": "npc_001",
+      "type": "npc",
+      "position": [-30, 0, -30],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1],
+      "hierarchy": {
+        "levels": 4,
+        "branches": [1, 2, 2, 2],
+        "angles": [0, 0, 45, 0],
+        "lengths": [3, 1, 2, 2.5],
+        "radii": [0.8, 0.4, 0.2, 0.25]
+      },
+      "materials": {
+        "body": {"color": "0xFFB6C1", "texture": "flesh"},
+        "head": {"color": "0xFFE4C4", "texture": "flesh"},
+        "arms": {"color": "0xFFE4C4", "texture": "flesh"},
+        "legs": {"color": "0x4169E1", "texture": "fabric"}
+      },
+      "behavior": {
+        "movement": "kinematic",
+        "interaction": "trigger",
+        "ai": "patrol"
+      }
+    },
+    {
+      "id": "building_001",
+      "type": "building",
+      "position": [0, 0, 40],
+      "rotation": [0, 0, 0],
+      "scale": [1.5, 1.5, 1.5],
+      "hierarchy": {
+        "levels": 5,
+        "branches": [1, 1, 1, 4, 2],
+        "angles": [0, 0, 0, 90, 45],
+        "lengths": [10, 8, 6, 3, 1],
+        "radii": [3, 2.5, 2, 1, 0.5]
+      },
+      "materials": {
+        "foundation": {"color": "0x696969", "texture": "concrete"},
+        "structure": {"color": "0x2F4F4F", "texture": "steel"},
+        "facade": {"color": "0x87CEEB", "texture": "glass"},
+        "interior": {"color": "0xF5F5DC", "texture": "drywall"}
+      },
+      "behavior": {
+        "movement": "static",
+        "interaction": "collision",
+        "ai": "none"
+      }
+    },
+    {
+      "id": "creature_001",
+      "type": "creature",
+      "position": [40, 0, -40],
+      "rotation": [0, 0, 0],
+      "scale": [0.8, 0.8, 0.8],
+      "hierarchy": {
+        "levels": 4,
+        "branches": [1, 1, 4, 4],
+        "angles": [0, 0, 30, 60],
+        "lengths": [2, 1, 1.5, 0.8],
+        "radii": [0.6, 0.3, 0.15, 0.08]
+      },
+      "materials": {
+        "body": {"color": "0x8B4513", "texture": "fur"},
+        "head": {"color": "0x8B4513", "texture": "fur"},
+        "limbs": {"color": "0x8B4513", "texture": "fur"},
+        "eyes": {"color": "0xFFFF00", "texture": "glass"}
+      },
+      "behavior": {
+        "movement": "dynamic",
+        "interaction": "trigger",
+        "ai": "wander"
+      }
+    },
+    {
+      "id": "kameeldoring_001",
+      "type": "kameeldoring_tree",
+      "position": [0, 0, -15],
+      "rotation": [0, 0, 0],
+      "scale": [1, 1, 1],
+      "hierarchy": {
+        "levels": 5,
+        "branches": [1, 5, 4, 8, 20],
+        "angles": [0, 60, 50, 45, 30],
+        "lengths": [6, 3, 1.5, 0.5, 0.1],
+        "radii": [0.7, 0.3, 0.1, 0.05, 0.05]
+      },
+      "materials": {
+        "trunk": {"color": "0x4A2F2F", "texture": "wood"},
+        "branches": {"color": "0x5B3A3A", "texture": "wood"},
+        "leaves": {"color": "0x556B2F", "texture": "foliage", "transparent": true},
+        "flowers": {"color": "0xFFD700", "texture": "none"}
+      },
+      "behavior": {
+        "movement": "static",
+        "interaction": "collision",
+        "ai": "none"
+      }
+    }
+  ],
+  "generation": {
+    "algorithm": "hierarchical_recursive",
+    "randomization": {
+      "seed_based": true,
+      "noise_function": "perlin",
+      "variation_factor": 0.3
+    },
+    "optimization": {
+      "level_of_detail": "adaptive",
+      "culling": "frustum",
+      "instancing": "enabled"
+    }
+  }
+} 

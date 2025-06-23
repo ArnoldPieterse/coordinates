@@ -1,0 +1,69 @@
+{
+  "name": "multiplayer-planetary-shooter",
+  "version": "1.0.0",
+  "description": "A cutting-edge multiplayer first-person shooter game built with Three.js, featuring procedurally generated worlds, mathematical physics integration, and AI-driven gameplay systems",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "server": "node server.js",
+    "start": "concurrently \"npx kill-port 3001 && npm run server\" \"npm run dev\"",
+    "start:prod": "node server.js",
+    "test": "echo \"No tests specified\" && exit 0",
+    "test:watch": "echo \"No tests specified\" && exit 0",
+    "test:coverage": "echo \"No tests specified\" && exit 0",
+    "lint": "echo \"No linter configured\" && exit 0",
+    "lint:fix": "echo \"No linter configured\" && exit 0",
+    "audit": "npm audit",
+    "audit:fix": "npm audit fix",
+    "clean": "rm -rf dist node_modules package-lock.json",
+    "docker:build": "docker build -t multiplayer-planetary-shooter .",
+    "docker:run": "docker run -p 3001:3001 multiplayer-planetary-shooter",
+    "docker:compose:dev": "docker-compose --profile dev up",
+    "docker:compose:prod": "docker-compose --profile prod up -d",
+    "deploy:staging": "echo \"Add your staging deployment commands here\"",
+    "deploy:production": "echo \"Add your production deployment commands here\""
+  },
+  "keywords": [
+    "threejs",
+    "multiplayer",
+    "fps",
+    "game",
+    "procedural-generation",
+    "mathematical-physics",
+    "ai",
+    "socket.io",
+    "vite",
+    "javascript",
+    "es6"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/multiplayer-planetary-shooter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/multiplayer-planetary-shooter/issues"
+  },
+  "homepage": "https://github.com/yourusername/multiplayer-planetary-shooter#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@lmstudio/sdk": "^0.1.0",
+    "express": "^4.18.2",
+    "node-fetch": "^3.3.2",
+    "socket.io": "^4.7.4",
+    "socket.io-client": "^4.7.4",
+    "three": "^0.158.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "puppeteer": "^24.10.2",
+    "vite": "^5.0.0"
+  }
+}
