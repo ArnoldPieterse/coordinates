@@ -7,6 +7,9 @@ import MathematicalAI from './mathematical-ai.js';
 import FlowDiagramVisualizer from './flow-diagram-visualizer.js';
 import UniversalObjectGenerator from '../universal-object-generator.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
+import AdvancedRenderer from './advanced-renderer.js';
+import AdvancedPhysics from './advanced-physics.js';
+import { VoxelTree } from './procedural-tree-voxel.js';
 
 class MultiplayerPlanetaryShooter {
     constructor() {
@@ -146,8 +149,18 @@ class MultiplayerPlanetaryShooter {
         this.frameCount = 0;
         this.frameRate = 0;
         this.performanceMetrics = {};
+        
+        // Advanced systems for Crysis 1-level capabilities
+        this.advancedRenderer = null;
+        this.advancedPhysics = null;
+        this.destructibleEnvironment = [];
+        this.vehicles = [];
+        this.ragdolls = [];
+        this.fluidSimulations = [];
+        
         this.init();
     }
+    
     async init() {
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -206,6 +219,11 @@ class MultiplayerPlanetaryShooter {
         } else {
             document.body.appendChild(this.renderer.domElement);
         }
+        
+        // Initialize advanced systems
+        this.advancedRenderer = new AdvancedRenderer(this.scene, this.camera, this.renderer);
+        this.advancedPhysics = new AdvancedPhysics();
+        
         this.setupScene();
         this.setupPlayer();
         this.setupCamera();
@@ -213,6 +231,9 @@ class MultiplayerPlanetaryShooter {
         this.setupRocket();
         this.setupInput();
         this.setupNetworking();
+        this.setupDestructibleEnvironment();
+        this.setupVehicles();
+        this.setupFluidSimulation();
         this.flowDiagramVisualizer = new FlowDiagramVisualizer(this.scene);
         this.flowDiagramVisualizer.loadAndRender('./game_describers/flow-diagram.json');
         this.universalObjectGenerator = new UniversalObjectGenerator(this.scene);
@@ -222,38 +243,86 @@ class MultiplayerPlanetaryShooter {
             console.error("Halting initialization due to critical file load error.", error);
             return;
         }
-        this.setupUniversalObjectControls();
         this.animate();
     }
-    setupUniversalObjectControls() {
-        document.addEventListener('keydown', (event) => {
-            if (event.code === 'KeyG' && !this.isDead) {
-                const position = this.player.position.clone();
-                position.y = 0; 
-                this.universalObjectGenerator.generateObjectById('kameeldoring_001', position);
-                if (typeof this.addChatMessage === 'function') this.addChatMessage('System', 'Generated a Kameeldoring tree!', true);
+
+    setupDestructibleEnvironment() {
+        // Create destructible objects for Crysis 1-level destruction
+        const destructibleObjects = [
+            { type: 'box', position: [10, 2, 10], size: [2, 4, 2], mass: 100 },
+            { type: 'box', position: [-10, 2, -10], size: [2, 4, 2], mass: 100 },
+            { type: 'sphere', position: [15, 1, 0], radius: 2, mass: 50 },
+            { type: 'cylinder', position: [0, 2, 15], radius: 1, height: 4, mass: 75 }
+        ];
+
+        destructibleObjects.forEach(obj => {
+            let geometry;
+            if (obj.type === 'box') {
+                geometry = new THREE.BoxGeometry(obj.size[0], obj.size[1], obj.size[2]);
+            } else if (obj.type === 'sphere') {
+                geometry = new THREE.SphereGeometry(obj.radius, 16, 16);
+            } else if (obj.type === 'cylinder') {
+                geometry = new THREE.CylinderGeometry(obj.radius, obj.radius, obj.height, 16);
             }
-            if (event.code === 'KeyH' && !this.isDead) {
-                const randomType = 'tree';
-                const position = this.player.position.clone().add(new THREE.Vector3(Math.random() * 10 - 5, 0, Math.random() * 10 - 5));
-                position.y = 0;
-                this.universalObjectGenerator.generateRandomObject(randomType, position);
-                if (typeof this.addChatMessage === 'function') this.addChatMessage('System', `Generated a random ${randomType}!`, true);
-            }
-            if (event.code === 'KeyJ' && !this.isDead) {
-                this.universalObjectGenerator.clearAllObjects();
-                if (typeof this.addChatMessage === 'function') this.addChatMessage('System', 'Cleared all generated objects.', true);
-            }
-            if (event.code === 'KeyK' && !this.isDead) {
-                this.universalObjectGenerator.inspectObjects();
-            }
+
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0x8B4513,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(...obj.position);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            this.scene.add(mesh);
+
+            const physicsBody = this.advancedPhysics.createDestructibleObject(
+                geometry, 
+                material, 
+                new THREE.Vector3(...obj.position), 
+                obj.mass
+            );
+
+            this.destructibleEnvironment.push({
+                mesh: mesh,
+                body: physicsBody,
+                health: 100
+            });
         });
     }
+
+    setupVehicles() {
+        // Create vehicles for Crysis 1-level vehicle physics
+        const vehiclePositions = [
+            new THREE.Vector3(20, 1, 20),
+            new THREE.Vector3(-20, 1, -20),
+            new THREE.Vector3(20, 1, -20)
+        ];
+
+        vehiclePositions.forEach(position => {
+            const vehicle = this.advancedPhysics.createVehicle(position);
+            this.vehicles.push(vehicle);
+        });
+    }
+
+    setupFluidSimulation() {
+        // Create fluid simulation for advanced effects
+        const fluidBounds = {
+            min: new THREE.Vector3(-5, 0, -5),
+            max: new THREE.Vector3(5, 10, 5)
+        };
+
+        const fluid = this.advancedPhysics.createFluidSimulation(fluidBounds, 500);
+        this.fluidSimulations.push(fluid);
+    }
+
     setupScene() {
         for (const [planetId, planetInfo] of Object.entries(this.planetData)) { this.createPlanet(planetId, planetInfo); }
         this.switchToPlanet(this.currentPlanet);
         const gridHelper = new THREE.GridHelper(200, 50);
         this.scene.add(gridHelper);
+        addProceduralTree(this.scene);
     }
     setupPlayer() {
         this.playerGeometry = new THREE.CapsuleGeometry(this.playerRadius, this.playerHeight - (2 * this.playerRadius), 4, 8);
@@ -694,3 +763,11 @@ window.addEventListener('resize', () => {
         game.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 });
+
+// Add a procedural voxel tree to the scene for demonstration
+function addProceduralTree(scene) {
+    const tree = new VoxelTree({ size: 32 });
+    const treeMesh = tree.toMesh();
+    treeMesh.position.set(0, 0, 0); // Adjust as needed
+    scene.add(treeMesh);
+}

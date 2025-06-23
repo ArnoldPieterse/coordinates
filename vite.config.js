@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 export default defineConfig({
+  plugins: [
+    nodePolyfills(),
+  ],
   root: '.',
   build: {
     outDir: 'dist',
@@ -9,9 +13,12 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    open: true
+    open: true,
+    headers: {
+      'Content-Security-Policy': "script-src 'self' 'unsafe-inline';"
+    }
   },
   optimizeDeps: {
-    include: ['three']
+    include: ['three', 'cannon-es']
   }
 }); 

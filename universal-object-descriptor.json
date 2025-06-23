@@ -249,67 +249,28 @@
       }
     },
     {
-      "id": "creature_001",
-      "type": "creature",
-      "position": [40, 0, -40],
-      "rotation": [0, 0, 0],
-      "scale": [0.8, 0.8, 0.8],
-      "hierarchy": {
-        "levels": 4,
-        "branches": [1, 1, 4, 4],
-        "angles": [0, 0, 30, 60],
-        "lengths": [2, 1, 1.5, 0.8],
-        "radii": [0.6, 0.3, 0.15, 0.08]
-      },
-      "materials": {
-        "body": {"color": "0x8B4513", "texture": "fur"},
-        "head": {"color": "0x8B4513", "texture": "fur"},
-        "limbs": {"color": "0x8B4513", "texture": "fur"},
-        "eyes": {"color": "0xFFFF00", "texture": "glass"}
-      },
-      "behavior": {
-        "movement": "dynamic",
-        "interaction": "trigger",
-        "ai": "wander"
-      }
+        "id": "placeholder_rock_001",
+        "type": "rock",
+        "position": { "x": 15, "y": 0, "z": 15 },
+        "size": { "x": 5, "y": 5, "z": 5 },
+        "material": { "color": "#A9A9A9", "type": "standard" },
+        "physics": { "mass": 0 },
+        "children": []
     },
     {
-      "id": "kameeldoring_001",
-      "type": "kameeldoring_tree",
-      "position": [0, 0, -15],
-      "rotation": [0, 0, 0],
-      "scale": [1, 1, 1],
-      "hierarchy": {
-        "levels": 5,
-        "branches": [1, 5, 4, 8, 20],
-        "angles": [0, 60, 50, 45, 30],
-        "lengths": [6, 3, 1.5, 0.5, 0.1],
-        "radii": [0.7, 0.3, 0.1, 0.05, 0.05]
-      },
-      "materials": {
-        "trunk": {"color": "0x4A2F2F", "texture": "wood"},
-        "branches": {"color": "0x5B3A3A", "texture": "wood"},
-        "leaves": {"color": "0x556B2F", "texture": "foliage", "transparent": true},
-        "flowers": {"color": "0xFFD700", "texture": "none"}
-      },
-      "behavior": {
-        "movement": "static",
-        "interaction": "collision",
-        "ai": "none"
-      }
+        "id": "placeholder_platform_001",
+        "type": "platform",
+        "position": { "x": -15, "y": 5, "z": -15 },
+        "size": { "x": 10, "y": 1, "z": 10 },
+        "material": { "color": "#8B4513", "type": "standard" },
+        "physics": { "mass": 0 },
+        "children": [
+            {
+                "type": "tree",
+                "position": { "x": 0, "y": 5, "z": 0 },
+                "parameters": { "height": 10, "leafColor": "#228B22" }
+            }
+        ]
     }
-  ],
-  "generation": {
-    "algorithm": "hierarchical_recursive",
-    "randomization": {
-      "seed_based": true,
-      "noise_function": "perlin",
-      "variation_factor": 0.3
-    },
-    "optimization": {
-      "level_of_detail": "adaptive",
-      "culling": "frustum",
-      "instancing": "enabled"
-    }
-  }
+]
 } 

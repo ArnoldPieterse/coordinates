@@ -16,8 +16,8 @@ class UniversalObjectGenerator {
     preloadAudio() {
         const audioLoader = new THREE.AudioLoader();
         const sounds = {
-            wind: 'https://cdn.glitch.com/b5230ca8-4a5e-41a3-8368-80a5a0d24021%2Fwind-rustle-light.ogg?v=1622158882352',
-            birds: 'https://cdn.glitch.com/b5230ca8-4a5e-41a3-8368-80a5a0d24021%2Fweaver-birds.ogg?v=1622158888052'
+            wind: 'https://cdn.freesound.org/previews/352/352514_4939433-lq.ogg',
+            birds: 'https://cdn.freesound.org/previews/237/237359_4019027-lq.ogg'
         };
 
         for (const [key, url] of Object.entries(sounds)) {
