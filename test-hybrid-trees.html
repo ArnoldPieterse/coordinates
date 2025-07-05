@@ -88,6 +88,22 @@
             </div>
             
             <div class="control-group">
+                <label>Trunk Height:</label>
+                <input type="range" id="trunkHeight" min="4" max="20" value="10" step="1" title="Trunk Height">
+                <span id="trunkHeightValue">10</span>
+            </div>
+            <div class="control-group">
+                <label>Branch Length:</label>
+                <input type="range" id="branchLength" min="2" max="16" value="7" step="1" title="Branch Length">
+                <span id="branchLengthValue">7</span>
+            </div>
+            <div class="control-group">
+                <label>Branch Angle (deg from vertical):</label>
+                <input type="range" id="branchAngleDeg" min="60" max="115" value="100" step="1" title="Branch Angle (deg from vertical)">
+                <span id="branchAngleDegValue">100</span>
+            </div>
+            
+            <div class="control-group">
                 <label>L-System Iterations:</label>
                 <input type="range" id="lSystemIterations" min="2" max="6" value="4" step="1" aria-label="L-System iterations">
                 <span id="lSystemIterationsValue">4</span>
@@ -182,6 +198,10 @@
             const lSystemIterations = parseInt(document.getElementById('lSystemIterations').value);
             const pointDensity = parseFloat(document.getElementById('pointDensity').value);
             const ringSides = parseInt(document.getElementById('ringSides').value);
+            // Fine-tuning controls
+            const trunkHeight = parseInt(document.getElementById('trunkHeight').value);
+            const branchLength = parseInt(document.getElementById('branchLength').value);
+            const branchAngleDeg = parseInt(document.getElementById('branchAngleDeg').value);
 
             // Remove existing tree
             if (treeGroup) {
@@ -189,7 +209,8 @@
             }
 
             // Create tree parameters
-            const params = {
+            // For 'custom', always use sliders. For presets, use sliders if 'custom' is selected, else use defaults.
+            let params = {
                 type: treeType,
                 useHybrid: useHybrid,
                 lSystemParams: {
@@ -205,6 +226,12 @@
                     stepSize: 0.5
                 }
             };
+            // Override with fine-tuning if custom, or always if you want live tuning for all
+            if (treeType === 'custom' || true) { // Set to 'true' for all types, or 'treeType === "custom"' for only custom
+                params.trunkHeight = trunkHeight;
+                params.branchLength = branchLength;
+                params.branchAngleDeg = branchAngleDeg;
+            }
 
             // Generate tree
             currentTree = new VoxelTree(params);
@@ -273,6 +300,17 @@
 
         document.getElementById('ringSides').addEventListener('input', function() {
             document.getElementById('ringSidesValue').textContent = this.value;
+        });
+
+        // Fine-tuning slider value updates
+        document.getElementById('trunkHeight').addEventListener('input', function() {
+            document.getElementById('trunkHeightValue').textContent = this.value;
+        });
+        document.getElementById('branchLength').addEventListener('input', function() {
+            document.getElementById('branchLengthValue').textContent = this.value;
+        });
+        document.getElementById('branchAngleDeg').addEventListener('input', function() {
+            document.getElementById('branchAngleDegValue').textContent = this.value;
         });
 
         // Initialize scene and generate first tree
