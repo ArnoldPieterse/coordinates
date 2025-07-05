@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDX-TREEHYBRID: Hybrid L-System + Space Colonization Tree Generator Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .controls {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: inline-block;
+            width: 200px;
+            margin-right: 10px;
+        }
+        input, select, button {
+            padding: 5px 10px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background: #333;
+            color: #fff;
+        }
+        button {
+            background: #4CAF50;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .tree-info {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: monospace;
+        }
+        #canvas {
+            border: 1px solid #555;
+            border-radius: 8px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .stat {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IDX-TREEHYBRID: Hybrid L-System + Space Colonization Tree Generator</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Tree Type:</label>
+                <select id="treeType" aria-label="Select tree type">
+                    <option value="broadleaf">Broadleaf (Oak-like)</option>
+                    <option value="pine">Pine (Conifer)</option>
+                    <option value="custom">Custom</option>
+                </select>
+                <button onclick="generateTree()">Generate Tree</button>
+                <button onclick="toggleHybrid()">Toggle Hybrid/Traditional</button>
+            </div>
+            
+            <div class="control-group">
+                <label>L-System Iterations:</label>
+                <input type="range" id="lSystemIterations" min="2" max="6" value="4" step="1" aria-label="L-System iterations">
+                <span id="lSystemIterationsValue">4</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Space Colonization Density:</label>
+                <input type="range" id="pointDensity" min="0.05" max="0.3" value="0.1" step="0.01" aria-label="Point density">
+                <span id="pointDensityValue">0.1</span>
+            </div>
+            
+            <div class="control-group">
+                <label>Ring Sides:</label>
+                <input type="range" id="ringSides" min="3" max="12" value="6" step="1" aria-label="Ring sides">
+                <span id="ringSidesValue">6</span>
+            </div>
+        </div>
+        
+        <div class="tree-info">
+            <h3>Tree Information</h3>
+            <div id="treeStats" class="stats">
+                <div class="stat">Loading...</div>
+            </div>
+        </div>
+        
+        <canvas id="canvas" width="800" height="600"></canvas>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'https://cdn.skypack.dev/three@0.150.1';
+        import { VoxelTree } from './src/procedural-tree-voxel.js';
+
+        let scene, camera, renderer, treeGroup;
+        let currentTree = null;
+        let useHybrid = true;
+
+        // Initialize Three.js scene
+        function initScene() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB); // Sky blue
+
+            camera = new THREE.PerspectiveCamera(75, 800 / 600, 0.1, 1000);
+            camera.position.set(20, 15, 20);
+            camera.lookAt(0, 10, 0);
+
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+            renderer.setSize(800, 600);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            // Add ground
+            const groundGeometry = new THREE.PlaneGeometry(50, 50);
+            const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x90EE90 });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            treeGroup = new THREE.Group();
+            scene.add(treeGroup);
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotate camera around tree
+            const time = Date.now() * 0.001;
+            camera.position.x = Math.cos(time * 0.5) * 25;
+            camera.position.z = Math.sin(time * 0.5) * 25;
+            camera.position.y = 15 + Math.sin(time * 0.3) * 5;
+            camera.lookAt(0, 10, 0);
+            
+            renderer.render(scene, camera);
+        }
+
+        // Generate tree with current parameters
+        window.generateTree = function() {
+            const treeType = document.getElementById('treeType').value;
+            const lSystemIterations = parseInt(document.getElementById('lSystemIterations').value);
+            const pointDensity = parseFloat(document.getElementById('pointDensity').value);
+            const ringSides = parseInt(document.getElementById('ringSides').value);
+
+            // Remove existing tree
+            if (treeGroup) {
+                treeGroup.clear();
+            }
+
+            // Create tree parameters
+            const params = {
+                type: treeType,
+                useHybrid: useHybrid,
+                lSystemParams: {
+                    iterations: lSystemIterations,
+                    length: treeType === 'pine' ? 1.5 : 2.0,
+                    angle: treeType === 'pine' ? Math.PI / 8 : Math.PI / 6,
+                    randomness: 0.1
+                },
+                spaceColonizationParams: {
+                    pointDensity: pointDensity,
+                    influenceRadius: 2.0,
+                    killRadius: 0.5,
+                    stepSize: 0.5
+                }
+            };
+
+            // Generate tree
+            currentTree = new VoxelTree(params);
+            const treeMesh = currentTree.toMesh({ ringSides, useHybrid });
+            treeMesh.castShadow = true;
+            treeMesh.receiveShadow = true;
+            treeGroup.add(treeMesh);
+
+            // Update stats
+            updateTreeStats();
+        };
+
+        // Toggle between hybrid and traditional approaches
+        window.toggleHybrid = function() {
+            useHybrid = !useHybrid;
+            document.querySelector('button[onclick="toggleHybrid()"]').textContent = 
+                useHybrid ? 'Switch to Traditional' : 'Switch to Hybrid';
+            generateTree();
+        };
+
+        // Update tree statistics display
+        function updateTreeStats() {
+            if (!currentTree) return;
+
+            const stats = document.getElementById('treeStats');
+            const segments = currentTree.hybridSegments || [];
+            const skeletonSegments = segments.filter(s => s.type === 'skeleton');
+            const fineSegments = segments.filter(s => s.type === 'fine');
+
+            stats.innerHTML = `
+                <div class="stat">
+                    <strong>Total Segments</strong><br>
+                    ${segments.length}
+                </div>
+                <div class="stat">
+                    <strong>Skeleton Segments</strong><br>
+                    ${skeletonSegments.length}
+                </div>
+                <div class="stat">
+                    <strong>Fine Branches</strong><br>
+                    ${fineSegments.length}
+                </div>
+                <div class="stat">
+                    <strong>Leaf Clusters</strong><br>
+                    ${currentTree.leafClusters.length}
+                </div>
+                <div class="stat">
+                    <strong>Approach</strong><br>
+                    ${useHybrid ? 'Hybrid' : 'Traditional'}
+                </div>
+                <div class="stat">
+                    <strong>Tree Type</strong><br>
+                    ${document.getElementById('treeType').value}
+                </div>
+            `;
+        }
+
+        // Update range input displays
+        document.getElementById('lSystemIterations').addEventListener('input', function() {
+            document.getElementById('lSystemIterationsValue').textContent = this.value;
+        });
+
+        document.getElementById('pointDensity').addEventListener('input', function() {
+            document.getElementById('pointDensityValue').textContent = this.value;
+        });
+
+        document.getElementById('ringSides').addEventListener('input', function() {
+            document.getElementById('ringSidesValue').textContent = this.value;
+        });
+
+        // Initialize scene and generate first tree
+        initScene();
+        generateTree();
+    </script>
+</body>
+</html> 
