@@ -89,7 +89,7 @@
             
             <div class="control-group">
                 <label>Trunk Height:</label>
-                <input type="range" id="trunkHeight" min="8" max="20" value="12" step="1" title="Trunk Height">
+                <input type="range" id="trunkHeight" min="8" max="20" value="12" step="1" title="Trunk Height" disabled>
                 <span id="trunkHeightValue">12</span>
             </div>
             <div class="control-group">
@@ -193,6 +193,14 @@
             renderer.render(scene, camera);
         }
 
+        // IDX-TREEPROMPT: Link trunk height to L-System Iterations
+        function getTrunkHeightFromIterations(iter) {
+            // 2 -> 8, 3 -> 20, interpolate for 2-3
+            if (iter <= 2) return 8;
+            if (iter >= 3) return 20;
+            return Math.round(8 + (20 - 8) * (iter - 2) / (3 - 2));
+        }
+
         // Generate tree with current parameters
         window.generateTree = function() {
             const treeType = document.getElementById('treeType').value;
@@ -200,7 +208,9 @@
             const pointDensity = parseFloat(document.getElementById('pointDensity').value);
             const ringSides = parseInt(document.getElementById('ringSides').value);
             // Fine-tuning controls
-            const trunkHeight = parseInt(document.getElementById('trunkHeight').value);
+            const trunkHeight = getTrunkHeightFromIterations(lSystemIterations);
+            document.getElementById('trunkHeight').value = trunkHeight;
+            document.getElementById('trunkHeightValue').textContent = trunkHeight;
             const branchLength = parseInt(document.getElementById('branchLength').value);
             const branchAngleDeg = parseInt(document.getElementById('branchAngleDeg').value);
 
@@ -293,6 +303,10 @@
         // Update range input displays
         document.getElementById('lSystemIterations').addEventListener('input', function() {
             document.getElementById('lSystemIterationsValue').textContent = this.value;
+            // IDX-TREEPROMPT: Update trunk height when L-System Iterations changes
+            const trunkHeight = getTrunkHeightFromIterations(parseInt(this.value));
+            document.getElementById('trunkHeight').value = trunkHeight;
+            document.getElementById('trunkHeightValue').textContent = trunkHeight;
         });
 
         document.getElementById('pointDensity').addEventListener('input', function() {
@@ -304,9 +318,6 @@
         });
 
         // Fine-tuning slider value updates
-        document.getElementById('trunkHeight').addEventListener('input', function() {
-            document.getElementById('trunkHeightValue').textContent = this.value;
-        });
         document.getElementById('branchLength').addEventListener('input', function() {
             document.getElementById('branchLengthValue').textContent = this.value;
         });
