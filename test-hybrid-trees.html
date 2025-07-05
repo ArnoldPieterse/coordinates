@@ -133,7 +133,8 @@
     </div>
 
     <script type="module">
-        import * as THREE from 'https://cdn.skypack.dev/three@0.150.1';
+        // IDX-TREEPROMPT: Use local Three.js for CSP compliance
+        import * as THREE from './src/three.module.js';
         import { VoxelTree } from './src/procedural-tree-voxel.js';
 
         let scene, camera, renderer, treeGroup;
