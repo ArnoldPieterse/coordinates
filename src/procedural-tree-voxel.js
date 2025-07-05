@@ -552,12 +552,11 @@ export class VoxelTree {
     generateBranches() {
         // IDX-TREEPROMPT: Branch placement uses phyllotaxis spiral and realistic elevation angles.
         // Angle is measured from vertical (Y axis). 90 deg = horizontal, >90 deg = drooping downward.
-        // TODO (IDX-TREEPROMPT): Implement species-specific droopiness.
-        // TODO (IDX-TREEPROMPT): Add dynamic trunk/branch ratio by species/age.
+        // Now: Each branch gets a random angle in a range, lower branches droop more.
         const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.399 rad
         let branchAngleRad = (this.branchAngleDeg || 110) * Math.PI / 180;
-        // Clamp to 100-115 deg for realism (drooping allowed)
-        branchAngleRad = Math.max(Math.PI*100/180, Math.min(branchAngleRad, Math.PI*115/180));
+        // Clamp to 100-125 deg for realism (drooping allowed)
+        branchAngleRad = Math.max(Math.PI*100/180, Math.min(branchAngleRad, Math.PI*125/180));
         this.branchAngleRad = branchAngleRad; // For sub-branches
         const baseLength = this.branchLength * 1.2; // Slightly longer for main branches
         const trunkLen = this.trunkPath.length;
@@ -570,10 +569,17 @@ export class VoxelTree {
             const trunkBase = this.trunkPath[trunkIdx];
             // Spiral around trunk using golden angle
             const azimuth = i * goldenAngle;
-            // Elevation angle from trunk (species-dependent)
-            const angle = branchAngleRad + this.randomBetween(-Math.PI/36, Math.PI/36); // ±5°
+            // --- Natural angle randomization ---
+            // Lower branches droop more, upper branches more horizontal
+            // Mean angle from slider, range ±12°
+            let angleSpread = Math.PI * 12 / 180; // ±12°
+            let meanAngle = branchAngleRad;
+            // Bias: lower branches (t near 0) droop more, upper (t near 1) less
+            let bias = (1 - t) * angleSpread; // more droop for lower
+            let angle = meanAngle + bias + this.randomBetween(-angleSpread, angleSpread);
+            // Clamp to 100–125 deg
+            angle = Math.max(Math.PI*100/180, Math.min(angle, Math.PI*125/180));
             // Offset branch base outward from trunk axis (IDX-TREEPROMPT)
-            const trunkDir = this.trunkPath[trunkIdx + 1].clone().sub(this.trunkPath[trunkIdx - 1]).normalize();
             const outward = new THREE.Vector3(Math.cos(azimuth), 0, Math.sin(azimuth)).normalize();
             const baseOffset = outward.clone().multiplyScalar(this.trunkRadius * 1.1 + 0.1 * this.randomBetween(0.8, 1.2));
             const start = trunkBase.clone().add(baseOffset);
