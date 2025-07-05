@@ -514,20 +514,22 @@ export class VoxelTree {
         let path = [start.clone()];
         let dir = direction.clone().normalize();
         let pos = start.clone();
+        // IDX-TREEPROMPT: Increase branchCurve for more arching branches
+        const curve = this.branchCurve * 1.5;
         for (let i = 1; i <= length; i++) {
-            // Curve the branch slightly, but keep main direction
-            dir.x += this.randomBetween(-this.branchCurve * 0.3, this.branchCurve * 0.3);
-            dir.y += this.randomBetween(-this.branchCurve * 0.15, this.branchCurve * 0.15);
-            dir.z += this.randomBetween(-this.branchCurve * 0.3, this.branchCurve * 0.3);
+            // Curve the branch more for realism
+            dir.x += this.randomBetween(-curve * 0.3, curve * 0.3);
+            dir.y += this.randomBetween(-curve * 0.15, curve * 0.15);
+            dir.z += this.randomBetween(-curve * 0.3, curve * 0.3);
             dir.normalize();
             pos = pos.clone().add(dir);
             path.push(pos.clone());
             // Recursively spawn sub-branches
             if (level < this.branchLevels && i > length * 0.4 && Math.random() < 0.18) {
-                // Sub-branch: inherit parent angle, but add small random offset, clamp to 80-115 deg
+                // Sub-branch: inherit parent angle, but add small random offset, clamp to 100-115 deg
                 let baseAngle = (parentAngle !== null ? parentAngle : this.branchAngleRad);
                 let subAngle = baseAngle + this.randomBetween(-Math.PI/18, Math.PI/18);
-                subAngle = Math.max(Math.PI*80/180, Math.min(subAngle, Math.PI*115/180)); // Clamp 80-115 deg
+                subAngle = Math.max(Math.PI*100/180, Math.min(subAngle, Math.PI*115/180)); // Clamp 100-115 deg
                 const subAzimuth = this.randomBetween(0, Math.PI * 2);
                 const subDir = new THREE.Vector3(
                     Math.sin(subAngle) * Math.cos(subAzimuth),
@@ -553,21 +555,28 @@ export class VoxelTree {
         // TODO (IDX-TREEPROMPT): Implement species-specific droopiness.
         // TODO (IDX-TREEPROMPT): Add dynamic trunk/branch ratio by species/age.
         const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.399 rad
-        let branchAngleRad = (this.branchAngleDeg || 100) * Math.PI / 180;
-        // Clamp to 80-115 deg for realism (drooping allowed)
-        branchAngleRad = Math.max(Math.PI*80/180, Math.min(branchAngleRad, Math.PI*115/180));
+        let branchAngleRad = (this.branchAngleDeg || 110) * Math.PI / 180;
+        // Clamp to 100-115 deg for realism (drooping allowed)
+        branchAngleRad = Math.max(Math.PI*100/180, Math.min(branchAngleRad, Math.PI*115/180));
         this.branchAngleRad = branchAngleRad; // For sub-branches
         const baseLength = this.branchLength * 1.2; // Slightly longer for main branches
         const trunkLen = this.trunkPath.length;
         for (let i = 0; i < this.numBranches; i++) {
             // Evenly space branches vertically, with slight random offset
             const t = (i + 0.5) / this.numBranches;
-            const trunkIdx = Math.floor(t * (trunkLen - 1));
-            const start = this.trunkPath[trunkIdx];
+            let trunkIdx = Math.floor(t * (trunkLen - 1));
+            // Add a small random vertical offset to branch base
+            trunkIdx = Math.max(1, Math.min(trunkLen - 2, trunkIdx + Math.floor(this.randomBetween(-1, 2))));
+            const trunkBase = this.trunkPath[trunkIdx];
             // Spiral around trunk using golden angle
             const azimuth = i * goldenAngle;
             // Elevation angle from trunk (species-dependent)
             const angle = branchAngleRad + this.randomBetween(-Math.PI/36, Math.PI/36); // ±5°
+            // Offset branch base outward from trunk axis (IDX-TREEPROMPT)
+            const trunkDir = this.trunkPath[trunkIdx + 1].clone().sub(this.trunkPath[trunkIdx - 1]).normalize();
+            const outward = new THREE.Vector3(Math.cos(azimuth), 0, Math.sin(azimuth)).normalize();
+            const baseOffset = outward.clone().multiplyScalar(this.trunkRadius * 1.1 + 0.1 * this.randomBetween(0.8, 1.2));
+            const start = trunkBase.clone().add(baseOffset);
             // Spherical to Cartesian (angle from vertical)
             const dir = new THREE.Vector3(
                 Math.sin(angle) * Math.cos(azimuth),
