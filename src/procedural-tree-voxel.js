@@ -2,31 +2,62 @@
 // Generates a 3D voxel matrix for trunk, branches, and leaves, then creates a mesh with smooth branch-to-trunk connections
 import * as THREE from 'three';
 
+const TREE_TYPES = {
+    pine: {
+        trunkHeight: 22,
+        trunkRadius: 0.5,
+        trunkCurve: 0.08,
+        numBranches: 12,
+        branchLevels: 3,
+        branchLength: 7,
+        branchCurve: 0.18,
+        branchSpread: Math.PI / 3.5,
+        leafRadius: 1.2,
+        leafSegments: 4,
+        leafType: 'cone',
+        trunkColor: 0x7B5E3B,
+        branchColor: 0x8B6B4A,
+        leafColor: 0x2E8B57
+    },
+    broadleaf: {
+        trunkHeight: 16,
+        trunkRadius: 0.8,
+        trunkCurve: 0.18,
+        numBranches: 8,
+        branchLevels: 2,
+        branchLength: 8,
+        branchCurve: 0.28,
+        branchSpread: Math.PI / 2.2,
+        leafRadius: 2.5,
+        leafSegments: 7,
+        leafType: 'sphere',
+        trunkColor: 0x8B4513,
+        branchColor: 0xA0522D,
+        leafColor: 0x228B22
+    }
+};
+
 export class VoxelTree {
-    constructor({
-        trunkHeight = 18,
-        trunkRadius = 0.7,
-        trunkCurve = 0.15,
-        numBranches = 7,
-        branchLevels = 2,
-        branchLength = 7,
-        branchCurve = 0.25,
-        branchSpread = Math.PI / 2.5,
-        leafRadius = 2.2,
-        leafSegments = 6,
-        randomness = 0.25
-    } = {}) {
-        this.trunkHeight = trunkHeight;
-        this.trunkRadius = trunkRadius;
-        this.trunkCurve = trunkCurve;
-        this.numBranches = numBranches;
-        this.branchLevels = branchLevels;
-        this.branchLength = branchLength;
-        this.branchCurve = branchCurve;
-        this.branchSpread = branchSpread;
-        this.leafRadius = leafRadius;
-        this.leafSegments = leafSegments;
-        this.randomness = randomness;
+    constructor({ geneMap = {}, ...params } = {}) {
+        // Determine tree type and merge geneMap with defaults
+        const type = geneMap.type || 'broadleaf';
+        const base = TREE_TYPES[type] || TREE_TYPES.broadleaf;
+        const genes = { ...base, ...geneMap, ...params };
+        this.trunkHeight = genes.trunkHeight;
+        this.trunkRadius = genes.trunkRadius;
+        this.trunkCurve = genes.trunkCurve;
+        this.numBranches = genes.numBranches;
+        this.branchLevels = genes.branchLevels;
+        this.branchLength = genes.branchLength;
+        this.branchCurve = genes.branchCurve;
+        this.branchSpread = genes.branchSpread;
+        this.leafRadius = genes.leafRadius;
+        this.leafSegments = genes.leafSegments;
+        this.leafType = genes.leafType;
+        this.trunkColor = genes.trunkColor;
+        this.branchColor = genes.branchColor;
+        this.leafColor = genes.leafColor;
+        this.randomness = genes.randomness ?? 0.22;
         this.trunkPath = [];
         this.branches = [];
         this.leafClusters = [];
@@ -114,9 +145,9 @@ export class VoxelTree {
     // Generate a THREE.Group mesh from the trunk, branches, and leaves
     toMesh() {
         const group = new THREE.Group();
-        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
-        const branchMat = new THREE.MeshStandardMaterial({ color: 0xA0522D });
-        const leafMat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
+        const trunkMat = new THREE.MeshStandardMaterial({ color: this.trunkColor });
+        const branchMat = new THREE.MeshStandardMaterial({ color: this.branchColor });
+        const leafMat = new THREE.MeshStandardMaterial({ color: this.leafColor });
         // Trunk
         for (let i = 1; i < this.trunkPath.length; i++) {
             const start = this.trunkPath[i - 1];
@@ -135,11 +166,21 @@ export class VoxelTree {
         }
         // Leaves
         for (const pos of this.leafClusters) {
-            const mesh = new THREE.Mesh(
-                new THREE.SphereGeometry(this.leafRadius, this.leafSegments, this.leafSegments),
-                leafMat
-            );
-            mesh.position.copy(pos);
+            let mesh;
+            if (this.leafType === 'cone') {
+                mesh = new THREE.Mesh(
+                    new THREE.ConeGeometry(this.leafRadius, this.leafRadius * 2.2, this.leafSegments),
+                    leafMat
+                );
+                mesh.position.copy(pos);
+                mesh.position.y += this.leafRadius; // Offset for cone
+            } else {
+                mesh = new THREE.Mesh(
+                    new THREE.SphereGeometry(this.leafRadius, this.leafSegments, this.leafSegments),
+                    leafMat
+                );
+                mesh.position.copy(pos);
+            }
             group.add(mesh);
         }
         return group;
@@ -166,5 +207,7 @@ export class VoxelTree {
 
 // Usage example (in your scene):
 // import { VoxelTree } from './procedural-tree-voxel.js';
-// const tree = new VoxelTree();
-// scene.add(tree.toMesh()); 
+// const pine = new VoxelTree({ geneMap: { type: 'pine' } });
+// const oak = new VoxelTree({ geneMap: { type: 'broadleaf', leafColor: 0x44aa33 } });
+// scene.add(pine.toMesh());
+// scene.add(oak.toMesh()); 

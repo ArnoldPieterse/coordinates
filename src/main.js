@@ -5,6 +5,8 @@ import MathematicalEngine from './mathematical-engine.js';
 import MathematicalVisualizer from './mathematical-visualizer.js';
 import MathematicalAI from './mathematical-ai.js';
 import FlowDiagramVisualizer from './flow-diagram-visualizer.js';
+import SystemInterconnectivityMatrix from './system-interconnectivity-matrix.js';
+import SpatialFunctionClusteringMatrix from './spatial-function-clustering-matrix.js';
 import UniversalObjectGenerator from '../universal-object-generator.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import AdvancedRenderer from './advanced-renderer.js';
@@ -13,6 +15,8 @@ import { VoxelTree } from './procedural-tree-voxel.js';
 
 class MultiplayerPlanetaryShooter {
     constructor() {
+        console.log('[DEBUG] MultiplayerPlanetaryShooter constructor called');
+        this.initLogOverlay();
         this.mathEngine = new MathematicalEngine();
         this.mathEngine.initializeTHREE(THREE);
         this.mathematicalVisualizer = null;
@@ -158,11 +162,82 @@ class MultiplayerPlanetaryShooter {
         this.ragdolls = [];
         this.fluidSimulations = [];
         
+        // System Interconnectivity Matrix
+        this.systemInterconnectivityMatrix = null;
+        this.matrixControls = {
+            isActive: false,
+            currentPerspective: 'interconnectivity',
+            butterflyEffectTriggered: false
+        };
+        
+        // Spatial Function Clustering Matrix
+        this.spatialFunctionClusteringMatrix = null;
+        this.spatialControls = {
+            isActive: false,
+            clusteringMode: 'frequency',
+            optimizationEnabled: true
+        };
+        
         this.init();
     }
     
+    initLogOverlay() {
+        // Patch console.log and console.error to show in overlay
+        if (window.__logOverlayInitialized) return;
+        window.__logOverlayInitialized = true;
+        const overlay = document.createElement('div');
+        overlay.id = 'log-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.bottom = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100vw';
+        overlay.style.maxHeight = '30vh';
+        overlay.style.overflowY = 'auto';
+        overlay.style.background = 'rgba(0,0,0,0.7)';
+        overlay.style.color = '#00ff00';
+        overlay.style.fontSize = '12px';
+        overlay.style.fontFamily = 'monospace';
+        overlay.style.zIndex = '9998';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.padding = '4px 8px';
+        document.body.appendChild(overlay);
+        const logs = [];
+        function updateOverlay() {
+            overlay.innerHTML = logs.slice(-30).join('<br>');
+        }
+        const origLog = console.log;
+        const origErr = console.error;
+        console.log = function(...args) {
+            logs.push('[LOG] ' + args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' '));
+            updateOverlay();
+            origLog.apply(console, args);
+        };
+        console.error = function(...args) {
+            logs.push('<span style="color:#ff5555">[ERR] ' + args.map(a => (typeof a === 'object' ? JSON.stringify(a) : a)).join(' ') + '</span>');
+            updateOverlay();
+            origErr.apply(console, args);
+        };
+        window.onerror = function(msg, src, line, col, err) {
+            logs.push('<span style="color:#ff5555">[ONERROR] ' + msg + ' @' + src + ':' + line + '</span>');
+            updateOverlay();
+        };
+    }
+
     async init() {
+        console.log('[DEBUG] init() called');
         this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x222244); // fallback background color
+        // Add Hello World spinning cube
+        this.helloWorldCube = new THREE.Mesh(
+            new THREE.BoxGeometry(2, 2, 2),
+            new THREE.MeshStandardMaterial({ color: 0xff00ff })
+        );
+        this.helloWorldCube.position.set(0, 5, -10);
+        this.scene.add(this.helloWorldCube);
+        // Automated asset/dependency check
+        await this.checkCriticalAssets();
+        // Automated UI/UX health check
+        this.checkUIElements();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.clock = new THREE.Clock();
@@ -190,6 +265,8 @@ class MultiplayerPlanetaryShooter {
         for (const [weaponKey, weapon] of Object.entries(this.weapons)) { weapon.damage = this.mathEngine.calculateMathematicalWeaponDamage(weapon.damage, weaponKey); }
         this.mathematicalVisualizer = null;
         this.flowDiagramVisualizer = null;
+        this.systemInterconnectivityMatrix = new SystemInterconnectivityMatrix(this.scene, this.mathEngine);
+        this.spatialFunctionClusteringMatrix = new SpatialFunctionClusteringMatrix(this.scene, this.mathEngine);
         this.mathematicalConstants = this.mathEngine.getMathematicalConstants();
         this.socket = null;
         this.players = new Map();
@@ -224,26 +301,74 @@ class MultiplayerPlanetaryShooter {
         this.advancedRenderer = new AdvancedRenderer(this.scene, this.camera, this.renderer);
         this.advancedPhysics = new AdvancedPhysics();
         
-        this.setupScene();
-        this.setupPlayer();
-        this.setupCamera();
-        this.setupLights();
-        this.setupRocket();
-        this.setupInput();
-        this.setupNetworking();
-        this.setupDestructibleEnvironment();
-        this.setupVehicles();
-        this.setupFluidSimulation();
-        this.flowDiagramVisualizer = new FlowDiagramVisualizer(this.scene);
-        this.flowDiagramVisualizer.loadAndRender('./game_describers/flow-diagram.json');
-        this.universalObjectGenerator = new UniversalObjectGenerator(this.scene);
         try {
+            console.log('[DEBUG] setupScene()');
+            this.setupScene();
+            console.log('[DEBUG] setupPlayer()');
+            this.setupPlayer();
+            console.log('[DEBUG] setupCamera()');
+            this.setupCamera();
+            console.log('[DEBUG] setupLights()');
+            this.setupLights();
+            console.log('[DEBUG] setupRocket()');
+            this.setupRocket();
+            console.log('[DEBUG] setupInput()');
+            this.setupInput();
+            console.log('[DEBUG] setupNetworking()');
+            this.setupNetworking();
+            console.log('[DEBUG] setupDestructibleEnvironment()');
+            this.setupDestructibleEnvironment();
+            console.log('[DEBUG] setupVehicles()');
+            this.setupVehicles();
+            console.log('[DEBUG] setupFluidSimulation()');
+            this.setupFluidSimulation();
+            this.flowDiagramVisualizer = new FlowDiagramVisualizer(this.scene);
+            this.flowDiagramVisualizer.loadAndRender('./game_describers/flow-diagram.json');
+            this.universalObjectGenerator = new UniversalObjectGenerator(this.scene);
+            // Setup Matrix controls
+            this.setupMatrixControls();
+            this.setupSpatialControls();
+            console.log('[DEBUG] Loading universal-object-descriptor.json');
             await this.universalObjectGenerator.load('./universal-object-descriptor.json');
         } catch (error) {
-            console.error("Halting initialization due to critical file load error.", error);
+            this.showErrorOverlay(error);
+            console.error('[CRITICAL INIT ERROR]', error);
             return;
         }
+        console.log('[DEBUG] Initialization complete, starting animation loop');
         this.animate();
+    }
+
+    async checkCriticalAssets() {
+        const assets = [
+            './universal-object-descriptor.json',
+            './game_describers/flow-diagram.json'
+        ];
+        for (const asset of assets) {
+            try {
+                const res = await fetch(asset);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                await res.json();
+                console.log(`[DEBUG] Asset check passed: ${asset}`);
+            } catch (e) {
+                this.showErrorOverlay(`Missing or invalid asset: ${asset} - ${e.message}`);
+                throw new Error(`Missing or invalid asset: ${asset} - ${e.message}`);
+            }
+        }
+    }
+
+    checkUIElements() {
+        const uiIds = [
+            'player-stats', 'weapon-ui', 'kill-feed', 'chat-container', 'gameContainer', 'connection-status', 'status', 'rocketStatus', 'ui-container'
+        ];
+        for (const id of uiIds) {
+            const el = document.getElementById(id);
+            if (!el) {
+                console.error(`[HEALTH] UI element missing: #${id}`);
+            } else if (el.offsetParent === null) {
+                console.error(`[HEALTH] UI element hidden: #${id}`);
+            }
+        }
     }
 
     setupDestructibleEnvironment() {
@@ -316,6 +441,272 @@ class MultiplayerPlanetaryShooter {
         const fluid = this.advancedPhysics.createFluidSimulation(fluidBounds, 500);
         this.fluidSimulations.push(fluid);
     }
+    
+    setupMatrixControls() {
+        // Add Matrix toggle to available tools
+        this.availableTools.push({
+            key: 'system-interconnectivity-matrix',
+            name: 'System Interconnectivity Matrix',
+            icon: '🌐',
+            shortcut: 'F8',
+            description: 'Visualize system interconnectivity and butterfly effects'
+        });
+        
+        this.availableTools.push({
+            key: 'spatial-function-clustering',
+            name: 'Spatial Function Clustering',
+            icon: '🎯',
+            shortcut: 'F10',
+            description: 'Spatial optimization and refactoring suggestions'
+        });
+        
+        // Add Matrix UI
+        this.createMatrixUI();
+        this.createSpatialUI();
+    }
+    
+    createMatrixUI() {
+        // Create Matrix control panel
+        const matrixPanel = document.createElement('div');
+        matrixPanel.id = 'matrixPanel';
+        matrixPanel.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ff00;
+            padding: 15px;
+            border-radius: 10px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            z-index: 1000;
+            display: none;
+        `;
+        
+        matrixPanel.innerHTML = `
+            <h3 style="margin: 0 0 10px 0; text-align: center;">🌐 System Interconnectivity Matrix</h3>
+            <div style="margin-bottom: 10px;">
+                <button id="toggleMatrix" style="background: #00ff00; color: #000; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Toggle Matrix</button>
+                <button id="triggerButterfly" style="background: #ff0000; color: #fff; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Trigger Butterfly Effect</button>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <button id="perspectivePlayer" style="background: #00ff00; color: #000; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Player View</button>
+                <button id="perspectiveAI" style="background: #0000ff; color: #fff; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">AI View</button>
+                <button id="perspectivePhysics" style="background: #ff0000; color: #fff; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Physics View</button>
+                <button id="perspectiveRendering" style="background: #ffff00; color: #000; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Rendering View</button>
+            </div>
+            <div id="matrixStats" style="font-size: 12px; line-height: 1.4;">
+                <div>Active Functions: <span id="activeFunctions">0</span></div>
+                <div>Active Connections: <span id="activeConnections">0</span></div>
+                <div>Active Changes: <span id="activeChanges">0</span></div>
+                <div>Propagation Waves: <span id="propagationWaves">0</span></div>
+            </div>
+        `;
+        
+        document.body.appendChild(matrixPanel);
+        this.matrixPanel = matrixPanel;
+        
+        // Add event listeners
+        document.getElementById('toggleMatrix').addEventListener('click', () => {
+            this.toggleMatrixVisualization();
+        });
+        
+        document.getElementById('triggerButterfly').addEventListener('click', () => {
+            this.triggerMatrixButterflyEffect();
+        });
+        
+        document.getElementById('perspectivePlayer').addEventListener('click', () => {
+            this.switchMatrixPerspective('player');
+        });
+        
+        document.getElementById('perspectiveAI').addEventListener('click', () => {
+            this.switchMatrixPerspective('ai');
+        });
+        
+        document.getElementById('perspectivePhysics').addEventListener('click', () => {
+            this.switchMatrixPerspective('physics');
+        });
+        
+        document.getElementById('perspectiveRendering').addEventListener('click', () => {
+            this.switchMatrixPerspective('rendering');
+        });
+    }
+    
+    toggleMatrixVisualization() {
+        this.matrixControls.isActive = !this.matrixControls.isActive;
+        
+        if (this.matrixControls.isActive) {
+            this.systemInterconnectivityMatrix.createMatrixVisualization();
+            this.matrixPanel.style.display = 'block';
+        } else {
+            this.systemInterconnectivityMatrix.clearMatrixVisualization();
+            this.matrixPanel.style.display = 'none';
+        }
+    }
+    
+    triggerMatrixButterflyEffect() {
+        if (!this.matrixControls.isActive) return;
+        
+        // Trigger butterfly effect on a random system
+        const systems = ['mathematicalEngine', 'physicsEngine', 'aiSystem', 'renderingSystem', 'playerSystem', 'bulletSystem'];
+        const randomSystem = systems[Math.floor(Math.random() * systems.length)];
+        
+        this.systemInterconnectivityMatrix.triggerButterflyEffect(randomSystem, 'modification');
+        this.matrixControls.butterflyEffectTriggered = true;
+        
+        // Reset after 5 seconds
+        setTimeout(() => {
+            this.matrixControls.butterflyEffectTriggered = false;
+        }, 5000);
+    }
+    
+    switchMatrixPerspective(perspectiveName) {
+        if (!this.matrixControls.isActive) return;
+        
+        this.systemInterconnectivityMatrix.switchPerspective(perspectiveName);
+        this.matrixControls.currentPerspective = perspectiveName;
+    }
+    
+    updateMatrixUI() {
+        if (!this.matrixPanel || !this.matrixControls.isActive) return;
+        
+        const stats = this.systemInterconnectivityMatrix.getMatrixStatistics();
+        document.getElementById('activeFunctions').textContent = stats.activeFunctions;
+        document.getElementById('activeConnections').textContent = stats.activeConnections;
+        document.getElementById('activeChanges').textContent = stats.activeChanges;
+        document.getElementById('propagationWaves').textContent = stats.propagationWaves;
+    }
+    
+    setupSpatialControls() {
+        // Spatial controls are already added to available tools
+    }
+    
+    createSpatialUI() {
+        // Create Spatial control panel
+        const spatialPanel = document.createElement('div');
+        spatialPanel.id = 'spatialPanel';
+        spatialPanel.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00ffff;
+            padding: 15px;
+            border-radius: 10px;
+            color: #00ffff;
+            font-family: 'Courier New', monospace;
+            z-index: 1000;
+            display: none;
+        `;
+        
+        spatialPanel.innerHTML = `
+            <h3 style="margin: 0 0 10px 0; text-align: center;">🎯 Spatial Function Clustering</h3>
+            <div style="margin-bottom: 10px;">
+                <button id="toggleSpatial" style="background: #00ffff; color: #000; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Toggle Spatial View</button>
+                <button id="optimizePositions" style="background: #ff8800; color: #fff; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Optimize Positions</button>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <button id="clusteringFrequency" style="background: #00ffff; color: #000; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Frequency Mode</button>
+                <button id="clusteringCohesion" style="background: #00ff00; color: #000; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Cohesion Mode</button>
+                <button id="clusteringComplexity" style="background: #ff0000; color: #fff; border: none; padding: 5px 10px; margin: 2px; cursor: pointer;">Complexity Mode</button>
+            </div>
+            <div id="spatialStats" style="font-size: 12px; line-height: 1.4;">
+                <div>Total Functions: <span id="totalFunctions">0</span></div>
+                <div>Total Clusters: <span id="totalClusters">0</span></div>
+                <div>Average Distance: <span id="averageDistance">0</span></div>
+                <div>Average Cohesion: <span id="averageCohesion">0</span></div>
+                <div>Functions Needing Refactoring: <span id="functionsNeedingRefactoring">0</span></div>
+                <div>Optimization Score: <span id="optimizationScore">0</span></div>
+            </div>
+            <div id="refactoringSuggestions" style="margin-top: 10px; font-size: 11px; max-height: 100px; overflow-y: auto;">
+                <strong>Refactoring Suggestions:</strong>
+                <div id="suggestionsList"></div>
+            </div>
+        `;
+        
+        document.body.appendChild(spatialPanel);
+        this.spatialPanel = spatialPanel;
+        
+        // Add event listeners
+        document.getElementById('toggleSpatial').addEventListener('click', () => {
+            this.toggleSpatialVisualization();
+        });
+        
+        document.getElementById('optimizePositions').addEventListener('click', () => {
+            this.optimizeSpatialPositions();
+        });
+        
+        document.getElementById('clusteringFrequency').addEventListener('click', () => {
+            this.switchClusteringMode('frequency');
+        });
+        
+        document.getElementById('clusteringCohesion').addEventListener('click', () => {
+            this.switchClusteringMode('cohesion');
+        });
+        
+        document.getElementById('clusteringComplexity').addEventListener('click', () => {
+            this.switchClusteringMode('complexity');
+        });
+    }
+    
+    toggleSpatialVisualization() {
+        this.spatialControls.isActive = !this.spatialControls.isActive;
+        
+        if (this.spatialControls.isActive) {
+            this.spatialFunctionClusteringMatrix.createSpatialVisualization();
+            this.spatialPanel.style.display = 'block';
+        } else {
+            this.spatialFunctionClusteringMatrix.clearSpatialVisualization();
+            this.spatialPanel.style.display = 'none';
+        }
+    }
+    
+    optimizeSpatialPositions() {
+        if (!this.spatialControls.isActive) return;
+        
+        // Recalculate optimal positions
+        this.spatialFunctionClusteringMatrix.calculateOptimalPositions();
+        
+        // Update statistics
+        this.updateSpatialUI();
+    }
+    
+    switchClusteringMode(mode) {
+        if (!this.spatialControls.isActive) return;
+        
+        this.spatialControls.clusteringMode = mode;
+        this.spatialFunctionClusteringMatrix.spatialState.clusteringMode = mode;
+        
+        // Recreate visualization with new mode
+        this.spatialFunctionClusteringMatrix.createSpatialVisualization();
+    }
+    
+    updateSpatialUI() {
+        if (!this.spatialPanel || !this.spatialControls.isActive) return;
+        
+        const stats = this.spatialFunctionClusteringMatrix.getSpatialStatistics();
+        document.getElementById('totalFunctions').textContent = stats.totalFunctions;
+        document.getElementById('totalClusters').textContent = stats.totalClusters;
+        document.getElementById('averageDistance').textContent = stats.averageDistance.toFixed(2);
+        document.getElementById('averageCohesion').textContent = stats.averageCohesion.toFixed(2);
+        document.getElementById('functionsNeedingRefactoring').textContent = stats.functionsNeedingRefactoring;
+        document.getElementById('optimizationScore').textContent = (stats.optimizationScore * 100).toFixed(1) + '%';
+        
+        // Update refactoring suggestions
+        const suggestions = this.spatialFunctionClusteringMatrix.suggestRefactoring();
+        const suggestionsList = document.getElementById('suggestionsList');
+        suggestionsList.innerHTML = '';
+        
+        suggestions.forEach(suggestion => {
+            const suggestionDiv = document.createElement('div');
+            suggestionDiv.style.cssText = 'margin: 5px 0; padding: 5px; background: rgba(255,0,0,0.2); border-left: 3px solid #ff0000;';
+            suggestionDiv.innerHTML = `
+                <strong>${suggestion.function}</strong>: ${suggestion.reason}<br>
+                <em>${suggestion.suggestion}</em>
+            `;
+            suggestionsList.appendChild(suggestionDiv);
+        });
+    }
 
     setupScene() {
         for (const [planetId, planetInfo] of Object.entries(this.planetData)) { this.createPlanet(planetId, planetInfo); }
@@ -325,17 +716,24 @@ class MultiplayerPlanetaryShooter {
         addProceduralTree(this.scene);
     }
     setupPlayer() {
-        this.playerGeometry = new THREE.CapsuleGeometry(this.playerRadius, this.playerHeight - (2 * this.playerRadius), 4, 8);
-        this.playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0077ff, wireframe: false });
-        this.player = new THREE.Mesh(this.playerGeometry, this.playerMaterial);
-        this.player.castShadow = true;
-        this.player.position.set(0, 5, 0);
-        this.scene.add(this.player);
-        const gunGeometry = new THREE.BoxGeometry(0.1, 0.2, 0.5);
-        const gunMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
-        this.gun = new THREE.Mesh(gunGeometry, gunMaterial);
-        this.gun.position.set(0.3, 0.2, 0.5);
-        this.player.add(this.gun);
+        try {
+            console.log('[DEBUG] Creating player mesh');
+            this.playerGeometry = new THREE.CapsuleGeometry(this.playerRadius, this.playerHeight - (2 * this.playerRadius), 4, 8);
+            this.playerMaterial = new THREE.MeshLambertMaterial({ color: 0x0077ff, wireframe: false });
+            this.player = new THREE.Mesh(this.playerGeometry, this.playerMaterial);
+            this.player.castShadow = true;
+            this.player.position.set(0, 5, 0);
+            this.scene.add(this.player);
+            const gunGeometry = new THREE.BoxGeometry(0.1, 0.2, 0.5);
+            const gunMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
+            this.gun = new THREE.Mesh(gunGeometry, gunMaterial);
+            this.gun.position.set(0.3, 0.2, 0.5);
+            this.player.add(this.gun);
+            console.log('[DEBUG] Player mesh created and added to scene');
+        } catch (e) {
+            this.showErrorOverlay(e);
+            console.error('[ERROR] setupPlayer failed:', e);
+        }
     }
     setupCamera() {
         this.cameraControls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -406,8 +804,43 @@ class MultiplayerPlanetaryShooter {
         if (event.code === 'KeyR') this.reload();
         if (event.code === 'ShiftLeft') this.initiateDash();
         if (event.code === 'KeyV') this.switchCameraMode();
+        
+        // Matrix controls
+        if (event.code === 'F8') { 
+            event.preventDefault();
+            this.toggleMatrixVisualization(); 
+        }
+        if (event.code === 'F9') { 
+            event.preventDefault();
+            this.triggerMatrixButterflyEffect(); 
+        }
+        
+        // Spatial controls
+        if (event.code === 'F10') { 
+            event.preventDefault();
+            this.toggleSpatialVisualization(); 
+        }
     }
     animate() {
+        if (!this.renderer || !this.scene || !this.camera) {
+            this.showErrorOverlay('Renderer, scene, or camera not initialized');
+            return;
+        }
+        // Animate Hello World cube
+        if (this.helloWorldCube) {
+            this.helloWorldCube.rotation.x += 0.01;
+            this.helloWorldCube.rotation.y += 0.01;
+        }
+        // Player mesh health check
+        if (!this.player) {
+            console.error('[HEALTH] Player mesh is missing!');
+        } else if (!this.scene.children.includes(this.player)) {
+            console.error('[HEALTH] Player mesh not in scene!');
+        }
+        // Server connection health check
+        if (!this.isConnected) {
+            console.error('[HEALTH] Not connected to server!');
+        }
         requestAnimationFrame(() => this.animate());
         const deltaTime = this.clock.getDelta();
         if (this.player) { this.updatePlayer(deltaTime); }
@@ -417,6 +850,19 @@ class MultiplayerPlanetaryShooter {
         this.updateDash(deltaTime);
         this.updateParticles(deltaTime);
         this.updateExplosions(deltaTime);
+        
+        // Update Matrix visualization
+        if (this.matrixControls.isActive) {
+            this.systemInterconnectivityMatrix.update(deltaTime);
+            this.updateMatrixUI();
+        }
+        
+        // Update Spatial visualization
+        if (this.spatialControls.isActive) {
+            this.spatialFunctionClusteringMatrix.update(deltaTime);
+            this.updateSpatialUI();
+        }
+        
         this.renderer.render(this.scene, this.camera);
         this.frameCount++;
     }
@@ -585,7 +1031,7 @@ class MultiplayerPlanetaryShooter {
         });
 
         this.socket.on('disconnect', () => {
-            console.log('Disconnected from server');
+            console.error('[HEALTH] Disconnected from server');
             this.isConnected = false;
         });
 
@@ -748,6 +1194,31 @@ class MultiplayerPlanetaryShooter {
             if(this.cameraControls) this.cameraControls.enabled = true;
             this.gun.position.set(0.3, 0.2, 0.5);
             this.player.add(this.gun);
+        }
+    }
+    showErrorOverlay(error) {
+        let overlay = document.getElementById('error-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'error-overlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100vw';
+            overlay.style.height = '100vh';
+            overlay.style.background = 'rgba(0,0,0,0.85)';
+            overlay.style.color = '#ff5555';
+            overlay.style.fontSize = '20px';
+            overlay.style.zIndex = '9999';
+            overlay.style.display = 'flex';
+            overlay.style.flexDirection = 'column';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.innerHTML = '<b>Critical Error</b><br>' + (error && error.message ? error.message : error);
+            document.body.appendChild(overlay);
+        } else {
+            overlay.innerHTML = '<b>Critical Error</b><br>' + (error && error.message ? error.message : error);
+            overlay.style.display = 'flex';
         }
     }
 }
