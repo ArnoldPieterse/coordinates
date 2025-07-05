@@ -1,5 +1,53 @@
+// IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md
+// IDX-TREEVOX-01: Procedural Tree Voxel Module
 // Advanced Procedural Voxel Tree Generator
 // Generates a 3D voxel matrix for trunk, branches, and leaves, then creates a mesh with smooth branch-to-trunk connections
+// IDX-TREEVOX-02: Voxel Matrix Generation
+// IDX-TREEHYBRID-PLAN: Hybrid L-System + Space Colonization Tree Generator
+//
+// ## Overview
+// This module will implement a procedural tree generator that combines:
+//   - L-Systems (Lindenmayer Systems) for the main trunk and primary branches (global structure)
+//   - Space Colonization Algorithm for secondary/tertiary branches and leaf distribution (local realism)
+//
+// ## Industry Standards & References
+// - L-Systems: Prusinkiewicz & Lindenmayer, "The Algorithmic Beauty of Plants" (1990)
+// - Space Colonization: Runions et al., "Modeling Trees with a Space Colonization Algorithm" (2007)
+// - Used in: SpeedTree, PlantFactory, Blender Sapling, academic research
+//
+// ## Implementation Plan
+//
+// IDX-TREEHYBRID-01: L-System Skeleton Generation
+//   - Define L-system grammar (axiom, rules, iterations)
+//   - Generate main trunk and primary branches as a set of connected segments
+//   - Parameters: branching angle, segment length, iterations, tropism
+//
+// IDX-TREEHYBRID-02: Space Colonization for Fine Branching
+//   - Distribute attraction points (representing light/space/leaf targets) in the crown volume
+//   - Grow secondary/tertiary branches from L-system skeleton toward attraction points
+//   - Remove attraction points as they are reached, prune unreachable points
+//   - Parameters: influence radius, kill radius, step size, point density
+//
+// IDX-TREEHYBRID-03: Mesh Generation
+//   - Sweep a polygonal cross-section (ring) along the combined skeleton to create the mesh
+//   - Connect rings with triangles (as in IDX-TREEVOX-TRIWRAP)
+//   - Optionally blend junctions for smoothness
+//   - Add leaves at attraction points or branch tips
+//
+// IDX-TREEHYBRID-04: Parameters & Controls
+//   - Expose parameters for L-system rules, space colonization, mesh detail, and randomness
+//   - Allow for different tree species and growth styles
+//
+// IDX-TREEHYBRID-05: Documentation & Examples
+//   - Provide usage examples, parameter presets, and references to industry tools
+//
+// ## References
+// - Prusinkiewicz, P., & Lindenmayer, A. (1990). The Algorithmic Beauty of Plants.
+// - Runions, A., Lane, B., & Prusinkiewicz, P. (2007). Modeling Trees with a Space Colonization Algorithm.
+// - SpeedTree, PlantFactory, Blender Sapling Addon
+//
+// ---
+// The following code will implement these steps sequentially, using the IDX-TREEHYBRID index for traceability.
 import * as THREE from 'three';
 
 const TREE_TYPES = {
@@ -142,66 +190,128 @@ export class VoxelTree {
         this.generateBranches();
     }
 
-    // Generate a THREE.Group mesh from the trunk, branches, and leaves
-    toMesh() {
+    // IDX-TREEVOX-TRIWRAP: Polygonal ring mesh for trunk/branches (matches sketch)
+    toMesh({ ringSides = 3 } = {}) {
         const group = new THREE.Group();
         const trunkMat = new THREE.MeshStandardMaterial({ color: this.trunkColor });
-        const branchMat = new THREE.MeshStandardMaterial({ color: this.branchColor });
         const leafMat = new THREE.MeshStandardMaterial({ color: this.leafColor });
-        // Trunk
+        let vertices = [];
+        let faces = [];
+        let trunkRings = [];
+        // Helper: generate a ring of N vertices around axis at center
+        function addRing(center, dir, radius) {
+            let up = Math.abs(dir.y) < 0.99 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+            const right = new THREE.Vector3().crossVectors(dir, up).normalize();
+            up = new THREE.Vector3().crossVectors(right, dir).normalize();
+            const ring = [];
+            for (let j = 0; j < ringSides; j++) {
+                const theta = (j / ringSides) * Math.PI * 2;
+                const cos = Math.cos(theta);
+                const sin = Math.sin(theta);
+                const v = center.clone()
+                    .add(right.clone().multiplyScalar(radius * cos))
+                    .add(up.clone().multiplyScalar(radius * sin));
+                ring.push(vertices.length / 3);
+                vertices.push(v.x, v.y, v.z);
+            }
+            return ring;
+        }
+        // Build trunk as a tube of rings
+        let prevRing = null;
         for (let i = 1; i < this.trunkPath.length; i++) {
             const start = this.trunkPath[i - 1];
             const end = this.trunkPath[i];
-            const cyl = this.cylinderBetween(start, end, this.trunkRadius, trunkMat);
-            group.add(cyl);
+            const dir = new THREE.Vector3().subVectors(end, start).normalize();
+            const ringA = addRing(start, dir, this.trunkRadius);
+            const ringB = addRing(end, dir, this.trunkRadius);
+            trunkRings.push(ringA);
+            if (i === this.trunkPath.length - 1) trunkRings.push(ringB);
+            if (prevRing) {
+                for (let j = 0; j < ringSides; j++) {
+                    const a = prevRing[j];
+                    const b = ringA[j];
+                    const c = ringA[(j + 1) % ringSides];
+                    const d = prevRing[(j + 1) % ringSides];
+                    faces.push(a, b, c);
+                    faces.push(a, c, d);
+                }
+            }
+            prevRing = ringB;
         }
-        // Branches
+        // Build branches as tubes, connect base ring to closest trunk ring
         for (const branch of this.branches) {
+            // Find closest trunk point for branch start
+            let minDist = Infinity;
+            let closestIdx = 0;
+            for (let i = 0; i < this.trunkPath.length; i++) {
+                const d = branch[0].distanceTo(this.trunkPath[i]);
+                if (d < minDist) {
+                    minDist = d;
+                    closestIdx = i;
+                }
+            }
+            // Use the trunk ring at closestIdx as the base for the branch
+            let baseRingCenter = this.trunkPath[closestIdx];
+            let baseRingDir = (closestIdx < this.trunkPath.length - 1)
+                ? new THREE.Vector3().subVectors(this.trunkPath[closestIdx + 1], this.trunkPath[closestIdx]).normalize()
+                : new THREE.Vector3().subVectors(this.trunkPath[closestIdx], this.trunkPath[closestIdx - 1]).normalize();
+            let trunkBaseRing = trunkRings[closestIdx];
+            let branchBaseDir = new THREE.Vector3().subVectors(branch[1], branch[0]).normalize();
+            let branchBaseRing = addRing(branch[0], branchBaseDir, this.trunkRadius * 0.6);
+            // Connect branch base ring to trunk ring
+            for (let j = 0; j < ringSides; j++) {
+                const a = trunkBaseRing[j];
+                const b = branchBaseRing[j];
+                const c = branchBaseRing[(j + 1) % ringSides];
+                const d = trunkBaseRing[(j + 1) % ringSides];
+                faces.push(a, b, c);
+                faces.push(a, c, d);
+            }
+            // Continue branch as tube
+            let prevRing = branchBaseRing;
             for (let i = 1; i < branch.length; i++) {
                 const start = branch[i - 1];
                 const end = branch[i];
-                const cyl = this.cylinderBetween(start, end, this.trunkRadius * 0.6, branchMat);
-                group.add(cyl);
+                const dir = new THREE.Vector3().subVectors(end, start).normalize();
+                const ringB = addRing(end, dir, this.trunkRadius * 0.6);
+                for (let j = 0; j < ringSides; j++) {
+                    const a = prevRing[j];
+                    const b = ringB[j];
+                    const c = ringB[(j + 1) % ringSides];
+                    const d = prevRing[(j + 1) % ringSides];
+                    faces.push(a, b, c);
+                    faces.push(a, c, d);
+                }
+                prevRing = ringB;
             }
         }
-        // Leaves
+        // Create geometry
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.setIndex(faces);
+        geometry.computeVertexNormals();
+        const mesh = new THREE.Mesh(geometry, trunkMat);
+        group.add(mesh);
+        // Leaves (unchanged)
         for (const pos of this.leafClusters) {
-            let mesh;
+            let leafMesh;
             if (this.leafType === 'cone') {
-                mesh = new THREE.Mesh(
+                leafMesh = new THREE.Mesh(
                     new THREE.ConeGeometry(this.leafRadius, this.leafRadius * 2.2, this.leafSegments),
                     leafMat
                 );
-                mesh.position.copy(pos);
-                mesh.position.y += this.leafRadius; // Offset for cone
+                leafMesh.position.copy(pos);
+                leafMesh.position.y += this.leafRadius;
             } else {
-                mesh = new THREE.Mesh(
+                leafMesh = new THREE.Mesh(
                     new THREE.SphereGeometry(this.leafRadius, this.leafSegments, this.leafSegments),
                     leafMat
                 );
-                mesh.position.copy(pos);
+                leafMesh.position.copy(pos);
             }
-            group.add(mesh);
+            group.add(leafMesh);
         }
         return group;
-    }
-
-    // Helper: create a cylinder between two points
-    cylinderBetween(start, end, radius, material) {
-        const dir = new THREE.Vector3().subVectors(end, start);
-        const len = dir.length();
-        const mid = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
-        const cyl = new THREE.Mesh(
-            new THREE.CylinderGeometry(radius, radius, len, 8),
-            material
-        );
-        // Orient the cylinder
-        cyl.position.copy(mid);
-        cyl.quaternion.setFromUnitVectors(
-            new THREE.Vector3(0, 1, 0),
-            dir.clone().normalize()
-        );
-        return cyl;
     }
 }
 

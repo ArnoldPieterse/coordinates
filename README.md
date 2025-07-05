@@ -1,5 +1,9 @@
 # 🌌 Multiplayer Planetary Shooter
 
+> For index reference format, see [INDEX_DESCRIBER.md](./INDEX_DESCRIBER.md)  <!-- IDX-DOC-00 -->
+
+# IDX-DOC-01: Features
+
 A cutting-edge multiplayer first-person shooter game built with Three.js, featuring procedurally generated worlds, mathematical physics integration, and AI-driven gameplay systems.
 
 ## 🚀 Features
@@ -235,6 +239,29 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Issues**: [GitHub Issues](https://github.com/yourusername/multiplayer-planetary-shooter/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/yourusername/multiplayer-planetary-shooter/discussions)
 - **Documentation**: [Wiki](https://github.com/yourusername/multiplayer-planetary-shooter/wiki)
+
+## IDX-TREEHYBRID: Hybrid L-System + Space Colonization Tree Generator
+A new procedural tree generator combines L-Systems for main structure and Space Colonization for fine branching and leaf distribution. See implementation plan in [src/procedural-tree-voxel.js](src/procedural-tree-voxel.js) (IDX-TREEHYBRID-PLAN).
+
+### Approach Overview
+- **L-Systems**: Generate the main tree skeleton and primary branching structure
+- **Space Colonization**: Add fine branches and distribute leaves naturally
+- **Benefits**: Combines structural control with organic distribution
+- **Industry Standard**: Similar to SpeedTree and other professional tools
+
+### Implementation Status
+- [x] Implementation plan documented (IDX-TREEHYBRID-PLAN)
+- [ ] L-System skeleton generation
+- [ ] Space colonization fine branching
+- [ ] Mesh generation and optimization
+- [ ] Parameter controls and presets
+- [ ] Documentation and examples
+
+### Technical Details
+The hybrid approach addresses limitations of single-method approaches:
+- L-Systems alone can be too rigid and predictable
+- Space colonization alone lacks structural control
+- Combined approach provides both control and natural variation
 
 ---
 

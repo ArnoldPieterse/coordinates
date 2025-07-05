@@ -1,5 +1,9 @@
 # Game Describers Documentation Index
 
+> For index reference format, see [../INDEX_DESCRIBER.md](../INDEX_DESCRIBER.md)  <!-- IDX-DOC-00 -->
+
+# IDX-DOC-01: Folder Structure
+
 *Comprehensive documentation system for the Coordinates game project*
 
 ---
@@ -274,4 +278,7 @@ The `game_describers` folder contains comprehensive technical documentation for 
 
 ---
 
-*This documentation index should be updated whenever new documentation is added or the structure changes.* 
+*This documentation index should be updated whenever new documentation is added or the structure changes.*
+
+- IDX-TREEHYBRID: Hybrid L-System + Space Colonization tree generator (see src/procedural-tree-voxel.js for plan and implementation)
+- IDX-GITRULES: Comprehensive git workflow guidelines (see GIT_RULES.md) 

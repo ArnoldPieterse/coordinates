@@ -1,5 +1,9 @@
 # Project Status - Multiplayer Planetary Shooter
 
+> For index reference format, see [INDEX_DESCRIBER.md](./INDEX_DESCRIBER.md)  <!-- IDX-DOC-00 -->
+
+# IDX-DOC-01: Project Overview
+
 *Comprehensive project overview, status, and roadmap*
 
 ---
@@ -165,6 +169,7 @@ A multiplayer third-person shooter game featuring:
 - [ ] **WebGL Optimizations** - Advanced rendering techniques
 - [ ] **Mobile Support** - Touch controls and mobile optimization
 - [ ] **Progressive Web App** - Offline capabilities
+- [ ] IDX-TREEHYBRID: Hybrid L-System + Space Colonization procedural tree generator (see src/procedural-tree-voxel.js)
 
 ### 🔄 Phase 5: Content & Polish (PLANNED)
 - [ ] **Additional Planets** - Jupiter, Saturn, Neptune, Pluto, Asteroid Belt
@@ -254,6 +259,13 @@ A multiplayer third-person shooter game featuring:
 - **AI Response Time**: <2 seconds
 - **Memory Usage**: Optimized object management
 - **Load Times**: Fast startup and transitions
+
+### 📚 Documentation
+- [x] **README.md** - Project overview and setup
+- [x] **CONTRIBUTING.md** - Contribution guidelines
+- [x] **PROJECT_STATUS.md** - Current development status
+- [x] **GIT_RULES.md** - Comprehensive git workflow guidelines (IDX-GITRULES)
+- [x] **INDEX_DESCRIBER.md** - Universal indexing system documentation
 
 ---
 

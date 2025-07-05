@@ -1,5 +1,9 @@
 # 🤝 Contributing to Multiplayer Planetary Shooter
 
+> For index reference format, see [INDEX_DESCRIBER.md](./INDEX_DESCRIBER.md)  <!-- IDX-DOC-00 -->
+
+# IDX-DOC-01: Getting Started
+
 Thank you for your interest in contributing to our project! This document provides guidelines and information for contributors.
 
 ## 📋 Table of Contents
@@ -11,6 +15,8 @@ Thank you for your interest in contributing to our project! This document provid
 - [Pull Request Process](#pull-request-process)
 - [Issue Guidelines](#issue-guidelines)
 - [Community Guidelines](#community-guidelines)
+- [Git Workflow](#git-workflow)
+- [Development Guidelines](#development-guidelines)
 
 ## 🚀 Getting Started
 
@@ -209,4 +215,11 @@ Contributors will be recognized in:
 - Release notes
 - Project documentation
 
-Thank you for contributing to our project! 🚀 
+Thank you for contributing to our project! 🚀
+
+- IDX-TREEHYBRID: For advanced procedural tree generation, see the hybrid L-System + Space Colonization plan in [src/procedural-tree-voxel.js](src/procedural-tree-voxel.js).
+
+## Git Workflow
+Please follow our comprehensive git workflow guidelines in [GIT_RULES.md](GIT_RULES.md) (IDX-GITRULES) for all version control operations.
+
+## Development Guidelines 
