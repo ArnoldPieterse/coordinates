@@ -568,7 +568,13 @@ export class VoxelTree {
             trunkIdx = Math.max(1, Math.min(trunkLen - 2, trunkIdx + Math.floor(this.randomBetween(-1, 2))));
             const trunkBase = this.trunkPath[trunkIdx];
             // Spiral around trunk using golden angle
-            const azimuth = i * goldenAngle;
+            let azimuth = i * goldenAngle;
+            // IDX-TREEPROMPT: Add random azimuthal offset (±60°)
+            azimuth += this.randomBetween(-Math.PI/3, Math.PI/3); // ±60°
+            // For 15% of branches, flip azimuth by 180° for opposite direction
+            if (Math.random() < 0.15) {
+                azimuth += Math.PI;
+            }
             // --- Natural angle randomization ---
             // Lower branches droop more, upper branches more horizontal
             // Mean angle from slider, range ±12°
