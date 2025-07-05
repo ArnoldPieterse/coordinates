@@ -52,7 +52,7 @@ import * as THREE from 'three';
 
 const TREE_TYPES = {
     pine: {
-        trunkHeight: 22,
+        trunkHeight: 10,
         trunkRadius: 0.5,
         trunkCurve: 0.08,
         numBranches: 12,
@@ -60,7 +60,7 @@ const TREE_TYPES = {
         branchLength: 7,
         branchCurve: 0.18,
         branchSpread: Math.PI / 3.5,
-        branchAngleDeg: 60,
+        branchAngleDeg: 95,
         leafRadius: 1.2,
         leafSegments: 4,
         leafType: 'cone',
@@ -69,7 +69,7 @@ const TREE_TYPES = {
         leafColor: 0x2E8B57
     },
     broadleaf: {
-        trunkHeight: 16,
+        trunkHeight: 9,
         trunkRadius: 0.8,
         trunkCurve: 0.18,
         numBranches: 8,
@@ -77,7 +77,7 @@ const TREE_TYPES = {
         branchLength: 8,
         branchCurve: 0.28,
         branchSpread: Math.PI / 2.2,
-        branchAngleDeg: 70,
+        branchAngleDeg: 100,
         leafRadius: 2.5,
         leafSegments: 7,
         leafType: 'sphere',
@@ -86,15 +86,15 @@ const TREE_TYPES = {
         leafColor: 0x228B22
     },
     birch: {
-        trunkHeight: 18,
+        trunkHeight: 10,
         trunkRadius: 0.35,
         trunkCurve: 0.12,
         numBranches: 10,
         branchLevels: 2,
-        branchLength: 6,
+        branchLength: 7,
         branchCurve: 0.22,
         branchSpread: Math.PI / 2.5,
-        branchAngleDeg: 65,
+        branchAngleDeg: 100,
         leafRadius: 0.7,
         leafSegments: 5,
         leafType: 'sphere',
@@ -103,7 +103,7 @@ const TREE_TYPES = {
         leafColor: 0xA7D129
     },
     willow: {
-        trunkHeight: 14,
+        trunkHeight: 8,
         trunkRadius: 0.6,
         trunkCurve: 0.25,
         numBranches: 16,
@@ -111,7 +111,7 @@ const TREE_TYPES = {
         branchLength: 10,
         branchCurve: 0.35,
         branchSpread: Math.PI / 2.8,
-        branchAngleDeg: 80,
+        branchAngleDeg: 110,
         leafRadius: 0.5,
         leafSegments: 4,
         leafType: 'sphere',
@@ -120,15 +120,15 @@ const TREE_TYPES = {
         leafColor: 0x6BAF4B
     },
     palm: {
-        trunkHeight: 24,
+        trunkHeight: 12,
         trunkRadius: 0.4,
         trunkCurve: 0.09,
         numBranches: 7,
         branchLevels: 1,
-        branchLength: 8,
+        branchLength: 10,
         branchCurve: 0.12,
         branchSpread: Math.PI / 1.5,
-        branchAngleDeg: 85,
+        branchAngleDeg: 110,
         leafRadius: 2.2,
         leafSegments: 6,
         leafType: 'cone',
@@ -137,15 +137,15 @@ const TREE_TYPES = {
         leafColor: 0x3B7A57
     },
     cypress: {
-        trunkHeight: 20,
+        trunkHeight: 10,
         trunkRadius: 0.3,
         trunkCurve: 0.05,
         numBranches: 18,
         branchLevels: 2,
-        branchLength: 5,
+        branchLength: 6,
         branchCurve: 0.13,
         branchSpread: Math.PI / 4.5,
-        branchAngleDeg: 60,
+        branchAngleDeg: 95,
         leafRadius: 0.4,
         leafSegments: 3,
         leafType: 'sphere',
@@ -154,15 +154,15 @@ const TREE_TYPES = {
         leafColor: 0x3A5F0B
     },
     maple: {
-        trunkHeight: 15,
+        trunkHeight: 9,
         trunkRadius: 0.7,
         trunkCurve: 0.15,
         numBranches: 11,
         branchLevels: 2,
-        branchLength: 9,
+        branchLength: 8,
         branchCurve: 0.25,
         branchSpread: Math.PI / 2.1,
-        branchAngleDeg: 75,
+        branchAngleDeg: 100,
         leafRadius: 1.8,
         leafSegments: 7,
         leafType: 'sphere',
@@ -524,10 +524,10 @@ export class VoxelTree {
             path.push(pos.clone());
             // Recursively spawn sub-branches
             if (level < this.branchLevels && i > length * 0.4 && Math.random() < 0.18) {
-                // Sub-branch: inherit parent angle, but add small random offset, clamp to 60-85 deg
+                // Sub-branch: inherit parent angle, but add small random offset, clamp to 80-115 deg
                 let baseAngle = (parentAngle !== null ? parentAngle : this.branchAngleRad);
                 let subAngle = baseAngle + this.randomBetween(-Math.PI/18, Math.PI/18);
-                subAngle = Math.max(Math.PI/3, Math.min(subAngle, Math.PI*85/180)); // Clamp 60-85 deg
+                subAngle = Math.max(Math.PI*80/180, Math.min(subAngle, Math.PI*115/180)); // Clamp 80-115 deg
                 const subAzimuth = this.randomBetween(0, Math.PI * 2);
                 const subDir = new THREE.Vector3(
                     Math.sin(subAngle) * Math.cos(subAzimuth),
@@ -549,15 +549,13 @@ export class VoxelTree {
 
     generateBranches() {
         // IDX-TREEPROMPT: Branch placement uses phyllotaxis spiral and realistic elevation angles.
-        // Angle is measured from vertical (Y axis). 90 deg = horizontal, 0 deg = vertical.
-        // TODO (IDX-TREEPROMPT): Implement species-specific whorled branch patterns.
-        // TODO (IDX-TREEPROMPT): Add branch thickness tapering by order/length.
-        // TODO (IDX-TREEPROMPT): Add phototropism (branches curve toward light).
-        // TODO (IDX-TREEPROMPT): Improve leaf clustering at branch tips.
+        // Angle is measured from vertical (Y axis). 90 deg = horizontal, >90 deg = drooping downward.
+        // TODO (IDX-TREEPROMPT): Implement species-specific droopiness.
+        // TODO (IDX-TREEPROMPT): Add dynamic trunk/branch ratio by species/age.
         const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.399 rad
-        let branchAngleRad = (this.branchAngleDeg || 70) * Math.PI / 180;
-        // Clamp to 60-85 deg for realism
-        branchAngleRad = Math.max(Math.PI/3, Math.min(branchAngleRad, Math.PI*85/180));
+        let branchAngleRad = (this.branchAngleDeg || 100) * Math.PI / 180;
+        // Clamp to 80-115 deg for realism (drooping allowed)
+        branchAngleRad = Math.max(Math.PI*80/180, Math.min(branchAngleRad, Math.PI*115/180));
         this.branchAngleRad = branchAngleRad; // For sub-branches
         const baseLength = this.branchLength * 1.2; // Slightly longer for main branches
         const trunkLen = this.trunkPath.length;
