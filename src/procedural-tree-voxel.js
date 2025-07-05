@@ -4,6 +4,7 @@
 // Generates a 3D voxel matrix for trunk, branches, and leaves, then creates a mesh with smooth branch-to-trunk connections
 // IDX-TREEVOX-02: Voxel Matrix Generation
 // IDX-TREEHYBRID-PLAN: Hybrid L-System + Space Colonization Tree Generator
+// See PROMPTS.md for biological realism prompt
 //
 // ## Overview
 // This module will implement a procedural tree generator that combines:
@@ -49,6 +50,8 @@
 // ---
 // The following code will implement these steps sequentially, using the IDX-TREEHYBRID index for traceability.
 import * as THREE from 'three';
+import TreeOptions from './tree-options.js';
+import { Branch } from './branch.js';
 
 const TREE_TYPES = {
     pine: {
@@ -225,61 +228,36 @@ class LSystemSkeleton {
     interpretChar(char) {
         switch (char) {
             case 'F':
-                // Move forward and create segment
+                // Move forward and create a segment
                 const endPos = this.currentPos.clone().add(
                     this.currentDir.clone().multiplyScalar(this.currentLength)
                 );
-                
-                // Apply tropism (bend toward light/gravity)
-                const tropismInfluence = this.tropism.clone()
-                    .sub(this.currentDir)
-                    .multiplyScalar(this.tropismStrength);
-                this.currentDir.add(tropismInfluence).normalize();
-                
-                // Add randomness
-                this.currentDir.x += (Math.random() - 0.5) * this.randomness;
-                this.currentDir.y += (Math.random() - 0.5) * this.randomness;
-                this.currentDir.z += (Math.random() - 0.5) * this.randomness;
-                this.currentDir.normalize();
-                
                 this.segments.push({
                     start: this.currentPos.clone(),
-                    end: endPos.clone(),
-                    length: this.currentLength,
-                    radius: this.currentLength * 0.1 // Proportional radius
+                    end: endPos,
+                    direction: this.currentDir.clone(),
+                    length: this.currentLength
                 });
-                
                 this.currentPos.copy(endPos);
                 break;
-                
             case '+':
-                // Turn right (positive rotation around Y axis)
-                this.currentDir.applyAxisAngle(
-                    new THREE.Vector3(0, 1, 0),
-                    this.angle + (Math.random() - 0.5) * this.randomness
-                );
+                // Turn right
+                this.currentDir.applyAxisAngle(new THREE.Vector3(0, 0, 1), this.angle);
                 break;
-                
             case '-':
-                // Turn left (negative rotation around Y axis)
-                this.currentDir.applyAxisAngle(
-                    new THREE.Vector3(0, 1, 0),
-                    -this.angle + (Math.random() - 0.5) * this.randomness
-                );
+                // Turn left
+                this.currentDir.applyAxisAngle(new THREE.Vector3(0, 0, 1), -this.angle);
                 break;
-                
             case '[':
-                // Save state (branch)
+                // Save state
                 this.stack.push({
                     pos: this.currentPos.clone(),
                     dir: this.currentDir.clone(),
                     length: this.currentLength
                 });
-                this.currentLength *= this.lengthFactor;
                 break;
-                
             case ']':
-                // Restore state (end branch)
+                // Restore state
                 if (this.stack.length > 0) {
                     const state = this.stack.pop();
                     this.currentPos.copy(state.pos);
@@ -435,58 +413,37 @@ class SpaceColonization {
 }
 
 export class VoxelTree {
-    constructor({ geneMap = {}, useHybrid = true, ...params } = {}) {
-        // Determine tree type and merge geneMap with defaults
-        const type = geneMap.type || 'broadleaf';
-        const base = TREE_TYPES[type] || TREE_TYPES.broadleaf;
-        const genes = { ...base, ...geneMap, ...params };
+    constructor(options = new TreeOptions()) {
+        // IDX-TREEVOX-03: Modular Tree Options Integration
+        this.options = options;
+        this.seed = options.seed || 0;
+        this.type = options.type || 'broadleaf';
         
-        // Traditional parameters
-        this.trunkHeight = genes.trunkHeight;
-        this.trunkRadius = genes.trunkRadius;
-        this.trunkCurve = genes.trunkCurve;
-        this.numBranches = genes.numBranches;
-        this.branchLevels = genes.branchLevels;
-        this.branchLength = genes.branchLength;
-        this.branchCurve = genes.branchCurve;
-        this.branchSpread = genes.branchSpread;
-        this.leafRadius = genes.leafRadius;
-        this.leafSegments = genes.leafSegments;
-        this.leafType = genes.leafType;
-        this.trunkColor = genes.trunkColor;
-        this.branchColor = genes.branchColor;
-        this.leafColor = genes.leafColor;
-        this.randomness = genes.randomness ?? 0.22;
+        // Initialize with options
+        this.trunkHeight = options.branch.length[0] || 20;
+        this.trunkRadius = options.branch.radius[0] || 1.5;
+        this.numBranches = options.branch.children[0] || 7;
+        this.branchLevels = options.branch.levels || 3;
+        this.branchLength = options.branch.length[1] || 20;
+        this.branchAngleDeg = options.branch.angle[1] || 70;
         
-        // Hybrid approach parameters
-        this.useHybrid = useHybrid;
-        this.lSystemParams = genes.lSystemParams || {
-            axiom: 'F',
-            rules: { 'F': 'FF+[+F-F-F]-[-F+F+F]' },
-            iterations: 4,
-            angle: Math.PI / 6,
-            length: 2.0,
-            lengthFactor: 0.7,
-            tropismStrength: 0.1,
-            randomness: 0.1
-        };
-        this.spaceColonizationParams = genes.spaceColonizationParams || {
-            influenceRadius: 2.0,
-            killRadius: 0.5,
-            stepSize: 0.5,
-            pointDensity: 0.1,
-            maxIterations: 100,
-            minSegmentLength: 0.1
-        };
+        // Legacy compatibility
+        this.useHybrid = true;
+        this.geneMap = {};
         
-        // Data structures
+        // Initialize data structures
         this.trunkPath = [];
         this.branches = [];
         this.leafClusters = [];
-        this.lSystemSkeleton = null;
-        this.spaceColonization = null;
-        this.hybridSegments = [];
         
+        // L-System and Space Colonization
+        this.lSystemParams = {
+            angle: this.branchAngleDeg * Math.PI / 180,
+            iterations: Math.max(2, Math.min(4, Math.floor(this.trunkHeight / 5)))
+        };
+        this.spaceColonizationParams = {};
+        
+        // Generate the tree
         this.generate();
     }
 
@@ -514,10 +471,9 @@ export class VoxelTree {
         let path = [start.clone()];
         let dir = direction.clone().normalize();
         let pos = start.clone();
-        // IDX-TREEPROMPT: Increase branchCurve for more arching branches
+        // Restore naturalistic curve and sub-branching
         const curve = this.branchCurve * 1.5;
         for (let i = 1; i <= length; i++) {
-            // Curve the branch more for realism
             dir.x += this.randomBetween(-curve * 0.3, curve * 0.3);
             dir.y += this.randomBetween(-curve * 0.15, curve * 0.15);
             dir.z += this.randomBetween(-curve * 0.3, curve * 0.3);
@@ -526,10 +482,9 @@ export class VoxelTree {
             path.push(pos.clone());
             // Recursively spawn sub-branches
             if (level < this.branchLevels && i > length * 0.4 && Math.random() < 0.18) {
-                // Sub-branch: inherit parent angle, but add small random offset, clamp to 100-115 deg
                 let baseAngle = (parentAngle !== null ? parentAngle : this.branchAngleRad);
                 let subAngle = baseAngle + this.randomBetween(-Math.PI/18, Math.PI/18);
-                subAngle = Math.max(Math.PI*100/180, Math.min(subAngle, Math.PI*115/180)); // Clamp 100-115 deg
+                subAngle = Math.max(Math.PI*100/180, Math.min(subAngle, Math.PI*125/180));
                 const subAzimuth = this.randomBetween(0, Math.PI * 2);
                 const subDir = new THREE.Vector3(
                     Math.sin(subAngle) * Math.cos(subAzimuth),
@@ -542,7 +497,6 @@ export class VoxelTree {
                 );
             }
         }
-        // Only add leaf cluster at the end of terminal branches
         if (level === this.branchLevels) {
             this.leafClusters.push(pos.clone());
         }
@@ -550,77 +504,131 @@ export class VoxelTree {
     }
 
     generateBranches() {
-        // IDX-TREEPROMPT: Branch placement uses phyllotaxis spiral and realistic elevation angles.
-        // Angle is measured from vertical (Y axis). 90 deg = horizontal, >90 deg = drooping downward.
-        // Now: Each branch gets a random angle in a range, lower branches droop more.
-        const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~2.399 rad
-        let branchAngleRad = (this.branchAngleDeg || 110) * Math.PI / 180;
-        // Clamp to 100-125 deg for realism (drooping allowed)
-        branchAngleRad = Math.max(Math.PI*100/180, Math.min(branchAngleRad, Math.PI*125/180));
-        this.branchAngleRad = branchAngleRad; // For sub-branches
-        const baseLength = this.branchLength * 1.2; // Slightly longer for main branches
+        // IDX-TREEVOX-04: Recursive Branch Generation
+        // Biologically accurate branch placement using golden angle and height-based angles
+        const goldenAngle = Math.PI * (3 - Math.sqrt(5)); // ~137.5°
         const trunkLen = this.trunkPath.length;
-        for (let i = 0; i < this.numBranches; i++) {
-            // Evenly space branches vertically, with slight random offset
-            const t = (i + 0.5) / this.numBranches;
-            let trunkIdx = Math.floor(t * (trunkLen - 1));
-            // Add a small random vertical offset to branch base
-            trunkIdx = Math.max(1, Math.min(trunkLen - 2, trunkIdx + Math.floor(this.randomBetween(-1, 2))));
-            const trunkBase = this.trunkPath[trunkIdx];
-            // Spiral around trunk using golden angle
-            let azimuth = i * goldenAngle;
-            // IDX-TREEPROMPT: Add random azimuthal offset (±60°)
-            azimuth += this.randomBetween(-Math.PI/3, Math.PI/3); // ±60°
-            // For 15% of branches, flip azimuth by 180° for opposite direction
-            if (Math.random() < 0.15) {
-                azimuth += Math.PI;
-            }
-            // --- Natural angle randomization ---
-            // Lower branches droop more, upper branches more horizontal
-            // Mean angle from slider, range ±12°
-            let angleSpread = Math.PI * 12 / 180; // ±12°
-            let meanAngle = branchAngleRad;
-            // Bias: lower branches (t near 0) droop more, upper (t near 1) less
-            let bias = (1 - t) * angleSpread; // more droop for lower
-            let angle = meanAngle + bias + this.randomBetween(-angleSpread, angleSpread);
-            // Clamp to 100–125 deg
-            angle = Math.max(Math.PI*100/180, Math.min(angle, Math.PI*125/180));
-            // Offset branch base outward from trunk axis (IDX-TREEPROMPT)
-            const outward = new THREE.Vector3(Math.cos(azimuth), 0, Math.sin(azimuth)).normalize();
-            const baseOffset = outward.clone().multiplyScalar(this.trunkRadius * 1.1 + 0.1 * this.randomBetween(0.8, 1.2));
-            const start = trunkBase.clone().add(baseOffset);
-            // Spherical to Cartesian (angle from vertical)
-            const dir = new THREE.Vector3(
-                Math.sin(angle) * Math.cos(azimuth),
-                Math.cos(angle),
-                Math.sin(angle) * Math.sin(azimuth)
-            ).normalize();
-            // Allometric scaling: longer branches lower, shorter higher
-            const heightFrac = t;
-            const length = Math.floor(baseLength * (1 - 0.4 * heightFrac) * this.randomBetween(0.9, 1.1));
-            this.branches.push(this.generateBranch(start, dir, length, 1, angle));
+        
+        // Start with trunk as root branch
+        const rootBranch = new Branch(
+            new THREE.Vector3(0, 0, 0),
+            new THREE.Euler(0, 0, 0),
+            this.trunkHeight,
+            this.trunkRadius,
+            0,
+            this.options.branch.sections[0] || 12,
+            this.options.branch.segments[0] || 8
+        );
+        
+        // Generate branches recursively
+        this.generateBranchRecursive(rootBranch);
+        
+        // Extract branch paths for compatibility
+        this.branches = this.extractBranchPaths(rootBranch);
+    }
+
+    generateBranchRecursive(branch) {
+        const level = branch.level;
+        const maxLevels = this.options.branch.levels;
+        
+        if (level >= maxLevels) {
+            // Terminal branch - add leaf cluster
+            const endPos = branch.origin.clone().add(
+                new THREE.Vector3(0, branch.length, 0).applyEuler(branch.orientation)
+            );
+            this.leafClusters.push(endPos);
+            return;
+        }
+        
+        // Generate child branches
+        const childCount = this.options.branch.children[level] || 3;
+        const radialOffset = Math.random() * Math.PI * 2;
+        
+        for (let i = 0; i < childCount; i++) {
+            // Calculate child branch parameters
+            const radialAngle = 2.0 * Math.PI * (radialOffset + i / childCount);
+            const childStart = this.options.branch.start[level + 1] || 0.4;
+            const childLength = this.options.branch.length[level + 1] || branch.length * 0.7;
+            const childRadius = this.options.branch.radius[level + 1] || branch.radius * 0.5;
+            
+            // Calculate child origin (along parent branch)
+            const childOrigin = branch.origin.clone().add(
+                new THREE.Vector3(0, branch.length * childStart, 0).applyEuler(branch.orientation)
+            );
+            
+            // Calculate child orientation
+            const childAngle = this.options.branch.angle[level + 1] || 60;
+            const q1 = new THREE.Quaternion().setFromAxisAngle(
+                new THREE.Vector3(1, 0, 0),
+                childAngle * Math.PI / 180
+            );
+            const q2 = new THREE.Quaternion().setFromAxisAngle(
+                new THREE.Vector3(0, 1, 0),
+                radialAngle
+            );
+            const q3 = new THREE.Quaternion().setFromEuler(branch.orientation);
+            
+            const childOrientation = new THREE.Euler().setFromQuaternion(
+                q3.multiply(q2.multiply(q1))
+            );
+            
+            // Create child branch
+            const childBranch = new Branch(
+                childOrigin,
+                childOrientation,
+                childLength,
+                childRadius,
+                level + 1,
+                this.options.branch.sections[level + 1] || 8,
+                this.options.branch.segments[level + 1] || 6
+            );
+            
+            branch.children.push(childBranch);
+            
+            // Recursively generate children
+            this.generateBranchRecursive(childBranch);
         }
     }
 
-    generate() {
-        if (this.useHybrid) {
-            // Use hybrid L-System + Space Colonization approach
-            this.generateHybrid();
-        } else {
-            // Use traditional approach
-            this.trunkPath = [];
-            this.branches = [];
-            this.leafClusters = [];
-            this.generateTrunk();
-            this.generateBranches();
+    extractBranchPaths(branch) {
+        const paths = [];
+        
+        function extractBranch(branch) {
+            // Generate path for this branch
+            const path = [];
+            const dir = new THREE.Vector3(0, 1, 0).applyEuler(branch.orientation);
+            let pos = branch.origin.clone();
+            
+            for (let i = 0; i <= branch.sectionCount; i++) {
+                path.push(pos.clone());
+                pos.add(dir.clone().multiplyScalar(branch.length / branch.sectionCount));
+            }
+            
+            paths.push({ path, angle: branch.orientation.x });
+            
+            // Extract children
+            for (let child of branch.children) {
+                extractBranch(child);
+            }
         }
+        
+        extractBranch(branch);
+        return paths;
+    }
+
+    generate() {
+        // IDX-TREEVOX-05: Modular Tree Generation
+        this.generateTrunk();
+        this.generateBranches();
     }
 
     // Helper: get branch tip directions for leaf orientation
     getLeafTipDirections() {
         const tips = [];
         if (this.branches && this.branches.length > 0) {
-            for (const branch of this.branches) {
+            for (const branchObj of this.branches) {
+                const branch = branchObj.path || branchObj;
+                const angle = branchObj.angle !== undefined ? branchObj.angle : null;
                 if (branch.length > 1) {
                     const tip = branch[branch.length - 1];
                     const prev = branch[branch.length - 2];
@@ -690,7 +698,6 @@ export class VoxelTree {
     toSkeleton({ colorTrunk = 0x8B4513, colorBranch = 0x228B22, lineWidth = 2 } = {}) {
         const group = new THREE.Group();
         const trunkMat = new THREE.LineBasicMaterial({ color: colorTrunk, linewidth: lineWidth });
-        const branchMat = new THREE.LineBasicMaterial({ color: colorBranch, linewidth: lineWidth });
         // Trunk
         if (this.trunkPath && this.trunkPath.length > 1) {
             const trunkGeom = new THREE.BufferGeometry().setFromPoints(this.trunkPath);
@@ -699,8 +706,18 @@ export class VoxelTree {
         }
         // Branches
         if (this.branches && this.branches.length > 0) {
-            for (const branch of this.branches) {
+            for (const branchObj of this.branches) {
+                const branch = branchObj.path || branchObj;
+                const angle = branchObj.angle !== undefined ? branchObj.angle : null;
                 if (branch.length > 1) {
+                    // Color code: blue (upward, <110°), green (110–130°), red (>130°)
+                    let color = 0x00ff00; // default green
+                    if (angle !== null) {
+                        const deg = angle * 180 / Math.PI;
+                        if (deg < 110) color = 0x0000ff; // blue
+                        else if (deg > 130) color = 0xff0000; // red
+                    }
+                    const branchMat = new THREE.LineBasicMaterial({ color, linewidth: lineWidth });
                     const branchGeom = new THREE.BufferGeometry().setFromPoints(branch);
                     const branchLine = new THREE.Line(branchGeom, branchMat);
                     group.add(branchLine);
@@ -712,306 +729,203 @@ export class VoxelTree {
 
     // IDX-TREEVOX-TRIWRAP: Polygonal ring mesh for trunk/branches (matches sketch)
     toMesh({ ringSides = 3, useHybrid = null, debugSkeleton = false } = {}) {
-        if (debugSkeleton) return this.toSkeleton();
-        // Use hybrid mesh if hybrid approach was used or explicitly requested
-        if (useHybrid === true || (useHybrid === null && this.useHybrid)) {
-            return this.toMeshHybrid({ ringSides });
-        }
+        // IDX-TREEVOX-07: Updated Mesh Generation
         const group = new THREE.Group();
-        const trunkMat = new THREE.MeshStandardMaterial({ color: this.trunkColor });
-        const leafMat = new THREE.MeshStandardMaterial({ color: this.leafColor });
-        let vertices = [];
-        let faces = [];
-        let trunkRings = [];
-        // Helper: generate a ring of N vertices around axis at center
-        function addRing(center, dir, radius) {
-            let up = Math.abs(dir.y) < 0.99 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
-            const right = new THREE.Vector3().crossVectors(dir, up).normalize();
-            up = new THREE.Vector3().crossVectors(right, dir).normalize();
-            const ring = [];
-            for (let j = 0; j < ringSides; j++) {
-                const theta = (j / ringSides) * Math.PI * 2;
-                const cos = Math.cos(theta);
-                const sin = Math.sin(theta);
-                const v = center.clone()
-                    .add(right.clone().multiplyScalar(radius * cos))
-                    .add(up.clone().multiplyScalar(radius * sin));
-                ring.push(v.x, v.y, v.z);
-            }
-            return ring;
+        
+        if (debugSkeleton) {
+            // Add skeleton visualization
+            const skeleton = this.toSkeleton();
+            group.add(skeleton);
+        } else {
+            // Create separated meshes
+            const branchesGeometry = this.createBranchesGeometry();
+            const leavesGeometry = this.createLeavesGeometry();
+            
+            // Create materials
+            const branchMaterial = new THREE.MeshLambertMaterial({ 
+                color: this.options.bark.tint || 0x8B4513 
+            });
+            const leafMaterial = new THREE.MeshLambertMaterial({ 
+                color: this.options.leaves.tint || 0x228B22,
+                transparent: true,
+                alphaTest: this.options.leaves.alphaTest || 0.5
+            });
+            
+            // Create meshes
+            const branchesMesh = new THREE.Mesh(branchesGeometry, branchMaterial);
+            const leavesMesh = new THREE.Mesh(leavesGeometry, leafMaterial);
+            
+            group.add(branchesMesh);
+            group.add(leavesMesh);
         }
-        // Build trunk as a tube of rings with tapering
-        let prevRing = null;
-        const trunkBaseRadius = this.trunkRadius;
-        const trunkTipRadius = Math.max(0.1 * this.trunkRadius, 0.02);
-        const trunkLen = this.trunkPath.length;
-        for (let i = 1; i < trunkLen; i++) {
-            const start = this.trunkPath[i - 1];
-            const end = this.trunkPath[i];
-            const dir = new THREE.Vector3().subVectors(end, start).normalize();
-            const tA = (i - 1) / (trunkLen - 1);
-            const tB = i / (trunkLen - 1);
-            const rA = trunkBaseRadius * (1 - tA) + trunkTipRadius * tA;
-            const rB = trunkBaseRadius * (1 - tB) + trunkTipRadius * tB;
-            const ringA = addRing(start, dir, rA);
-            const ringB = addRing(end, dir, rB);
-            trunkRings.push(ringA);
-            if (i === trunkLen - 1) trunkRings.push(ringB);
-            if (prevRing) {
-                for (let j = 0; j < ringSides; j++) {
-                    const a = prevRing[j];
-                    const b = ringA[j];
-                    const c = ringA[(j + 1) % ringSides];
-                    const d = prevRing[(j + 1) % ringSides];
-                    faces.push(a, b, c);
-                    faces.push(a, c, d);
-                }
-            }
-            prevRing = ringB;
-        }
-        // Build branches as tubes with tapering, connect base ring to closest trunk ring
-        for (const branch of this.branches) {
-            // Find closest trunk point for branch start
-            let minDist = Infinity;
-            let closestIdx = 0;
-            for (let i = 0; i < this.trunkPath.length; i++) {
-                const d = branch[0].distanceTo(this.trunkPath[i]);
-                if (d < minDist) {
-                    minDist = d;
-                    closestIdx = i;
-                }
-            }
-            // Use the trunk ring at closestIdx as the base for the branch
-            let baseRingCenter = this.trunkPath[closestIdx];
-            let baseRingDir = (closestIdx < this.trunkPath.length - 1)
-                ? new THREE.Vector3().subVectors(this.trunkPath[closestIdx + 1], this.trunkPath[closestIdx]).normalize()
-                : new THREE.Vector3().subVectors(this.trunkPath[closestIdx], this.trunkPath[closestIdx - 1]).normalize();
-            let trunkBaseRing = trunkRings[closestIdx];
-            let branchBaseDir = new THREE.Vector3().subVectors(branch[1], branch[0]).normalize();
-            const branchBaseRadius = this.trunkRadius * 0.6;
-            const branchTipRadius = Math.max(branchBaseRadius * 0.2, 0.01);
-            let branchBaseRing = addRing(branch[0], branchBaseDir, branchBaseRadius);
-            // Connect branch base ring to trunk ring with smoothing
-            this.createSmoothedJunction(
-                trunkBaseRing, branchBaseRing,
-                baseRingCenter, branch[0],
-                baseRingDir, branchBaseDir,
-                trunkBaseRadius, branchBaseRadius,
-                ringSides, addRing, vertices, faces, 2
-            );
-            // Continue branch as tube with tapering
-            let prevRing = branchBaseRing;
-            const branchLen = branch.length;
-            for (let i = 1; i < branchLen; i++) {
-                const start = branch[i - 1];
-                const end = branch[i];
-                const dir = new THREE.Vector3().subVectors(end, start).normalize();
-                const tA = (i - 1) / (branchLen - 1);
-                const tB = i / (branchLen - 1);
-                const rA = branchBaseRadius * (1 - tA) + branchTipRadius * tA;
-                const rB = branchBaseRadius * (1 - tB) + branchTipRadius * tB;
-                const ringB = addRing(end, dir, rB);
-                for (let j = 0; j < ringSides; j++) {
-                    const a = prevRing[j];
-                    const b = ringB[j];
-                    const c = ringB[(j + 1) % ringSides];
-                    const d = prevRing[(j + 1) % ringSides];
-                    faces.push(a, b, c);
-                    faces.push(a, c, d);
-                }
-                prevRing = ringB;
-            }
-        }
-        // Create geometry
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-        geometry.setIndex(faces);
-        geometry.computeVertexNormals();
-        const mesh = new THREE.Mesh(geometry, trunkMat);
-        group.add(mesh);
-        // Leaves (instanced quads at branch tips)
-        const leafTips = this.getLeafTipDirections();
-        if (leafTips.length > 0) {
-            const leafMat = new THREE.MeshStandardMaterial({ color: this.leafColor, side: THREE.DoubleSide });
-            const instancedLeaves = this.createInstancedLeaves(leafTips, leafMat, this.leafRadius);
-            group.add(instancedLeaves);
-        }
+        
         return group;
     }
 
-    // IDX-TREEHYBRID-03: Generate tree using hybrid L-System + Space Colonization approach
-    generateHybrid() {
-        // Step 1: Generate L-System skeleton
-        this.lSystemSkeleton = new LSystemSkeleton(this.lSystemParams);
-        const skeletonSegments = this.lSystemSkeleton.generate();
+    createCompleteTreeMesh() {
+        // IDX-TREEVOX-08: Complete Tree Mesh Creation
+        const group = new THREE.Group();
         
-        // Step 2: Calculate crown parameters for space colonization
-        const crownCenter = new THREE.Vector3(0, this.trunkHeight * 0.7, 0);
-        const crownRadius = this.trunkHeight * 0.4;
-        const crownHeight = this.trunkHeight * 0.6;
+        // Create branches mesh
+        const branchesGeometry = this.createBranchesGeometry();
+        const branchMaterial = new THREE.MeshLambertMaterial({ 
+            color: this.options.bark.tint || 0x8B4513 
+        });
+        const branchesMesh = new THREE.Mesh(branchesGeometry, branchMaterial);
+        group.add(branchesMesh);
         
-        // Step 3: Generate fine branches using space colonization
-        this.spaceColonization = new SpaceColonization(this.spaceColonizationParams);
-        const fineBranches = this.spaceColonization.generate(
-            skeletonSegments, 
-            crownCenter, 
-            crownRadius, 
-            crownHeight
-        );
+        // Create leaves mesh
+        const leavesGeometry = this.createLeavesGeometry();
+        const leafMaterial = new THREE.MeshLambertMaterial({ 
+            color: this.options.leaves.tint || 0x228B22,
+            transparent: true,
+            alphaTest: this.options.leaves.alphaTest || 0.5
+        });
+        const leavesMesh = new THREE.Mesh(leavesGeometry, leafMaterial);
+        group.add(leavesMesh);
         
-        // Step 4: Combine skeleton and fine branches
-        this.hybridSegments = [
-            ...skeletonSegments.map(seg => ({ ...seg, type: 'skeleton' })),
-            ...fineBranches.map(branch => ({ 
-                start: branch.start,
-                end: branch.end,
-                length: branch.length,
-                radius: branch.radius,
-                type: 'fine'
-            }))
+        return group;
+    }
+
+    // IDX-TREEVOX-06: Separated Mesh Generation
+    createBranchesGeometry() {
+        const geometry = new THREE.BufferGeometry();
+        const vertices = [];
+        const indices = [];
+        const normals = [];
+        const uvs = [];
+        
+        // Generate trunk geometry
+        this.generateBranchGeometry(this.trunkPath, this.trunkRadius, vertices, indices, normals, uvs);
+        
+        // Generate branch geometry
+        for (let branch of this.branches) {
+            const branchRadius = this.options.branch.radius[branch.level || 1] || 0.7;
+            this.generateBranchGeometry(branch.path, branchRadius, vertices, indices, normals, uvs);
+        }
+        
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+        geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+        geometry.setIndex(indices);
+        
+        return geometry;
+    }
+
+    createLeavesGeometry() {
+        const geometry = new THREE.BufferGeometry();
+        const vertices = [];
+        const indices = [];
+        const normals = [];
+        const uvs = [];
+        
+        for (let leafPos of this.leafClusters) {
+            this.generateLeafGeometry(leafPos, vertices, indices, normals, uvs);
+        }
+        
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+        geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+        geometry.setIndex(indices);
+        
+        return geometry;
+    }
+
+    generateBranchGeometry(path, radius, vertices, indices, normals, uvs) {
+        if (path.length < 2) return;
+        
+        const ringSides = 8;
+        const rings = [];
+        
+        // Generate rings along the path
+        for (let i = 0; i < path.length; i++) {
+            const center = path[i];
+            const dir = i < path.length - 1 ? 
+                path[i + 1].clone().sub(center).normalize() : 
+                path[i].clone().sub(path[i - 1]).normalize();
+            
+            const ring = this.generateRing(center, dir, radius * (1 - i / path.length), ringSides);
+            rings.push(ring);
+        }
+        
+        // Connect rings with triangles
+        for (let i = 0; i < rings.length - 1; i++) {
+            this.connectRings(rings[i], rings[i + 1], vertices, indices, normals, uvs);
+        }
+    }
+
+    generateRing(center, dir, radius, sides) {
+        const ring = [];
+        const up = new THREE.Vector3(0, 1, 0);
+        const right = new THREE.Vector3().crossVectors(dir, up).normalize();
+        up.crossVectors(right, dir).normalize();
+        
+        for (let i = 0; i < sides; i++) {
+            const angle = (2 * Math.PI * i) / sides;
+            const offset = right.clone().multiplyScalar(Math.cos(angle) * radius)
+                .add(up.clone().multiplyScalar(Math.sin(angle) * radius));
+            ring.push(center.clone().add(offset));
+        }
+        
+        return ring;
+    }
+
+    connectRings(ringA, ringB, vertices, indices, normals, uvs) {
+        const baseIndex = vertices.length / 3;
+        
+        // Add vertices
+        for (let vertex of ringA) {
+            vertices.push(vertex.x, vertex.y, vertex.z);
+        }
+        for (let vertex of ringB) {
+            vertices.push(vertex.x, vertex.y, vertex.z);
+        }
+        
+        // Add triangles
+        for (let i = 0; i < ringA.length; i++) {
+            const next = (i + 1) % ringA.length;
+            
+            // First triangle
+            indices.push(baseIndex + i, baseIndex + next, baseIndex + ringA.length + i);
+            
+            // Second triangle
+            indices.push(baseIndex + next, baseIndex + ringA.length + next, baseIndex + ringA.length + i);
+        }
+        
+        // Add normals and UVs (simplified)
+        for (let i = 0; i < ringA.length * 2; i++) {
+            normals.push(0, 1, 0);
+            uvs.push(i / ringA.length, i % 2);
+        }
+    }
+
+    generateLeafGeometry(leafPos, vertices, indices, normals, uvs) {
+        const leafSize = this.options.leaves.size || 2.5;
+        const baseIndex = vertices.length / 3;
+        
+        // Simple quad leaf
+        const leafVerts = [
+            new THREE.Vector3(-leafSize/2, 0, 0),
+            new THREE.Vector3(leafSize/2, 0, 0),
+            new THREE.Vector3(leafSize/2, leafSize, 0),
+            new THREE.Vector3(-leafSize/2, leafSize, 0)
         ];
         
-        // Step 5: Generate leaf clusters at fine branch tips
-        this.leafClusters = fineBranches
-            .filter(branch => !branch.active) // Terminal branches
-            .map(branch => branch.end.clone());
+        // Add vertices
+        for (let vertex of leafVerts) {
+            vertex.add(leafPos);
+            vertices.push(vertex.x, vertex.y, vertex.z);
+        }
         
-        return this.hybridSegments;
-    }
-
-    // IDX-TREEHYBRID-04: Mesh generation for hybrid L-System + Space Colonization approach
-    toMeshHybrid({ ringSides = 6, debugSkeleton = false } = {}) {
-        if (debugSkeleton) return this.toSkeleton();
-        if (!this.hybridSegments || this.hybridSegments.length === 0) {
-            console.warn('No hybrid segments available. Call generateHybrid() first.');
-            return new THREE.Group();
+        // Add triangles
+        indices.push(baseIndex, baseIndex + 1, baseIndex + 2);
+        indices.push(baseIndex, baseIndex + 2, baseIndex + 3);
+        
+        // Add normals and UVs
+        for (let i = 0; i < 4; i++) {
+            normals.push(0, 0, 1);
+            uvs.push(i % 2, Math.floor(i / 2));
         }
-
-        const group = new THREE.Group();
-        const skeletonMat = new THREE.MeshStandardMaterial({ 
-            color: this.trunkColor,
-            roughness: 0.8,
-            metalness: 0.1
-        });
-        const fineBranchMat = new THREE.MeshStandardMaterial({ 
-            color: this.branchColor,
-            roughness: 0.9,
-            metalness: 0.0
-        });
-        const leafMat = new THREE.MeshStandardMaterial({ 
-            color: this.leafColor,
-            roughness: 0.3,
-            metalness: 0.0
-        });
-
-        let vertices = [];
-        let faces = [];
-        let vertexIndex = 0;
-
-        // Helper: generate a ring of vertices around axis at center
-        function addRing(center, dir, radius, ringSides) {
-            let up = Math.abs(dir.y) < 0.99 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
-            const right = new THREE.Vector3().crossVectors(dir, up).normalize();
-            up = new THREE.Vector3().crossVectors(right, dir).normalize();
-            
-            const ring = [];
-            for (let j = 0; j < ringSides; j++) {
-                const theta = (j / ringSides) * Math.PI * 2;
-                const cos = Math.cos(theta);
-                const sin = Math.sin(theta);
-                const v = center.clone()
-                    .add(right.clone().multiplyScalar(radius * cos))
-                    .add(up.clone().multiplyScalar(radius * sin));
-                
-                ring.push(vertexIndex++);
-                vertices.push(v.x, v.y, v.z);
-            }
-            return ring;
-        }
-
-        // Helper: connect two rings with triangles
-        function connectRings(ringA, ringB, ringSides) {
-            for (let j = 0; j < ringSides; j++) {
-                const a = ringA[j];
-                const b = ringB[j];
-                const c = ringB[(j + 1) % ringSides];
-                const d = ringA[(j + 1) % ringSides];
-                faces.push(a, b, c);
-                faces.push(a, c, d);
-            }
-        }
-
-        // Group segments by type for different materials
-        const skeletonSegments = this.hybridSegments.filter(seg => seg.type === 'skeleton');
-        const fineSegments = this.hybridSegments.filter(seg => seg.type === 'fine');
-
-        // Process skeleton segments (main structure) with tapering
-        if (skeletonSegments.length > 0) {
-            let skeletonVertices = [];
-            let skeletonFaces = [];
-            let skeletonVertexIndex = 0;
-
-            for (const segment of skeletonSegments) {
-                const dir = new THREE.Vector3().subVectors(segment.end, segment.start).normalize();
-                const baseRadius = segment.radius;
-                const tipRadius = Math.max(baseRadius * 0.2, 0.01);
-                const ringA = addRing(segment.start, dir, baseRadius, ringSides);
-                const ringB = addRing(segment.end, dir, tipRadius, ringSides);
-                // Store for skeleton geometry
-                skeletonVertices.push(...vertices.slice(vertexIndex - ringSides * 2, vertexIndex));
-                connectRings(ringA, ringB, ringSides);
-                skeletonFaces.push(...faces.slice(faces.length - ringSides * 6));
-            }
-
-            // Create skeleton mesh
-            if (skeletonVertices.length > 0) {
-                const skeletonGeometry = new THREE.BufferGeometry();
-                skeletonGeometry.setAttribute('position', new THREE.Float32BufferAttribute(skeletonVertices, 3));
-                skeletonGeometry.setIndex(skeletonFaces);
-                skeletonGeometry.computeVertexNormals();
-                const skeletonMesh = new THREE.Mesh(skeletonGeometry, skeletonMat);
-                group.add(skeletonMesh);
-            }
-        }
-
-        // Process fine segments (secondary branches) with tapering
-        if (fineSegments.length > 0) {
-            let fineVertices = [];
-            let fineFaces = [];
-            let fineVertexIndex = 0;
-
-            for (const segment of fineSegments) {
-                const dir = new THREE.Vector3().subVectors(segment.end, segment.start).normalize();
-                const baseRadius = segment.radius;
-                const tipRadius = Math.max(baseRadius * 0.2, 0.005);
-                const ringA = addRing(segment.start, dir, baseRadius, ringSides);
-                const ringB = addRing(segment.end, dir, tipRadius, ringSides);
-                // Store for fine branch geometry
-                fineVertices.push(...vertices.slice(vertexIndex - ringSides * 2, vertexIndex));
-                connectRings(ringA, ringB, ringSides);
-                fineFaces.push(...faces.slice(faces.length - ringSides * 6));
-            }
-
-            // Create fine branch mesh
-            if (fineVertices.length > 0) {
-                const fineGeometry = new THREE.BufferGeometry();
-                fineGeometry.setAttribute('position', new THREE.Float32BufferAttribute(fineVertices, 3));
-                fineGeometry.setIndex(fineFaces);
-                fineGeometry.computeVertexNormals();
-                const fineMesh = new THREE.Mesh(fineGeometry, fineBranchMat);
-                group.add(fineMesh);
-            }
-        }
-
-        // Leaves (instanced quads at branch tips)
-        const leafTips = this.getLeafTipDirections();
-        if (leafTips.length > 0) {
-            const leafMat = new THREE.MeshStandardMaterial({ color: this.leafColor, side: THREE.DoubleSide });
-            const instancedLeaves = this.createInstancedLeaves(leafTips, leafMat, this.leafRadius * 0.7);
-            group.add(instancedLeaves);
-        }
-
-        return group;
     }
 }
 
