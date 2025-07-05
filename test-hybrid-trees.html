@@ -83,7 +83,7 @@
                     <option value="pine">Pine (Conifer)</option>
                     <option value="custom">Custom</option>
                 </select>
-                <button onclick="generateTree()">Generate Tree</button>
+                <button id="generateTreeBtn">Generate Tree</button>
                 <button onclick="toggleHybrid()">Toggle Hybrid/Traditional</button>
             </div>
             
@@ -312,6 +312,9 @@
         document.getElementById('branchAngleDeg').addEventListener('input', function() {
             document.getElementById('branchAngleDegValue').textContent = this.value;
         });
+
+        // Attach event handler for Generate Tree button (module-safe)
+        document.getElementById('generateTreeBtn').addEventListener('click', generateTree);
 
         // Initialize scene and generate first tree
         initScene();
