@@ -1,12 +1,18 @@
 /**
  * Coordinates - AI Agent Manager
  * Specialized manager agent for coordinating and optimizing the AI ecosystem
- * IDX-AI-004: Manager Agent Implementation
+ * IDX-AI-008: Manager Agent Implementation
+ * IDX-AI-009: Agent Coordination System
+ * IDX-AI-010: Creative Agent Spawning
+ * IDX-AI-011: Performance Monitoring
+ * 
+ * For index reference format, see INDEX_DESCRIBER.md
  */
 
 import AIAgentManager, { AGENT_ROLES, JOB_TYPES } from './ai-agent-system.js';
 
 // ===== MANAGER AGENT CLASS =====
+// IDX-AI-012: Manager Agent Core Implementation
 export class ManagerAgent {
     constructor(agentManager) {
         this.agentManager = agentManager;

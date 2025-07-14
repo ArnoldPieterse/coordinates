@@ -16,6 +16,9 @@ import AdvancedPhysics from './advanced-physics.js';
 import { VoxelTree } from './procedural-tree-voxel.js';
 
 // ===== AI AGENT SYSTEM INTEGRATION =====
+// IDX-AI-023: Main Application AI Integration
+// IDX-AI-024: Agent System Initialization
+// IDX-AI-025: Global API Implementation
 import AIAgentManager, { AGENT_ROLES, JOB_TYPES } from './ai-agent-system.js';
 import AIAgentAutomation from './ai-agent-automation.js';
 import ManagerAgent from './ai-agent-manager.js';
@@ -26,6 +29,7 @@ let aiAutomation = null;
 let managerAgent = null;
 
 // Initialize AI agent system
+// IDX-AI-026: System Initialization Function
 async function initializeAIAgentSystem() {
     try {
         console.log('🤖 Initializing AI Agent System...');
@@ -57,6 +61,7 @@ async function initializeAIAgentSystem() {
 }
 
 // Queue initial project analysis jobs
+// IDX-AI-027: Initial Job Queue Setup
 async function queueInitialProjectJobs() {
     try {
         // Manager agent analysis
@@ -119,6 +124,7 @@ async function queueInitialProjectJobs() {
 }
 
 // AI Agent System API
+// IDX-AI-028: Global API Interface
 window.AIAgentSystem = {
     // Get agent manager
     getManager: () => aiAgentManager,

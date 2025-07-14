@@ -1,12 +1,18 @@
 /**
  * Coordinates - AI Agent Automation System
  * Automatically generates and queues jobs for AI agents
- * IDX-AI-003: Agent Automation Implementation
+ * IDX-AI-017: Agent Automation Implementation
+ * IDX-AI-018: Automated Job Generation
+ * IDX-AI-019: Performance Monitoring
+ * IDX-AI-020: Scheduled Task Management
+ * 
+ * For index reference format, see INDEX_DESCRIBER.md
  */
 
 import AIAgentManager, { AGENT_ROLES, JOB_TYPES } from './ai-agent-system.js';
 
 // ===== AUTOMATION RULES =====
+// IDX-AI-021: Automation Rule Definitions
 export const AUTOMATION_RULES = {
     CODE_QUALITY: {
         trigger: 'file_change',
@@ -64,6 +70,7 @@ export const AUTOMATION_RULES = {
 };
 
 // ===== AUTOMATION MANAGER =====
+// IDX-AI-022: Automation Manager Implementation
 export class AIAgentAutomation {
     constructor(agentManager) {
         this.agentManager = agentManager;

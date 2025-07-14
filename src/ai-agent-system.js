@@ -2,12 +2,18 @@
  * Coordinates - AI Agent System
  * Manages specialized AI agents with role-based job queuing
  * IDX-AI-001: AI Agent System Implementation
+ * IDX-AI-002: Agent Memory System
+ * IDX-AI-003: Enhanced Agent Capabilities
+ * IDX-AI-004: Job Management and Queuing
+ * 
+ * For index reference format, see INDEX_DESCRIBER.md
  */
 
 import { MathematicalAI } from './mathematical-ai.js';
 import { ComfyUIIntegration } from './comfyui-integration.js';
 
 // ===== AGENT ROLES =====
+// IDX-AI-005: Agent Role Definitions
 export const AGENT_ROLES = {
     PROJECT_MANAGER: 'project_manager',
     CODE_REVIEWER: 'code_reviewer',
@@ -28,6 +34,7 @@ export const AGENT_ROLES = {
 };
 
 // ===== JOB TYPES =====
+// IDX-AI-006: Job Type Definitions
 export const JOB_TYPES = {
     CODE_REVIEW: 'code_review',
     PERFORMANCE_ANALYSIS: 'performance_analysis',
@@ -53,6 +60,7 @@ export const JOB_TYPES = {
 };
 
 // ===== AGENT MEMORY SYSTEM =====
+// IDX-AI-007: Memory Management Implementation
 class AgentMemory {
     constructor(agentId) {
         this.agentId = agentId;

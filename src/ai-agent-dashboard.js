@@ -1,12 +1,17 @@
 /**
  * Coordinates - AI Agent Dashboard
  * Real-time monitoring and control interface for AI agents
- * IDX-AI-002: Agent Dashboard Implementation
+ * IDX-AI-013: Agent Dashboard Implementation
+ * IDX-AI-014: Real-time Monitoring System
+ * IDX-AI-015: Agent Control Interface
+ * 
+ * For index reference format, see INDEX_DESCRIBER.md
  */
 
 import AIAgentManager, { AGENT_ROLES, JOB_TYPES } from './ai-agent-system.js';
 
 // ===== DASHBOARD CLASS =====
+// IDX-AI-016: Dashboard Core Implementation
 export class AIAgentDashboard {
     constructor(containerId) {
         this.container = document.getElementById(containerId);

@@ -44,6 +44,7 @@ function recognizePattern(input) { ... }
 | IDX-SYS-04    | System architecture overview       |
 
 ---
+
 **For full details and updates, always refer to this file.**
 
 # Project Index: Advanced Mesh Generation Integration
@@ -122,6 +123,87 @@ function recognizePattern(input) { ... }
   2. Resolve collisions (update mesh positions/velocities)
   3. Feed deformations back to mesh and renderer
   - See PHYSICS.md for sub-steps.
+
+---
+
+# Project Index: AI Agent System Integration
+
+## AI Agent System Components and Implementation Details
+
+### 1. Core AI Agent System (IDX-AI-001 to IDX-AI-007)
+- **Descriptor:** src/ai-agent-system.js
+- **Components:**
+  - IDX-AI-001: AI Agent System Implementation
+  - IDX-AI-002: Agent Memory System
+  - IDX-AI-003: Enhanced Agent Capabilities
+  - IDX-AI-004: Job Management and Queuing
+  - IDX-AI-005: Agent Role Definitions
+  - IDX-AI-006: Job Type Definitions
+  - IDX-AI-007: Memory Management Implementation
+
+### 2. Manager Agent System (IDX-AI-008 to IDX-AI-012)
+- **Descriptor:** src/ai-agent-manager.js
+- **Components:**
+  - IDX-AI-008: Manager Agent Implementation
+  - IDX-AI-009: Agent Coordination System
+  - IDX-AI-010: Creative Agent Spawning
+  - IDX-AI-011: Performance Monitoring
+  - IDX-AI-012: Manager Agent Core Implementation
+
+### 3. Agent Dashboard (IDX-AI-013 to IDX-AI-016)
+- **Descriptor:** src/ai-agent-dashboard.js
+- **Components:**
+  - IDX-AI-013: Agent Dashboard Implementation
+  - IDX-AI-014: Real-time Monitoring System
+  - IDX-AI-015: Agent Control Interface
+  - IDX-AI-016: Dashboard Core Implementation
+
+### 4. Agent Automation (IDX-AI-017 to IDX-AI-022)
+- **Descriptor:** src/ai-agent-automation.js
+- **Components:**
+  - IDX-AI-017: Agent Automation Implementation
+  - IDX-AI-018: Automated Job Generation
+  - IDX-AI-019: Performance Monitoring
+  - IDX-AI-020: Scheduled Task Management
+  - IDX-AI-021: Automation Rule Definitions
+  - IDX-AI-022: Automation Manager Implementation
+
+### 5. Main Application Integration (IDX-AI-023 to IDX-AI-028)
+- **Descriptor:** src/main.js
+- **Components:**
+  - IDX-AI-023: Main Application AI Integration
+  - IDX-AI-024: Agent System Initialization
+  - IDX-AI-025: Global API Implementation
+  - IDX-AI-026: System Initialization Function
+  - IDX-AI-027: Initial Job Queue Setup
+  - IDX-AI-028: Global API Interface
+
+### 6. Agent Roles and Specializations
+- **Project Manager:** Coordinates overall project development
+- **Code Reviewer:** Analyzes code quality and suggests improvements
+- **Performance Optimizer:** Monitors and optimizes system performance
+- **AI Systems Engineer:** Manages AI model training and optimization
+- **Gameplay Designer:** Balances gameplay mechanics and features
+- **Graphics Artist:** Generates textures and visual assets via ComfyUI
+- **Testing Engineer:** Ensures comprehensive test coverage
+- **Documentation Writer:** Maintains project documentation
+- **Security Analyst:** Performs security audits and vulnerability assessments
+- **Deployment Engineer:** Manages deployment and production readiness
+- **Manager Agent:** Coordinates and optimizes the entire AI ecosystem
+- **AWS Specialist:** Handles cloud deployment and optimization
+- **Sales Team:** Manages market analysis and marketing strategies
+- **Messenger:** Routes communications between agents
+- **Creative Spawner:** Generates and manages temporary creative agents
+
+### 7. Job Types and Automation
+- **Code Review:** Automated code quality analysis
+- **Performance Analysis:** System performance monitoring and optimization
+- **AI Model Training:** Neural network training and optimization
+- **Texture Generation:** Automated texture creation via ComfyUI
+- **Agent Management:** Performance optimization and coordination
+- **Prompt Optimization:** Improves agent prompts based on performance
+- **Creative Generation:** Idea generation and concept development
+- **Memory Management:** Memory optimization and cleanup
 
 ---
 
