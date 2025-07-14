@@ -1,0 +1,407 @@
+/* ===== GAME LAUNCHER STYLES ===== */
+
+.game-launcher-page {
+    min-height: 100vh;
+    background: var(--background-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* ===== LOADING BACKGROUND ===== */
+.loading-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+}
+
+.loading-background .stars {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+        radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+        radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+        radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
+    background-repeat: repeat;
+    background-size: 200px 100px;
+    animation: twinkle 20s linear infinite;
+}
+
+.loading-background .planets {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.loading-background .planet {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.3;
+}
+
+.loading-background .planet-1 {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+    top: 15%;
+    right: 15%;
+    animation: float 8s ease-in-out infinite;
+}
+
+.loading-background .planet-2 {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(45deg, var(--secondary-color), var(--warning-color));
+    top: 70%;
+    right: 25%;
+    animation: float 10s ease-in-out infinite reverse;
+}
+
+.loading-background .planet-3 {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(45deg, var(--success-color), var(--primary-color));
+    top: 45%;
+    right: 8%;
+    animation: float 9s ease-in-out infinite;
+}
+
+/* ===== LAUNCHER CONTAINER ===== */
+.launcher-container {
+    max-width: 800px;
+    width: 90%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-3xl);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-xl);
+}
+
+.launcher-content {
+    text-align: center;
+}
+
+/* ===== GAME LOGO ===== */
+.game-logo {
+    margin-bottom: var(--spacing-3xl);
+}
+
+.logo-title {
+    font-family: var(--font-primary);
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--primary-color);
+    letter-spacing: 4px;
+    margin-bottom: var(--spacing-sm);
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+.logo-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    font-weight: 300;
+}
+
+/* ===== LOADING STATUS ===== */
+.loading-status {
+    margin-bottom: var(--spacing-3xl);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.status-text {
+    font-family: var(--font-primary);
+    font-size: 1.125rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    width: 0%;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+.progress-text {
+    font-family: var(--font-primary);
+    font-size: 1rem;
+    color: var(--primary-color);
+    font-weight: 600;
+    min-width: 50px;
+}
+
+/* ===== LOADING STEPS ===== */
+.loading-steps {
+    margin-bottom: var(--spacing-3xl);
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-md);
+    transition: all var(--transition-normal);
+    opacity: 0.5;
+}
+
+.step.active {
+    background: rgba(0, 212, 255, 0.1);
+    border-color: var(--primary-color);
+    opacity: 1;
+}
+
+.step.completed {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--success-color);
+    opacity: 0.8;
+}
+
+.step-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    text-align: center;
+}
+
+.step-content {
+    flex: 1;
+    text-align: left;
+}
+
+.step-title {
+    font-size: 1.125rem;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+    font-weight: 600;
+}
+
+.step-description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.step-status {
+    font-size: 1.25rem;
+    width: 30px;
+    text-align: center;
+}
+
+.step.completed .step-status {
+    color: var(--success-color);
+}
+
+.step.active .step-status {
+    color: var(--primary-color);
+    animation: spin 1s linear infinite;
+}
+
+/* ===== GAME INFO ===== */
+.game-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-3xl);
+}
+
+.info-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    text-align: center;
+}
+
+.info-card h3 {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-sm);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.info-card p {
+    font-family: var(--font-primary);
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin: 0;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-lg);
+    justify-content: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.action-buttons .btn {
+    min-width: 180px;
+}
+
+/* ===== ERROR DISPLAY ===== */
+.error-display {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--error-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.error-title {
+    font-size: 1.5rem;
+    color: var(--error-color);
+    margin-bottom: var(--spacing-md);
+}
+
+.error-message {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes pulse {
+    0%, 100% { 
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes twinkle {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-100px); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+    .launcher-container {
+        padding: var(--spacing-xl);
+        width: 95%;
+    }
+    
+    .logo-title {
+        font-size: 2rem;
+    }
+    
+    .step {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-md);
+    }
+    
+    .step-content {
+        text-align: center;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .game-info {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .launcher-container {
+        padding: var(--spacing-lg);
+    }
+    
+    .logo-title {
+        font-size: 1.5rem;
+    }
+    
+    .progress-container {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .progress-text {
+        min-width: auto;
+    }
+} 

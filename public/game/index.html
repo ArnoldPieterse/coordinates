@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coordinates - Game Launcher | Rekursing.com</title>
+    <meta name="description" content="Launch Coordinates - the multiplayer planetary shooter game with AI-driven gameplay.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/game-launcher.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="game-launcher-page">
+    <!-- Loading Background -->
+    <div class="loading-background">
+        <div class="stars"></div>
+        <div class="planets">
+            <div class="planet planet-1"></div>
+            <div class="planet planet-2"></div>
+            <div class="planet planet-3"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="launcher-container">
+        <div class="launcher-content">
+            <!-- Logo -->
+            <div class="game-logo">
+                <h1 class="logo-title">COORDINATES</h1>
+                <p class="logo-subtitle">Multiplayer Planetary Shooter</p>
+            </div>
+
+            <!-- Loading Status -->
+            <div class="loading-status">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span class="status-text">Initializing...</span>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">0%</div>
+                </div>
+            </div>
+
+            <!-- Loading Steps -->
+            <div class="loading-steps">
+                <div class="step" data-step="1">
+                    <div class="step-icon">🔧</div>
+                    <div class="step-content">
+                        <h3 class="step-title">System Check</h3>
+                        <p class="step-description">Verifying system requirements...</p>
+                    </div>
+                    <div class="step-status">⏳</div>
+                </div>
+                
+                <div class="step" data-step="2">
+                    <div class="step-icon">📦</div>
+                    <div class="step-content">
+                        <h3 class="step-title">Asset Loading</h3>
+                        <p class="step-description">Loading game assets and textures...</p>
+                    </div>
+                    <div class="step-status">⏳</div>
+                </div>
+                
+                <div class="step" data-step="3">
+                    <div class="step-icon">🌐</div>
+                    <div class="step-content">
+                        <h3 class="step-title">Network Connection</h3>
+                        <p class="step-description">Connecting to game servers...</p>
+                    </div>
+                    <div class="step-status">⏳</div>
+                </div>
+                
+                <div class="step" data-step="4">
+                    <div class="step-icon">🎮</div>
+                    <div class="step-content">
+                        <h3 class="step-title">Game Launch</h3>
+                        <p class="step-description">Starting the game engine...</p>
+                    </div>
+                    <div class="step-status">⏳</div>
+                </div>
+            </div>
+
+            <!-- Game Info -->
+            <div class="game-info">
+                <div class="info-card">
+                    <h3>Current Planet</h3>
+                    <p id="currentPlanet">Earth</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Players Online</h3>
+                    <p id="playerCount">Loading...</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Server Status</h3>
+                    <p id="serverStatus">Connecting...</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="launchBtn" disabled>
+                    <span class="btn-text">Launch Game</span>
+                    <span class="btn-icon">🚀</span>
+                </button>
+                
+                <button class="btn btn-secondary" id="backBtn">
+                    <span class="btn-text">Back to Website</span>
+                    <span class="btn-icon">←</span>
+                </button>
+            </div>
+
+            <!-- Error Display -->
+            <div class="error-display" id="errorDisplay" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <h3 class="error-title">Launch Error</h3>
+                <p class="error-message" id="errorMessage">An error occurred while launching the game.</p>
+                <button class="btn btn-primary" id="retryBtn">
+                    <span class="btn-text">Retry</span>
+                    <span class="btn-icon">🔄</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/game-launcher.js"></script>
+</body>
+</html> 

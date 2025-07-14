@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline - Coordinates | Rekursing.com</title>
+    <meta name="description" content="You're currently offline. Check your connection and try again.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/main.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        .offline-page {
+            min-height: 100vh;
+            background: var(--background-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .offline-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+        }
+        
+        .offline-background .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, #eee, transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+                radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+                radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: twinkle 20s linear infinite;
+        }
+        
+        .offline-container {
+            max-width: 600px;
+            width: 90%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-3xl);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .offline-icon {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-lg);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .offline-title {
+            font-family: var(--font-primary);
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .offline-message {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xl);
+            line-height: 1.6;
+        }
+        
+        .offline-actions {
+            display: flex;
+            gap: var(--spacing-lg);
+            justify-content: center;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .offline-actions .btn {
+            min-width: 150px;
+        }
+        
+        .connection-status {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-top: var(--spacing-xl);
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--error-color);
+            border-radius: 50%;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        
+        .status-text {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+        
+        @keyframes twinkle {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100px); }
+        }
+        
+        @media (max-width: 768px) {
+            .offline-container {
+                padding: var(--spacing-xl);
+            }
+            
+            .offline-title {
+                font-size: 2rem;
+            }
+            
+            .offline-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .offline-actions .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body class="offline-page">
+    <!-- Background -->
+    <div class="offline-background">
+        <div class="stars"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="offline-container">
+        <!-- Icon -->
+        <div class="offline-icon">📡</div>
+        
+        <!-- Title -->
+        <h1 class="offline-title">You're Offline</h1>
+        
+        <!-- Message -->
+        <p class="offline-message">
+            It looks like you've lost your connection to the internet. 
+            Check your network settings and try again to continue playing Coordinates.
+        </p>
+        
+        <!-- Actions -->
+        <div class="offline-actions">
+            <button class="btn btn-primary" onclick="retryConnection()">
+                <span class="btn-text">Retry Connection</span>
+                <span class="btn-icon">🔄</span>
+            </button>
+            
+            <button class="btn btn-secondary" onclick="goHome()">
+                <span class="btn-text">Go Home</span>
+                <span class="btn-icon">🏠</span>
+            </button>
+        </div>
+        
+        <!-- Connection Status -->
+        <div class="connection-status">
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span class="status-text">Checking connection...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check connection status
+        function checkConnection() {
+            const statusText = document.querySelector('.status-text');
+            const statusDot = document.querySelector('.status-dot');
+            
+            if (navigator.onLine) {
+                statusText.textContent = 'Connection restored! Redirecting...';
+                statusDot.style.background = '#10b981';
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                statusText.textContent = 'Still offline. Check your connection.';
+                statusDot.style.background = '#ef4444';
+            }
+        }
+        
+        // Retry connection
+        function retryConnection() {
+            const statusText = document.querySelector('.status-text');
+            statusText.textContent = 'Checking connection...';
+            
+            // Simulate connection check
+            setTimeout(() => {
+                checkConnection();
+            }, 1000);
+        }
+        
+        // Go home
+        function goHome() {
+            window.location.href = '/';
+        }
+        
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            checkConnection();
+        });
+        
+        window.addEventListener('offline', () => {
+            checkConnection();
+        });
+        
+        // Initial check
+        document.addEventListener('DOMContentLoaded', () => {
+            checkConnection();
+            
+            // Check periodically
+            setInterval(checkConnection, 5000);
+        });
+    </script>
+</body>
+</html> 

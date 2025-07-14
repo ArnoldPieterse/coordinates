@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coordinates - Multiplayer Planetary Shooter | Rekursing.com</title>
+    <meta name="description" content="Experience the future of gaming with Coordinates - a cutting-edge multiplayer planetary shooter featuring AI-driven gameplay, procedural generation, and mathematical physics integration.">
+    <meta name="keywords" content="multiplayer game, planetary shooter, AI gaming, procedural generation, Three.js, mathematical physics, ComfyUI integration">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.rekursing.com/">
+    <meta property="og:title" content="Coordinates - Multiplayer Planetary Shooter">
+    <meta property="og:description" content="Experience the future of gaming with AI-driven multiplayer combat across procedurally generated planets.">
+    <meta property="og:image" content="https://www.rekursing.com/assets/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://www.rekursing.com/">
+    <meta property="twitter:title" content="Coordinates - Multiplayer Planetary Shooter">
+    <meta property="twitter:description" content="Experience the future of gaming with AI-driven multiplayer combat across procedurally generated planets.">
+    <meta property="twitter:image" content="https://www.rekursing.com/assets/twitter-image.jpg">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'GA_MEASUREMENT_ID');
+    </script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <a href="#home">
+                    <span class="logo-text">COORDINATES</span>
+                    <span class="logo-subtitle">AI-Powered Gaming</span>
+                </a>
+            </div>
+            
+            <div class="nav-menu" id="nav-menu">
+                <a href="#home" class="nav-link">Home</a>
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#planets" class="nav-link">Planets</a>
+                <a href="#ai" class="nav-link">AI Systems</a>
+                <a href="#technology" class="nav-link">Technology</a>
+                <a href="#play" class="nav-link">Play Now</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </div>
+            
+            <div class="nav-toggle" id="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-background">
+            <div class="stars"></div>
+            <div class="planets">
+                <div class="planet planet-1"></div>
+                <div class="planet planet-2"></div>
+                <div class="planet planet-3"></div>
+            </div>
+        </div>
+        
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    <span class="title-line">MULTIPLAYER</span>
+                    <span class="title-line">PLANETARY</span>
+                    <span class="title-line highlight">SHOOTER</span>
+                </h1>
+                
+                <p class="hero-description">
+                    Experience the future of gaming with AI-driven multiplayer combat across procedurally generated planets. 
+                    Powered by advanced mathematical physics and cutting-edge AI systems.
+                </p>
+                
+                <div class="hero-buttons">
+                    <a href="#play" class="btn btn-primary">
+                        <span class="btn-text">Play Now</span>
+                        <span class="btn-icon">🚀</span>
+                    </a>
+                    <a href="#features" class="btn btn-secondary">
+                        <span class="btn-text">Learn More</span>
+                        <span class="btn-icon">📖</span>
+                    </a>
+                </div>
+                
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">5</span>
+                        <span class="stat-label">Unique Planets</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">7</span>
+                        <span class="stat-label">Weapon Types</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">∞</span>
+                        <span class="stat-label">Procedural Worlds</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hero-visual">
+                <div class="game-preview">
+                    <div class="preview-screen">
+                        <div class="screen-content">
+                            <div class="game-ui">
+                                <div class="ui-element health-bar">
+                                    <div class="health-fill"></div>
+                                </div>
+                                <div class="ui-element weapon-display">Plasma Rifle</div>
+                                <div class="ui-element planet-info">Mars - Low Gravity</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Game Features</h2>
+                <p class="section-subtitle">Discover what makes Coordinates the next generation of multiplayer gaming</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3 class="feature-title">Multiple Planets</h3>
+                    <p class="feature-description">
+                        Battle across 5 unique planets, each with distinct gravity, atmosphere, and environmental effects.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Earth - Balanced gameplay</li>
+                        <li>Mars - Low gravity, enhanced jumping</li>
+                        <li>Moon - Extreme jumping, precise shooting</li>
+                        <li>Jupiter - High gravity, powerful weapons</li>
+                        <li>Venus - Unique visual effects</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3 class="feature-title">AI Integration</h3>
+                    <p class="feature-description">
+                        Advanced AI systems power intelligent opponents, procedural generation, and adaptive gameplay.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Neural network-driven AI</li>
+                        <li>Pattern recognition</li>
+                        <li>Adaptive difficulty</li>
+                        <li>ComfyUI texture generation</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔫</div>
+                    <h3 class="feature-title">Weapon System</h3>
+                    <p class="feature-description">
+                        Master 7 different weapon types, each with unique mechanics and physics interactions.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Plasma Rifle</li>
+                        <li>Gravity Cannon</li>
+                        <li>Quantum Sniper</li>
+                        <li>Fusion Launcher</li>
+                        <li>And more...</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎨</div>
+                    <h3 class="feature-title">Procedural Generation</h3>
+                    <p class="feature-description">
+                        Infinite worlds generated using advanced algorithms and AI-powered content creation.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Voxel-based generation</li>
+                        <li>Marching Cubes algorithm</li>
+                        <li>AI texture generation</li>
+                        <li>Dynamic environments</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Planets Section -->
+    <section id="planets" class="planets">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Explore the Planets</h2>
+                <p class="section-subtitle">Each world offers unique challenges and gameplay mechanics</p>
+            </div>
+            
+            <div class="planets-showcase">
+                <div class="planet-card active" data-planet="earth">
+                    <div class="planet-visual">
+                        <div class="planet-sphere earth-sphere"></div>
+                    </div>
+                    <div class="planet-info">
+                        <h3 class="planet-name">Earth</h3>
+                        <p class="planet-description">Home world with balanced physics and familiar terrain.</p>
+                        <div class="planet-stats">
+                            <div class="planet-stat">
+                                <span class="stat-label">Gravity</span>
+                                <span class="stat-value">Standard</span>
+                            </div>
+                            <div class="planet-stat">
+                                <span class="stat-label">Atmosphere</span>
+                                <span class="stat-value">Blue Sky</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="planet-card" data-planet="mars">
+                    <div class="planet-visual">
+                        <div class="planet-sphere mars-sphere"></div>
+                    </div>
+                    <div class="planet-info">
+                        <h3 class="planet-name">Mars</h3>
+                        <p class="planet-description">Red planet with low gravity and enhanced mobility.</p>
+                        <div class="planet-stats">
+                            <div class="planet-stat">
+                                <span class="stat-label">Gravity</span>
+                                <span class="stat-value">Low</span>
+                            </div>
+                            <div class="planet-stat">
+                                <span class="stat-label">Atmosphere</span>
+                                <span class="stat-value">Red Dust</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="planet-card" data-planet="moon">
+                    <div class="planet-visual">
+                        <div class="planet-sphere moon-sphere"></div>
+                    </div>
+                    <div class="planet-info">
+                        <h3 class="planet-name">Moon</h3>
+                        <p class="planet-description">Lunar surface with extreme jumping and precise combat.</p>
+                        <div class="planet-stats">
+                            <div class="planet-stat">
+                                <span class="stat-label">Gravity</span>
+                                <span class="stat-value">Very Low</span>
+                            </div>
+                            <div class="planet-stat">
+                                <span class="stat-label">Atmosphere</span>
+                                <span class="stat-value">None</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="planet-card" data-planet="jupiter">
+                    <div class="planet-visual">
+                        <div class="planet-sphere jupiter-sphere"></div>
+                    </div>
+                    <div class="planet-info">
+                        <h3 class="planet-name">Jupiter</h3>
+                        <p class="planet-description">Gas giant with high gravity and powerful weapons.</p>
+                        <div class="planet-stats">
+                            <div class="planet-stat">
+                                <span class="stat-label">Gravity</span>
+                                <span class="stat-value">High</span>
+                            </div>
+                            <div class="planet-stat">
+                                <span class="stat-label">Atmosphere</span>
+                                <span class="stat-value">Gas Clouds</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="planet-card" data-planet="venus">
+                    <div class="planet-visual">
+                        <div class="planet-sphere venus-sphere"></div>
+                    </div>
+                    <div class="planet-info">
+                        <h3 class="planet-name">Venus</h3>
+                        <p class="planet-description">Mysterious world with unique visual effects and challenges.</p>
+                        <div class="planet-stats">
+                            <div class="planet-stat">
+                                <span class="stat-label">Gravity</span>
+                                <span class="stat-value">Medium</span>
+                            </div>
+                            <div class="planet-stat">
+                                <span class="stat-label">Atmosphere</span>
+                                <span class="stat-value">Thick Clouds</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Systems Section -->
+    <section id="ai" class="ai-systems">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">AI-Powered Systems</h2>
+                <p class="section-subtitle">Cutting-edge artificial intelligence drives every aspect of the game</p>
+            </div>
+            
+            <div class="ai-grid">
+                <div class="ai-card">
+                    <div class="ai-icon">🧠</div>
+                    <h3 class="ai-title">Mathematical AI</h3>
+                    <p class="ai-description">
+                        Neural network-driven AI that adapts to player behavior and mathematical patterns in real-time.
+                    </p>
+                    <div class="ai-features">
+                        <span class="ai-feature">8-input neural network</span>
+                        <span class="ai-feature">Pattern recognition</span>
+                        <span class="ai-feature">Adaptive responses</span>
+                    </div>
+                </div>
+                
+                <div class="ai-card">
+                    <div class="ai-icon">🎨</div>
+                    <h3 class="ai-title">ComfyUI Integration</h3>
+                    <p class="ai-description">
+                        AI-powered texture and material generation using advanced Stable Diffusion workflows.
+                    </p>
+                    <div class="ai-features">
+                        <span class="ai-feature">Realistic textures</span>
+                        <span class="ai-feature">Procedural materials</span>
+                        <span class="ai-feature">Dynamic generation</span>
+                    </div>
+                </div>
+                
+                <div class="ai-card">
+                    <div class="ai-icon">🌱</div>
+                    <h3 class="ai-title">Procedural Generation</h3>
+                    <p class="ai-description">
+                        AI-driven world generation creates infinite unique environments and structures.
+                    </p>
+                    <div class="ai-features">
+                        <span class="ai-feature">Voxel generation</span>
+                        <span class="ai-feature">Tree algorithms</span>
+                        <span class="ai-feature">Terrain synthesis</span>
+                    </div>
+                </div>
+                
+                <div class="ai-card">
+                    <div class="ai-icon">⚡</div>
+                    <h3 class="ai-title">Performance AI</h3>
+                    <p class="ai-description">
+                        Intelligent optimization systems ensure smooth gameplay across all devices.
+                    </p>
+                    <div class="ai-features">
+                        <span class="ai-feature">LOD systems</span>
+                        <span class="ai-feature">Frustum culling</span>
+                        <span class="ai-feature">Memory optimization</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Section -->
+    <section id="technology" class="technology">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Technology Stack</h2>
+                <p class="section-subtitle">Built with cutting-edge technologies for the best gaming experience</p>
+            </div>
+            
+            <div class="tech-grid">
+                <div class="tech-category">
+                    <h3 class="tech-category-title">Frontend</h3>
+                    <div class="tech-items">
+                        <div class="tech-item">
+                            <div class="tech-icon">🎮</div>
+                            <span class="tech-name">Three.js</span>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">⚡</div>
+                            <span class="tech-name">Vite</span>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">🔧</div>
+                            <span class="tech-name">ES6 Modules</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tech-category">
+                    <h3 class="tech-category-title">Backend</h3>
+                    <div class="tech-items">
+                        <div class="tech-item">
+                            <div class="tech-icon">🟢</div>
+                            <span class="tech-name">Node.js</span>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">🔌</div>
+                            <span class="tech-name">Socket.io</span>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">🚀</div>
+                            <span class="tech-name">Express</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tech-category">
+                    <h3 class="tech-category-title">AI & ML</h3>
+                    <div class="tech-items">
+                        <div class="tech-item">
+                            <div class="tech-icon">🤖</div>
+                            <span class="tech-name">ComfyUI</span>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">🧠</div>
+                            <span class="tech-name">Neural Networks</span>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">📊</div>
+                            <span class="tech-name">Mathematical Engine</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tech-category">
+                    <h3 class="tech-category-title">Infrastructure</h3>
+                    <div class="tech-items">
+                        <div class="tech-item">
+                            <div class="tech-icon">☁️</div>
+                            <span class="tech-name">AWS</span>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">🐳</div>
+                            <span class="tech-name">Docker</span>
+                        </div>
+                        <div class="tech-item">
+                            <div class="tech-icon">🔄</div>
+                            <span class="tech-name">CI/CD</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Play Now Section -->
+    <section id="play" class="play-now">
+        <div class="container">
+            <div class="play-content">
+                <div class="play-text">
+                    <h2 class="play-title">Ready to Play?</h2>
+                    <p class="play-description">
+                        Join the future of multiplayer gaming. Experience AI-driven combat, 
+                        procedural worlds, and mathematical physics in action.
+                    </p>
+                    
+                    <div class="play-features">
+                        <div class="play-feature">
+                            <span class="feature-icon">⚡</span>
+                            <span class="feature-text">Instant Play</span>
+                        </div>
+                        <div class="play-feature">
+                            <span class="feature-icon">🌐</span>
+                            <span class="feature-text">Cross-Platform</span>
+                        </div>
+                        <div class="play-feature">
+                            <span class="feature-icon">🔒</span>
+                            <span class="feature-text">Secure</span>
+                        </div>
+                    </div>
+                    
+                    <div class="play-buttons">
+                        <a href="/game" class="btn btn-primary btn-large">
+                            <span class="btn-text">Launch Game</span>
+                            <span class="btn-icon">🎮</span>
+                        </a>
+                        <a href="/demo" class="btn btn-secondary btn-large">
+                            <span class="btn-text">Try Demo</span>
+                            <span class="btn-icon">🎯</span>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="play-visual">
+                    <div class="game-launcher">
+                        <div class="launcher-screen">
+                            <div class="launcher-content">
+                                <div class="launcher-status">Ready to Launch</div>
+                                <div class="launcher-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Get in Touch</h2>
+                <p class="section-subtitle">Have questions or want to contribute? We'd love to hear from you</p>
+            </div>
+            
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">📧</div>
+                        <div class="contact-details">
+                            <h3 class="contact-title">Email</h3>
+                            <p class="contact-text">hello@rekursing.com</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">🐙</div>
+                        <div class="contact-details">
+                            <h3 class="contact-title">GitHub</h3>
+                            <p class="contact-text">github.com/ArnoldPieterse/coordinates</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-item">
+                        <div class="contact-icon">🤖</div>
+                        <div class="contact-details">
+                            <h3 class="contact-title">AI Collaboration</h3>
+                            <p class="contact-text">Open for AI agent contributions</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="contact-form">
+                    <form id="contactForm" class="form">
+                        <div class="form-group">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" id="name" name="name" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" id="email" name="email" class="form-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject" class="form-label">Subject</label>
+                            <select id="subject" name="subject" class="form-select" required>
+                                <option value="">Select a topic</option>
+                                <option value="general">General Inquiry</option>
+                                <option value="technical">Technical Support</option>
+                                <option value="collaboration">AI Collaboration</option>
+                                <option value="feedback">Feedback</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea id="message" name="message" class="form-textarea" rows="5" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <span class="btn-text">Send Message</span>
+                            <span class="btn-icon">📤</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <span class="logo-text">COORDINATES</span>
+                        <span class="logo-subtitle">AI-Powered Gaming</span>
+                    </div>
+                    <p class="footer-description">
+                        Pushing the boundaries of multiplayer gaming with AI, procedural generation, and mathematical physics.
+                    </p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3 class="footer-title">Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#planets">Planets</a></li>
+                        <li><a href="#ai">AI Systems</a></li>
+                        <li><a href="#technology">Technology</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3 class="footer-title">Resources</h3>
+                    <ul class="footer-links">
+                        <li><a href="/docs">Documentation</a></li>
+                        <li><a href="/api">API Reference</a></li>
+                        <li><a href="/github">GitHub</a></li>
+                        <li><a href="/blog">Blog</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3 class="footer-title">Connect</h3>
+                    <ul class="footer-links">
+                        <li><a href="#contact">Contact</a></li>
+                        <li><a href="/discord">Discord</a></li>
+                        <li><a href="/twitter">Twitter</a></li>
+                        <li><a href="/linkedin">LinkedIn</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-copyright">
+                    <p>&copy; 2025 Coordinates. All rights reserved. | Hosted on <a href="https://www.rekursing.com">rekursing.com</a></p>
+                </div>
+                
+                <div class="footer-legal">
+                    <a href="/privacy">Privacy Policy</a>
+                    <a href="/terms">Terms of Service</a>
+                    <a href="/cookies">Cookie Policy</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/main.js"></script>
+    <script src="/js/components.js"></script>
+    <script src="/js/animations.js"></script>
+</body>
+</html> 
