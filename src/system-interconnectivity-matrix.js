@@ -1,3 +1,5 @@
+// IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md
+// IDX-SIM-01: System Interconnectivity Matrix Module
 // System Interconnectivity Matrix Visualizer
 // Implements the Matrix concept: visualizing all program interconnectivity and butterfly effects
 import * as THREE from 'three';

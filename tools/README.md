@@ -1,5 +1,9 @@
 # Development Tools Suite
 
+> For index reference format, see [INDEX_DESCRIBER.md](../INDEX_DESCRIBER.md)  <!-- IDX-DOC-00 -->
+
+# IDX-TOOLS-01: Quick Start
+
 A comprehensive collection of development tools for the Multiplayer Planetary Shooter game, designed to enhance debugging, performance monitoring, multiplayer testing, and development workflow.
 
 ## 🚀 Quick Start
@@ -26,6 +30,8 @@ await toolsIndex.loadAllTools();
 const status = toolsIndex.getStatusReport();
 ```
 
+# IDX-TOOLS-02: Tools Overview
+
 ## 📋 Tools Overview
 
 ### Core Management
@@ -38,6 +44,8 @@ const status = toolsIndex.getStatusReport();
 - **🌐 Network Analyzer** (F4) - Multiplayer connection monitoring
 - **🎮 Gameplay Enhancer** (F5) - Gameplay modifications and cheats
 - **🛠️ Game Utilities** (F6) - Screenshots, recording, and data management
+
+# IDX-TOOLS-03: Keyboard Shortcuts
 
 ## 🎯 Keyboard Shortcuts
 
@@ -52,6 +60,8 @@ const status = toolsIndex.getStatusReport();
 | `` ` `` | Debug Console | Alternative debug console access |
 | `Ctrl+F2` | Tools Manager | Reload all tools |
 | `Ctrl+F5` | Gameplay Enhancer | Reset all features |
+
+# IDX-TOOLS-04: Architecture
 
 ## 🏗️ Architecture
 
@@ -82,6 +92,8 @@ tools/
 │   └── game-utilities.js    # Utility functions
 └── README.md               # This documentation
 ```
+
+# IDX-TOOLS-05: Tool Details
 
 ## 🛠️ Tool Details
 

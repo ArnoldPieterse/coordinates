@@ -1,8 +1,8 @@
 # 🚀 GitHub Integration Setup Guide
 
-This guide will help you complete the GitHub integration for your Multiplayer Planetary Shooter project.
+> For index reference format, see [INDEX_DESCRIBER.md](./INDEX_DESCRIBER.md)  <!-- IDX-DOC-00 -->
 
-## 📋 What's Already Done
+# IDX-DOC-01: What's Already Done
 
 ✅ **Git Repository**: Initialized and first commit made  
 ✅ **GitHub Actions**: CI/CD workflows created  

@@ -510,6 +510,7 @@ export class VoxelTree {
         const trunkLen = this.trunkPath.length;
         
         // Start with trunk as root branch
+        const rootDir = new THREE.Vector3(0, 1, 0);
         const rootBranch = new Branch(
             new THREE.Vector3(0, 0, 0),
             new THREE.Euler(0, 0, 0),
@@ -520,43 +521,42 @@ export class VoxelTree {
             this.options.branch.segments[0] || 8
         );
         
-        // Generate branches recursively
-        this.generateBranchRecursive(rootBranch);
+        // Generate branches recursively, passing parent direction
+        this.generateBranchRecursive(rootBranch, rootDir);
         
         // Extract branch paths for compatibility
-        this.branches = this.extractBranchPaths(rootBranch);
+        this.branches = this.extractBranchPaths(rootBranch, rootDir);
     }
 
-    generateBranchRecursive(branch) {
+    generateBranchRecursive(branch, parentDir) {
         const level = branch.level;
         const maxLevels = this.options.branch.levels;
-        
+        logOutput(`[BranchGen] level=${level}, origin=`, branch.origin, 'orientation=', branch.orientation, 'length=', branch.length, 'sectionCount=', branch.sectionCount);
         if (level >= maxLevels) {
             // Terminal branch - add leaf cluster
-            const endPos = branch.origin.clone().add(
-                new THREE.Vector3(0, branch.length, 0).applyEuler(branch.orientation)
-            );
+            const dir = parentDir.clone().applyEuler(branch.orientation).normalize();
+            if (!isFinite(dir.x) || !isFinite(dir.y) || !isFinite(dir.z) || dir.length() === 0) {
+                logOutput('SKIP: Invalid or zero direction vector at terminal branch:', dir, branch);
+                return;
+            }
+            const endPos = branch.origin.clone().add(dir.multiplyScalar(branch.length));
             this.leafClusters.push(endPos);
             return;
         }
-        
         // Generate child branches
         const childCount = this.options.branch.children[level] || 3;
         const radialOffset = Math.random() * Math.PI * 2;
-        
         for (let i = 0; i < childCount; i++) {
-            // Calculate child branch parameters
             const radialAngle = 2.0 * Math.PI * (radialOffset + i / childCount);
             const childStart = this.options.branch.start[level + 1] || 0.4;
             const childLength = this.options.branch.length[level + 1] || branch.length * 0.7;
             const childRadius = this.options.branch.radius[level + 1] || branch.radius * 0.5;
-            
-            // Calculate child origin (along parent branch)
-            const childOrigin = branch.origin.clone().add(
-                new THREE.Vector3(0, branch.length * childStart, 0).applyEuler(branch.orientation)
-            );
-            
-            // Calculate child orientation
+            const dir = parentDir.clone().applyEuler(branch.orientation).normalize();
+            if (!isFinite(dir.x) || !isFinite(dir.y) || !isFinite(dir.z) || dir.length() === 0) {
+                logOutput('SKIP: Invalid or zero direction vector for child branch:', dir, branch);
+                continue;
+            }
+            const childOrigin = branch.origin.clone().add(dir.multiplyScalar(branch.length * childStart));
             const childAngle = this.options.branch.angle[level + 1] || 60;
             const q1 = new THREE.Quaternion().setFromAxisAngle(
                 new THREE.Vector3(1, 0, 0),
@@ -567,12 +567,14 @@ export class VoxelTree {
                 radialAngle
             );
             const q3 = new THREE.Quaternion().setFromEuler(branch.orientation);
-            
             const childOrientation = new THREE.Euler().setFromQuaternion(
                 q3.multiply(q2.multiply(q1))
             );
-            
-            // Create child branch
+            const childDir = dir;
+            if (!isFinite(childDir.x) || !isFinite(childDir.y) || !isFinite(childDir.z) || childDir.length() === 0) {
+                logOutput('SKIP: Invalid or zero childDir for recursion:', childDir, branch);
+                continue;
+            }
             const childBranch = new Branch(
                 childOrigin,
                 childOrientation,
@@ -582,37 +584,54 @@ export class VoxelTree {
                 this.options.branch.sections[level + 1] || 8,
                 this.options.branch.segments[level + 1] || 6
             );
-            
             branch.children.push(childBranch);
-            
-            // Recursively generate children
-            this.generateBranchRecursive(childBranch);
+            this.generateBranchRecursive(childBranch, childDir);
         }
     }
 
-    extractBranchPaths(branch) {
+    extractBranchPaths(branch, parentDir) {
         const paths = [];
-        
-        function extractBranch(branch) {
-            // Generate path for this branch
-            const path = [];
-            const dir = new THREE.Vector3(0, 1, 0).applyEuler(branch.orientation);
-            let pos = branch.origin.clone();
-            
-            for (let i = 0; i <= branch.sectionCount; i++) {
-                path.push(pos.clone());
-                pos.add(dir.clone().multiplyScalar(branch.length / branch.sectionCount));
+        function extractBranch(branch, parentDir) {
+            if (!branch.sectionCount || !isFinite(branch.sectionCount) || branch.sectionCount <= 0) {
+                logOutput('Invalid sectionCount in branch:', branch);
+                return;
             }
-            
+            if (!branch.length || !isFinite(branch.length) || branch.length <= 0) {
+                logOutput('Invalid length in branch:', branch);
+                return;
+            }
+            const path = [];
+            const dir = parentDir.clone().applyEuler(branch.orientation).normalize();
+            if (!isFinite(dir.x) || !isFinite(dir.y) || !isFinite(dir.z) || dir.length() === 0) {
+                logOutput('SKIP: Invalid or zero direction vector in extractBranch:', dir, branch);
+                return;
+            }
+            let pos = branch.origin.clone();
+            const step = branch.length / branch.sectionCount;
+            if (!isFinite(step) || step === 0) {
+                logOutput('SKIP: Invalid step size in extractBranch:', step, branch);
+                return;
+            }
+            for (let i = 0; i <= branch.sectionCount; i++) {
+                if (!isFinite(pos.x) || !isFinite(pos.y) || !isFinite(pos.z)) {
+                    logOutput('NaN in pos before step', i, pos, 'branch:', branch);
+                }
+                path.push(pos.clone());
+                const delta = dir.clone().multiplyScalar(step);
+                if (!isFinite(delta.x) || !isFinite(delta.y) || !isFinite(delta.z)) {
+                    logOutput('NaN in delta at step', i, delta, 'branch:', branch);
+                }
+                pos.add(delta);
+                if (!isFinite(pos.x) || !isFinite(pos.y) || !isFinite(pos.z)) {
+                    logOutput('NaN in pos after step', i, pos, 'branch:', branch);
+                }
+            }
             paths.push({ path, angle: branch.orientation.x });
-            
-            // Extract children
             for (let child of branch.children) {
-                extractBranch(child);
+                extractBranch(child, dir);
             }
         }
-        
-        extractBranch(branch);
+        extractBranch(branch, parentDir);
         return paths;
     }
 
@@ -832,8 +851,14 @@ export class VoxelTree {
     }
 
     generateBranchGeometry(path, radius, vertices, indices, normals, uvs) {
-        if (path.length < 2) return;
-        
+        if (!path || path.length < 2) return;
+        // Defensive: Check for NaN in path
+        for (const p of path) {
+            if (!isFinite(p.x) || !isFinite(p.y) || !isFinite(p.z)) {
+                logOutput('NaN in branch path:', path);
+                return;
+            }
+        }
         const ringSides = 8;
         const rings = [];
         
@@ -935,3 +960,10 @@ export class VoxelTree {
 // const oak = new VoxelTree({ geneMap: { type: 'broadleaf', leafColor: 0x44aa33 } });
 // scene.add(pine.toMesh());
 // scene.add(oak.toMesh()); 
+
+// Global output log for AI review
+window.TREE_OUTPUT_LOG = [];
+function logOutput(...args) {
+    window.TREE_OUTPUT_LOG.push(args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' '));
+    console.log(...args);
+} 

@@ -336,7 +336,23 @@ export default class ObjectivesManager {
     }
 
     editObjective(title) {
-        this.showSuccess(`Edit functionality for "${title}" - Coming soon!`);
+        // IDX-OBJ-EDIT: Edit an objective by title
+        const allObjectives = [...this.objectivesData.completed, ...this.objectivesData.planned, ...this.objectivesData.ideas];
+        const obj = allObjectives.find(o => o.title === title);
+        if (!obj) {
+            this.showError(`Objective "${title}" not found!`);
+            return;
+        }
+        const newTitle = prompt('Edit objective title:', obj.title);
+        if (newTitle !== null && newTitle.trim() !== '') obj.title = newTitle.trim();
+        const newDesc = prompt('Edit objective description:', obj.description);
+        if (newDesc !== null && newDesc.trim() !== '') obj.description = newDesc.trim();
+        const newCategory = prompt('Edit objective category:', obj.category);
+        if (newCategory !== null && newCategory.trim() !== '') obj.category = newCategory.trim();
+        const newPriority = prompt('Edit objective priority:', obj.priority);
+        if (newPriority !== null && newPriority.trim() !== '') obj.priority = newPriority.trim();
+        this.renderObjectives();
+        this.showSuccess(`Objective "${title}" updated!`);
     }
 
     deleteObjective(title) {

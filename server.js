@@ -1,8 +1,11 @@
+// IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md
+// IDX-SERVER-01: Multiplayer Server Module
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -347,6 +350,20 @@ Available commands:
             });
     }
 }
+
+// API endpoint to receive tree output log
+app.post('/api/tree-log', (req, res) => {
+    const log = req.body.log;
+    if (!log) {
+        return res.status(400).json({ error: 'No log provided' });
+    }
+    fs.writeFile('tree-output-log.txt', Array.isArray(log) ? log.join('\n') : String(log), err => {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to write log' });
+        }
+        res.json({ success: true });
+    });
+});
 
 const PORT = process.env.PORT || 3001;
 

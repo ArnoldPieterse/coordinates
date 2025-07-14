@@ -1,3 +1,5 @@
+// IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md
+// IDX-ADVREND-01: Advanced Renderer Module
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';

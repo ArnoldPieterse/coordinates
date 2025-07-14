@@ -89,18 +89,18 @@
             
             <div class="control-group">
                 <label>Trunk Height:</label>
-                <input type="range" id="trunkHeight" min="8" max="20" value="12" step="1" title="Trunk Height" disabled>
-                <span id="trunkHeightValue">12</span>
+                <input type="range" id="trunkHeight" min="8" max="16" value="10" step="1" title="Trunk Height" disabled>
+                <span id="trunkHeightValue">10</span>
             </div>
             <div class="control-group">
                 <label>Branch Length:</label>
-                <input type="range" id="branchLength" min="6" max="16" value="10" step="1" title="Branch Length">
-                <span id="branchLengthValue">10</span>
+                <input type="range" id="branchLength" min="8" max="20" value="14" step="1" title="Branch Length">
+                <span id="branchLengthValue">14</span>
             </div>
             <div class="control-group">
                 <label>Branch Angle (deg from vertical):</label>
-                <input type="range" id="branchAngleDeg" min="100" max="115" value="110" step="1" title="Branch Angle (deg from vertical)">
-                <span id="branchAngleDegValue">110</span>
+                <input type="range" id="branchAngleDeg" min="100" max="150" value="130" step="1" title="Branch Angle (deg from vertical)">
+                <span id="branchAngleDegValue">130</span>
             </div>
             
             <div class="control-group">
@@ -136,6 +136,7 @@
         // IDX-TREEPROMPT: Use local Three.js for CSP compliance
         import * as THREE from './src/three.module.js';
         import { VoxelTree } from './src/procedural-tree-voxel.js';
+        import TreeOptions from './src/tree-options.js';
 
         let scene, camera, renderer, treeGroup;
         let currentTree = null;
@@ -219,33 +220,26 @@
                 treeGroup.clear();
             }
 
-            // Create tree parameters
-            // For 'custom', always use sliders. For presets, use sliders if 'custom' is selected, else use defaults.
-            let params = {
-                type: treeType,
-                useHybrid: useHybrid,
-                lSystemParams: {
-                    iterations: lSystemIterations,
-                    length: treeType === 'pine' ? 1.5 : 2.0,
-                    angle: treeType === 'pine' ? Math.PI / 8 : Math.PI / 6,
-                    randomness: 0.1
-                },
-                spaceColonizationParams: {
-                    pointDensity: pointDensity,
-                    influenceRadius: 2.0,
-                    killRadius: 0.5,
-                    stepSize: 0.5
-                }
-            };
-            // Override with fine-tuning if custom, or always if you want live tuning for all
-            if (treeType === 'custom' || true) { // Set to 'true' for all types, or 'treeType === "custom"' for only custom
-                params.trunkHeight = trunkHeight;
-                params.branchLength = branchLength;
-                params.branchAngleDeg = branchAngleDeg;
+            // Create and configure TreeOptions
+            const options = new TreeOptions();
+            options.type = treeType;
+            // Patch: Set all required branch options for levels 0-3
+            for (let lvl = 0; lvl <= 3; lvl++) {
+                options.branch.length[lvl] = lvl === 0 ? trunkHeight : branchLength * Math.pow(0.7, lvl-1);
+                options.branch.radius[lvl] = lvl === 0 ? 1.5 : 0.7 * Math.pow(0.7, lvl-1);
+                options.branch.sections[lvl] = lvl === 0 ? 12 : 8;
+                options.branch.segments[lvl] = lvl === 0 ? 8 : 6;
+                options.branch.angle[lvl] = branchAngleDeg;
+                options.branch.children[lvl] = lvl === 0 ? 7 : 3;
+                options.branch.start[lvl] = 0.4;
+                options.branch.taper[lvl] = 0.7;
+                options.branch.twist[lvl] = 0;
+                options.branch.gnarliness[lvl] = 0.15 + 0.05 * lvl;
             }
-
+            // Optionally set more options from UI or presets
+            // L-System and space colonization params can be set as needed
             // Generate tree
-            currentTree = new VoxelTree(params);
+            currentTree = new VoxelTree(options);
             const treeMesh = currentTree.toMesh({ ringSides, useHybrid });
             treeMesh.castShadow = true;
             treeMesh.receiveShadow = true;
@@ -253,6 +247,18 @@
 
             // Update stats
             updateTreeStats();
+
+            // Automatically upload the output log to the server (use correct port)
+            if (window.TREE_OUTPUT_LOG && window.TREE_OUTPUT_LOG.length > 0) {
+                fetch('http://localhost:3001/api/tree-log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ log: window.TREE_OUTPUT_LOG })
+                })
+                .then(res => res.json())
+                .then(data => console.log('Log upload result:', data))
+                .catch(err => console.error('Log upload error:', err));
+            }
         };
 
         // Toggle between hybrid and traditional approaches

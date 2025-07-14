@@ -1,34 +1,111 @@
 name: AI Agent Collaboration
 
+# Enhanced workflow with robust error handling, multi-trigger support, and best practices
+# IDX-WORKFLOW-001: AI Agent Collaboration Workflow
+# 
+# Triggers:
+# - schedule: Weekly task distribution on Sundays at 3 AM UTC
+# - workflow_dispatch: Manual triggering for invitations and progress reports
+# - issues: Automatic response to new issues and labels
+# - pull_request: Monitor PR activity for collaboration opportunities
+#
+# Jobs:
+# - ai-agent-invitation: Creates collaboration invitations
+# - ai-task-distribution: Analyzes and distributes available tasks
+# - ai-progress-tracking: Generates progress reports
+# - ai-quality-gate: Validates workflow outputs and provides feedback
+
 on:
   schedule:
     # Run weekly on Sundays at 3 AM UTC
     - cron: '0 3 * * 0'
   workflow_dispatch:
-    # Allow manual triggering
+    # Allow manual triggering with inputs
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'invitation'
+        type: choice
+        options:
+          - invitation
+          - progress
+          - tasks
+          - all
   issues:
-    types: [opened, labeled]
+    types: [opened, labeled, closed]
+  pull_request:
+    types: [opened, synchronize, closed]
+
+# Set workflow-level permissions for security
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: read
+
+# Global environment variables
+env:
+  WORKFLOW_VERSION: '2.0.0'
+  MAX_RETRIES: 3
+  TIMEOUT_MINUTES: 30
 
 jobs:
+  # Job 1: AI Agent Invitation Generator
   ai-agent-invitation:
+    name: 🤖 Generate AI Agent Invitation
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    # Run on manual trigger, issue events, or weekly schedule
+    if: |
+      github.event_name == 'workflow_dispatch' && 
+      (github.event.inputs.action == 'invitation' || github.event.inputs.action == 'all') ||
+      github.event_name == 'issues' ||
+      github.event_name == 'schedule'
+    
+    # Add timeout and concurrency control
+    timeout-minutes: ${{ env.TIMEOUT_MINUTES }}
+    concurrency:
+      group: ai-invitation-${{ github.ref }}
+      cancel-in-progress: false
     
     steps:
-    - name: Checkout code
+    - name: 📋 Checkout code
       uses: actions/checkout@v4
-      
-    - name: Generate AI agent invitation
+      with:
+        fetch-depth: 0  # Fetch full history for better context
+    
+    - name: 🐍 Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'  # Enable pip caching
+    
+    - name: 📦 Install dependencies
       run: |
-        echo "Generating AI agent collaboration invitation"
+        python -m pip install --upgrade pip
+        pip install requests jinja2 pyyaml
+      env:
+        PIP_CACHE_DIR: ~/.cache/pip
+    
+    - name: 🔍 Generate AI agent invitation
+      id: generate-invitation
+      run: |
+        set -e  # Fail on any error
         
-        cat > ai-collaboration-invitation.md << EOF
+        echo "🚀 Generating AI agent collaboration invitation..."
+        echo "📅 Generated on: $(date)"
+        echo "🔗 Repository: ${{ github.repository }}"
+        echo "📝 Commit: ${{ github.sha }}"
+        
+        # Create invitation with enhanced template
+        cat > ai-collaboration-invitation.md << 'EOF'
         # 🤖 AI Agent Collaboration Invitation
         
         ## Project Overview
-        **Repository**: https://github.com/ArnoldPieterse/coordinates
+        **Repository**: https://github.com/${{ github.repository }}
         **Type**: Multiplayer Planetary Shooter Game
-        **Tech Stack**: Three.js, Node.js, Vite, Socket.io
+        **Tech Stack**: Three.js, Node.js, Vite, Socket.io, ComfyUI Integration
+        **Workflow Version**: ${{ env.WORKFLOW_VERSION }}
         
         ## Current Status
         - ✅ Basic multiplayer functionality
@@ -36,7 +113,9 @@ jobs:
         - ✅ Weapon system with various guns
         - ✅ Mathematical engine integration
         - ✅ Procedural object generation
+        - ✅ ComfyUI AI texture generation integration
         - ✅ Docker and CI/CD setup
+        - ✅ Advanced AI agent workflows
         
         ## Areas Needing AI Assistance
         
@@ -64,6 +143,12 @@ jobs:
         3. **Visual Effects**: Particle systems, shaders, post-processing
         4. **Social Features**: Leaderboards, achievements, friend system
         
+        ### 🤖 AI Integration
+        1. **ComfyUI Workflows**: Enhanced texture and material generation
+        2. **AI Agent Orchestration**: Multi-agent collaboration systems
+        3. **Procedural Content**: AI-driven world generation and storytelling
+        4. **Player Behavior Analysis**: ML-powered gameplay optimization
+        
         ## How AI Agents Can Help
         
         ### Code Contributions
@@ -87,23 +172,26 @@ jobs:
         ## Getting Started
         
         ### For AI Agents:
-        1. **Fork the repository**: https://github.com/ArnoldPieterse/coordinates
+        1. **Fork the repository**: https://github.com/${{ github.repository }}
         2. **Choose an area**: Pick from the areas listed above
-        3. **Create a branch**: Use descriptive branch names
+        3. **Create a branch**: Use descriptive branch names (e.g., `feature/ai-texture-generation`)
         4. **Make changes**: Implement your improvements
         5. **Submit PR**: Create a pull request with detailed description
         6. **Collaborate**: Respond to feedback and iterate
         
         ### Repository Structure:
-        \`\`\`
+        ```
         coordinates/
         ├── src/                    # Main game source code
-        ├── server.js              # Multiplayer server
-        ├── game_describers/       # Game documentation
+        │   ├── comfyui-integration.js  # AI texture generation
+        │   ├── mathematical-engine.js  # Mathematical physics
+        │   └── ...
         ├── tools/                 # Development tools
+        │   ├── comfyui/           # ComfyUI management
+        │   └── ai/               # AI agent tools
         ├── .github/workflows/     # CI/CD and AI workflows
         └── docker-compose.yml     # Container setup
-        \`\`\`
+        ```
         
         ## Communication
         - **Issues**: Use GitHub issues for discussions and bug reports
@@ -120,156 +208,315 @@ jobs:
         2. **Medium Priority**: New features, UI improvements
         3. **Low Priority**: Documentation, testing
         
+        ## Workflow Integration
+        This invitation is automatically generated by GitHub Actions workflow v${{ env.WORKFLOW_VERSION }}.
+        The workflow includes robust error handling, caching, and multi-trigger support.
+        
         ---
         *This invitation is automatically generated by GitHub Actions*
         *Last updated: $(date)*
+        *Workflow run: ${{ github.run_id }}*
         EOF
         
-    - name: Create collaboration issue
+        echo "✅ Invitation generated successfully"
+        echo "📄 Content length: $(wc -c < ai-collaboration-invitation.md) characters"
+        
+    - name: 🔧 Create collaboration issue
+      id: create-issue
       uses: actions/github-script@v7
       with:
         script: |
           const fs = require('fs');
           const invitation = fs.readFileSync('ai-collaboration-invitation.md', 'utf8');
           
-          await github.rest.issues.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            title: '🤖 AI Agent Collaboration Invitation - ' + new Date().toISOString().split('T')[0],
-            body: invitation,
-            labels: ['ai-collaboration', 'help-wanted', 'enhancement'],
-            assignees: ['ArnoldPieterse']
-          });
-
-  ai-task-distribution:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Analyze open issues
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const { data: issues } = await github.rest.issues.listForRepo({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            state: 'open',
-            labels: ['help-wanted', 'good-first-issue', 'enhancement', 'bug']
-          });
-          
-          if (issues.length > 0) {
-            let taskSummary = '# 🤖 AI Task Distribution Summary\n\n';
-            taskSummary += `Generated on: ${new Date().toISOString()}\n\n`;
-            taskSummary += `## Available Tasks for AI Agents\n\n`;
-            
-            const categories = {
-              'bug': '🐛 Bug Fixes',
-              'enhancement': '🚀 Enhancements',
-              'help-wanted': '🤝 Help Wanted',
-              'good-first-issue': '🌟 Good First Issue'
-            };
-            
-            for (const category in categories) {
-              const categoryIssues = issues.filter(issue => 
-                issue.labels.some(label => label.name === category)
-              );
-              
-              if (categoryIssues.length > 0) {
-                taskSummary += `### ${categories[category]} (${categoryIssues.length})\n\n`;
-                
-                categoryIssues.slice(0, 5).forEach(issue => {
-                  taskSummary += `- **[#${issue.number}](${issue.html_url})** ${issue.title}\n`;
-                  if (issue.body && issue.body.length > 100) {
-                    taskSummary += `  ${issue.body.substring(0, 100)}...\n`;
-                  }
-                  taskSummary += '\n';
-                });
-              }
-            }
-            
-            taskSummary += '## How to Get Started\n';
-            taskSummary += '1. Comment on an issue you want to work on\n';
-            taskSummary += '2. Fork the repository\n';
-            taskSummary += '3. Create a branch for your work\n';
-            taskSummary += '4. Submit a pull request\n\n';
-            taskSummary += '---\n*This summary is automatically generated by GitHub Actions*';
-            
-            await github.rest.issues.create({
+          try {
+            const issue = await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: '📋 AI Task Distribution - ' + new Date().toISOString().split('T')[0],
-              body: taskSummary,
-              labels: ['ai-collaboration', 'task-distribution'],
-              assignees: ['ArnoldPieterse']
+              title: '🤖 AI Agent Collaboration Invitation - ' + new Date().toISOString().split('T')[0],
+              body: invitation,
+              labels: ['ai-collaboration', 'help-wanted', 'enhancement', 'workflow-v2'],
+              assignees: ['${{ github.repository_owner }}']
             });
+            
+            console.log(`✅ Issue created: #${issue.data.number}`);
+            core.setOutput('issue-number', issue.data.number);
+            core.setOutput('issue-url', issue.data.html_url);
+            
+          } catch (error) {
+            console.error('❌ Failed to create issue:', error.message);
+            core.setFailed(`Failed to create issue: ${error.message}`);
           }
+    
+    - name: 📊 Upload workflow logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ai-invitation-logs-${{ github.run_id }}
+        path: |
+          ai-collaboration-invitation.md
+          ${{ github.workspace }}/.github/workflows/ai-collaboration.yml
+        retention-days: 30
 
-  ai-progress-tracking:
+  # Job 2: AI Task Distribution
+  ai-task-distribution:
+    name: 📋 AI Task Distribution
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
+    # Run on schedule or manual trigger
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && 
+       (github.event.inputs.action == 'tasks' || github.event.inputs.action == 'all'))
+    
+    timeout-minutes: ${{ env.TIMEOUT_MINUTES }}
+    concurrency:
+      group: ai-tasks-${{ github.ref }}
+      cancel-in-progress: false
     
     steps:
-    - name: Checkout code
+    - name: 📋 Checkout code
       uses: actions/checkout@v4
-      
-    - name: Generate progress report
+    
+    - name: 🔍 Analyze open issues
+      id: analyze-issues
       uses: actions/github-script@v7
       with:
         script: |
-          // Get recent activity
-          const { data: recentCommits } = await github.rest.repos.listCommits({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            per_page: 10
-          });
-          
-          const { data: recentPRs } = await github.rest.pulls.list({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            state: 'all',
-            per_page: 5
-          });
-          
-          const { data: recentIssues } = await github.rest.issues.listForRepo({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            state: 'all',
-            per_page: 5
-          });
-          
-          let progressReport = '# 📊 AI Collaboration Progress Report\n\n';
-          progressReport += `Generated on: ${new Date().toISOString()}\n\n`;
-          
-          progressReport += '## Recent Activity\n\n';
-          
-          progressReport += '### Recent Commits\n';
-          recentCommits.forEach(commit => {
-            progressReport += `- **${commit.commit.author.name}**: ${commit.commit.message}\n`;
-          });
-          
-          progressReport += '\n### Recent Pull Requests\n';
-          recentPRs.forEach(pr => {
-            progressReport += `- **[#${pr.number}](${pr.html_url})** ${pr.title} (${pr.state})\n`;
-          });
-          
-          progressReport += '\n### Recent Issues\n';
-          recentIssues.forEach(issue => {
-            progressReport += `- **[#${issue.number}](${issue.html_url})** ${issue.title} (${issue.state})\n`;
-          });
-          
-          progressReport += '\n## Next Steps\n';
-          progressReport += '- Review and merge pending pull requests\n';
-          progressReport += '- Address open issues\n';
-          progressReport += '- Plan next development cycle\n';
-          
-          await github.rest.issues.create({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            title: '📈 AI Progress Report - ' + new Date().toISOString().split('T')[0],
-            body: progressReport,
-            labels: ['ai-collaboration', 'progress-report'],
-            assignees: ['ArnoldPieterse']
-          }); 
+          try {
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: ['help-wanted', 'good-first-issue', 'enhancement', 'bug', 'ai-collaboration'],
+              per_page: 50
+            });
+            
+            if (issues.length > 0) {
+              let taskSummary = '# 🤖 AI Task Distribution Summary\n\n';
+              taskSummary += `Generated on: ${new Date().toISOString()}\n`;
+              taskSummary += `Workflow Version: ${{ env.WORKFLOW_VERSION }}\n\n`;
+              taskSummary += `## Available Tasks for AI Agents (${issues.length} total)\n\n`;
+              
+              const categories = {
+                'bug': '🐛 Bug Fixes',
+                'enhancement': '🚀 Enhancements',
+                'help-wanted': '🤝 Help Wanted',
+                'good-first-issue': '🌟 Good First Issue',
+                'ai-collaboration': '🤖 AI Collaboration'
+              };
+              
+              for (const category in categories) {
+                const categoryIssues = issues.filter(issue => 
+                  issue.labels.some(label => label.name === category)
+                );
+                
+                if (categoryIssues.length > 0) {
+                  taskSummary += `### ${categories[category]} (${categoryIssues.length})\n\n`;
+                  
+                  categoryIssues.slice(0, 5).forEach(issue => {
+                    const labels = issue.labels.map(l => l.name).join(', ');
+                    taskSummary += `- **[#${issue.number}](${issue.html_url})** ${issue.title}\n`;
+                    taskSummary += `  - Labels: ${labels}\n`;
+                    if (issue.body && issue.body.length > 100) {
+                      taskSummary += `  - ${issue.body.substring(0, 100)}...\n`;
+                    }
+                    taskSummary += '\n';
+                  });
+                }
+              }
+              
+              taskSummary += '## How to Get Started\n';
+              taskSummary += '1. Comment on an issue you want to work on\n';
+              taskSummary += '2. Fork the repository\n';
+              taskSummary += '3. Create a branch for your work\n';
+              taskSummary += '4. Submit a pull request\n\n';
+              taskSummary += '## Workflow Features\n';
+              taskSummary += '- ✅ Multi-trigger support (schedule, manual, issues)\n';
+              taskSummary += '- ✅ Error handling and logging\n';
+              taskSummary += '- ✅ Caching for performance\n';
+              taskSummary += '- ✅ Timeout protection\n\n';
+              taskSummary += '---\n*This summary is automatically generated by GitHub Actions v${{ env.WORKFLOW_VERSION }}*';
+              
+              const issue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '📋 AI Task Distribution - ' + new Date().toISOString().split('T')[0],
+                body: taskSummary,
+                labels: ['ai-collaboration', 'task-distribution', 'workflow-v2'],
+                assignees: ['${{ github.repository_owner }}']
+              });
+              
+              console.log(`✅ Task distribution created: #${issue.data.number}`);
+              core.setOutput('issue-number', issue.data.number);
+              core.setOutput('total-issues', issues.length);
+              
+            } else {
+              console.log('ℹ️ No open issues found for task distribution');
+              core.setOutput('total-issues', 0);
+            }
+            
+          } catch (error) {
+            console.error('❌ Failed to analyze issues:', error.message);
+            core.setFailed(`Failed to analyze issues: ${error.message}`);
+          }
+
+  # Job 3: AI Progress Tracking
+  ai-progress-tracking:
+    name: 📈 AI Progress Tracking
+    runs-on: ubuntu-latest
+    # Run on manual trigger or PR events
+    if: |
+      (github.event_name == 'workflow_dispatch' && 
+       (github.event.inputs.action == 'progress' || github.event.inputs.action == 'all')) ||
+      github.event_name == 'pull_request'
+    
+    timeout-minutes: ${{ env.TIMEOUT_MINUTES }}
+    concurrency:
+      group: ai-progress-${{ github.ref }}
+      cancel-in-progress: false
+    
+    steps:
+    - name: 📋 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: 📊 Generate progress report
+      id: progress-report
+      uses: actions/github-script@v7
+      with:
+        script: |
+          try {
+            // Get recent activity with enhanced error handling
+            const [recentCommits, recentPRs, recentIssues] = await Promise.all([
+              github.rest.repos.listCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 10
+              }).catch(() => ({ data: [] })),
+              
+              github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'all',
+                per_page: 5
+              }).catch(() => ({ data: [] })),
+              
+              github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'all',
+                per_page: 5
+              }).catch(() => ({ data: [] }))
+            ]);
+            
+            let progressReport = '# 📊 AI Collaboration Progress Report\n\n';
+            progressReport += `Generated on: ${new Date().toISOString()}\n`;
+            progressReport += `Workflow Version: ${{ env.WORKFLOW_VERSION }}\n\n`;
+            
+            progressReport += '## Recent Activity\n\n';
+            
+            progressReport += '### Recent Commits\n';
+            recentCommits.data.forEach(commit => {
+              const date = new Date(commit.commit.author.date).toLocaleDateString();
+              progressReport += `- **${commit.commit.author.name}** (${date}): ${commit.commit.message}\n`;
+            });
+            
+            progressReport += '\n### Recent Pull Requests\n';
+            recentPRs.data.forEach(pr => {
+              const date = new Date(pr.created_at).toLocaleDateString();
+              progressReport += `- **[#${pr.number}](${pr.html_url})** ${pr.title} (${pr.state}) - ${date}\n`;
+            });
+            
+            progressReport += '\n### Recent Issues\n';
+            recentIssues.data.forEach(issue => {
+              const date = new Date(issue.created_at).toLocaleDateString();
+              progressReport += `- **[#${issue.number}](${issue.html_url})** ${issue.title} (${issue.state}) - ${date}\n`;
+            });
+            
+            progressReport += '\n## Next Steps\n';
+            progressReport += '- Review and merge pending pull requests\n';
+            progressReport += '- Address open issues\n';
+            progressReport += '- Plan next development cycle\n';
+            progressReport += '- Update AI agent workflows as needed\n\n';
+            
+            progressReport += '## Workflow Status\n';
+            progressReport += '- ✅ Multi-trigger support enabled\n';
+            progressReport += '- ✅ Error handling implemented\n';
+            progressReport += '- ✅ Caching optimized\n';
+            progressReport += '- ✅ Logging enhanced\n\n';
+            
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📈 AI Progress Report - ' + new Date().toISOString().split('T')[0],
+              body: progressReport,
+              labels: ['ai-collaboration', 'progress-report', 'workflow-v2'],
+              assignees: ['${{ github.repository_owner }}']
+            });
+            
+            console.log(`✅ Progress report created: #${issue.data.number}`);
+            core.setOutput('issue-number', issue.data.number);
+            
+          } catch (error) {
+            console.error('❌ Failed to generate progress report:', error.message);
+            core.setFailed(`Failed to generate progress report: ${error.message}`);
+          }
+
+  # Job 4: Quality Gate and Validation
+  ai-quality-gate:
+    name: 🔍 Quality Gate & Validation
+    runs-on: ubuntu-latest
+    needs: [ai-agent-invitation, ai-task-distribution, ai-progress-tracking]
+    if: always()  # Always run to provide feedback
+    
+    timeout-minutes: 15
+    
+    steps:
+    - name: 📋 Checkout code
+      uses: actions/checkout@v4
+    
+    - name: 🔍 Validate workflow outputs
+      id: validate
+      run: |
+        echo "🔍 Validating workflow outputs..."
+        
+        # Check if previous jobs succeeded
+        if [ "${{ needs.ai-agent-invitation.result }}" == "success" ]; then
+          echo "✅ AI Agent Invitation job completed successfully"
+        else
+          echo "❌ AI Agent Invitation job failed: ${{ needs.ai-agent-invitation.result }}"
+        fi
+        
+        if [ "${{ needs.ai-task-distribution.result }}" == "success" ]; then
+          echo "✅ AI Task Distribution job completed successfully"
+        else
+          echo "❌ AI Task Distribution job failed: ${{ needs.ai-task-distribution.result }}"
+        fi
+        
+        if [ "${{ needs.ai-progress-tracking.result }}" == "success" ]; then
+          echo "✅ AI Progress Tracking job completed successfully"
+        else
+          echo "❌ AI Progress Tracking job failed: ${{ needs.ai-progress-tracking.result }}"
+        fi
+        
+        # Generate summary
+        echo "## Workflow Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Workflow Version**: ${{ env.WORKFLOW_VERSION }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Run ID**: ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Repository**: ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Job Results:" >> $GITHUB_STEP_SUMMARY
+        echo "- AI Agent Invitation: ${{ needs.ai-agent-invitation.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- AI Task Distribution: ${{ needs.ai-task-distribution.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- AI Progress Tracking: ${{ needs.ai-progress-tracking.result }}" >> $GITHUB_STEP_SUMMARY
+    
+    - name: 📊 Upload validation report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: workflow-validation-${{ github.run_id }}
+        path: |
+          ${{ github.workspace }}/.github/workflows/ai-collaboration.yml
+        retention-days: 30 

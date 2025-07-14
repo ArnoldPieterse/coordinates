@@ -1,5 +1,7 @@
 # Rendering System Documentation
 
+> For index reference format, see [../INDEX_DESCRIBER.md](../INDEX_DESCRIBER.md)  <!-- IDX-DOC-00 -->
+
 *Comprehensive technical specification for the game's rendering engine and visual effects*
 
 ---

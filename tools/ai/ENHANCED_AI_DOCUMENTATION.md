@@ -1,4 +1,6 @@
-# Enhanced AI Interface Documentation
+# Enhanced AI Documentation
+
+> For index reference format, see [../../INDEX_DESCRIBER.md](../../INDEX_DESCRIBER.md)  <!-- IDX-DOC-00 -->
 
 ## Overview
 

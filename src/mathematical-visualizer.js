@@ -1,3 +1,5 @@
+// IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md
+// IDX-MATHVIS-01: Mathematical Visualizer Module
 // Mathematical Visualizer - Real-time visualization of mathematical effects
 // Shows fractal patterns, quantum states, complex number relationships, and fine structure constant effects
 

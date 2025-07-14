@@ -1,6 +1,8 @@
 # Spatial Function Clustering Matrix Documentation
 
-## Overview
+> For index reference format, see [INDEX_DESCRIBER.md](./INDEX_DESCRIBER.md)  <!-- IDX-DOC-00 -->
+
+# IDX-DOC-01: Overview
 
 The **Spatial Function Clustering Matrix** is a revolutionary code architecture visualization system that positions functions in 3D space based on their calling relationships and frequency. This system implements your vision of functions as voxels/points in three-dimensional space, where their physical location is calculated to be closest to their most frequent callers.
 

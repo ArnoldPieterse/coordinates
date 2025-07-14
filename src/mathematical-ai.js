@@ -1,4 +1,5 @@
-// Mathematical AI System
+// IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md
+// IDX-MATHAI-01: Mathematical AI Module
 
 import MathematicalEngine from './mathematical-engine.js';
 

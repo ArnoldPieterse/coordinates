@@ -1,4 +1,6 @@
-# [STORY_ELEMENT_NAME] Template
+# Story Element Template
+
+> For index reference format, see [../../INDEX_DESCRIBER.md](../../INDEX_DESCRIBER.md)  <!-- IDX-DOC-00 -->
 
 *Template for documenting story elements and narrative content*
 

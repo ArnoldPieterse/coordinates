@@ -1,3 +1,5 @@
+// IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md
+// IDX-MATHENG-01: Mathematical Engine Module
 // Mathematical Engine - Core Implementation
 // Integrates fractal rooting, fine structure constant (137), and complex number relationships
 

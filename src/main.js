@@ -1,3 +1,5 @@
+// IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md
+// IDX-MAIN-01: Main imports
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { io } from 'socket.io-client';
@@ -1119,10 +1121,38 @@ class MultiplayerPlanetaryShooter {
         }
     }
     addChatMessage(sender, message, isSystem = false) {
-        // Implementation for chat
+        // IDX-MAIN-CHAT: Add a chat message to the chat container
+        if (!this.chatContainer) {
+            this.chatContainer = document.getElementById('chat-container');
+        }
+        if (!this.chatContainer) return;
+        const msgDiv = document.createElement('div');
+        msgDiv.className = isSystem ? 'chat-system-message' : 'chat-message';
+        msgDiv.style.color = isSystem ? '#00ffff' : '#fff';
+        msgDiv.style.fontWeight = isSystem ? 'bold' : 'normal';
+        msgDiv.textContent = isSystem ? message : `${sender}: ${message}`;
+        this.chatContainer.appendChild(msgDiv);
+        this.chatMessages.push({ sender, message, isSystem });
+        // Limit chat messages
+        while (this.chatContainer.children.length > this.maxChatMessages) {
+            this.chatContainer.removeChild(this.chatContainer.firstChild);
+        }
+        // Optionally scroll to bottom
+        this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
     }
     updateWeaponUI() {
-        // Implementation for weapon UI
+        // IDX-MAIN-WEAPONUI: Update the weapon UI display
+        if (!this.weaponUI) {
+            this.weaponUI = document.getElementById('weapon-ui');
+        }
+        if (!this.weaponUI) return;
+        const weapon = this.weapons[this.currentWeapon];
+        const ammo = this.ammo[this.currentWeapon];
+        this.weaponUI.innerHTML = `
+            <div style="font-weight:bold; color:#fff;">${weapon.name}</div>
+            <div style="color:#ff0;">Ammo: ${ammo} / ${weapon.ammoCapacity}</div>
+            <div style="color:#aaa; font-size:12px;">Damage: ${weapon.damage} | Reload: ${weapon.reloadTime}s</div>
+        `;
     }
     switchWeapon(weaponKey) {
         if (!this.weapons[weaponKey] || this.isDead || this.isInRocket) return;

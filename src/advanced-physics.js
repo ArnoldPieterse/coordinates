@@ -1,3 +1,5 @@
+// IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md
+// IDX-ADVPHYS-01: Advanced Physics Module
 import * as CANNON from 'cannon-es';
 
 class AdvancedPhysics {

@@ -1,3 +1,7 @@
+# Mechanic Component Template
+
+> For index reference format, see [../../INDEX_DESCRIBER.md](../../INDEX_DESCRIBER.md)  <!-- IDX-DOC-00 -->
+
 # [GAME_MECHANIC_NAME] Template
 
 *Template for documenting game mechanics and systems*

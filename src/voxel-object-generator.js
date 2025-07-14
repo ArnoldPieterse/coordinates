@@ -1,6 +1,9 @@
 import * as THREE from 'three';
 import { MarchingCubes } from 'three/examples/jsm/objects/MarchingCubes.js';
 
+// IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md
+// IDX-VOXELGEN-01: Voxel Object Generator Module
+
 class VoxelObjectGenerator {
     constructor(resolution) {
         this.resolution = resolution;

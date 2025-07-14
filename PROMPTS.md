@@ -53,6 +53,8 @@ A collection of concise, actionable prompts to guide development, navigation, do
 - Use the indexer to navigate and build project files efficiently.
 - Rate the suggestions and do the most important ones first. For technical/environmental issues, always select the most secure and robust solution (e.g., use local dependencies over CDN if CSP blocks external scripts). Implement the highest-rated suggestion first, then proceed with the rest in order.
 
+* When implementing or reviewing tree growth/generation code, always use biologically accurate rules: branch angle as a function of height/order, golden angle for azimuth, tropism, allometry, and local randomness. Reference recent research and update the generator accordingly.
+
 ---
 
 *Review this file regularly and add new prompts as the project grows to maintain high quality, efficiency, and collaboration.* 

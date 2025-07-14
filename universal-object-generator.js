@@ -1,3 +1,5 @@
+// IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md
+// IDX-UOG-01: Universal Object Generator Module
 import * as THREE from 'three';
 import VoxelObjectGenerator from './src/voxel-object-generator.js';
 

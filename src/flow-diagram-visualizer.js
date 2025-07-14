@@ -1,3 +1,5 @@
+// IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md
+// IDX-FLOW-01: Flow Diagram Visualizer Module
 import * as THREE from 'three';
 
 export default class FlowDiagramVisualizer {
