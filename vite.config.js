@@ -18,9 +18,9 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: true,
     rollupOptions: {
-      input: {
-        main: './src/main.jsx'
-      },
+      // input: {
+      //   main: './src/main.jsx'
+      // },
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
