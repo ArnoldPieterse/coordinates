@@ -200,24 +200,30 @@ class LSystemSkeleton {
     // Generate the L-system string
     generateString() {
         let result = this.axiom;
+        
         for (let i = 0; i < this.iterations; i++) {
             let newResult = '';
             for (let char of result) {
-                newResult += this.rules[char] || char;
+                if (this.rules[char]) {
+                    newResult += this.rules[char];
+                } else {
+                    newResult += char;
+                }
             }
             result = newResult;
         }
+        
         return result;
     }
 
-    // Interpret the L-system string to create 3D segments
+    // Interpret the L-system string to generate segments
     interpretString(lString) {
         this.segments = [];
         this.stack = [];
         this.currentPos = new THREE.Vector3(0, 0, 0);
         this.currentDir = new THREE.Vector3(0, 1, 0);
         this.currentLength = this.length;
-
+        
         for (let char of lString) {
             this.interpretChar(char);
         }
@@ -225,39 +231,58 @@ class LSystemSkeleton {
         return this.segments;
     }
 
+    // Interpret individual characters
     interpretChar(char) {
         switch (char) {
-            case 'F':
-                // Move forward and create a segment
+            case 'F': // Forward
                 const endPos = this.currentPos.clone().add(
                     this.currentDir.clone().multiplyScalar(this.currentLength)
                 );
+                
+                // Apply tropism (upward growth bias)
+                const tropismEffect = this.tropism.clone()
+                    .multiplyScalar(this.tropismStrength * this.currentLength);
+                endPos.add(tropismEffect);
+                
+                // Add randomness
+                if (this.randomness > 0) {
+                    const randomOffset = new THREE.Vector3(
+                        (Math.random() - 0.5) * this.randomness * this.currentLength,
+                        (Math.random() - 0.5) * this.randomness * this.currentLength,
+                        (Math.random() - 0.5) * this.randomness * this.currentLength
+                    );
+                    endPos.add(randomOffset);
+                }
+                
                 this.segments.push({
                     start: this.currentPos.clone(),
-                    end: endPos,
-                    direction: this.currentDir.clone(),
-                    length: this.currentLength
+                    end: endPos.clone(),
+                    type: 'skeleton',
+                    length: this.currentLength,
+                    direction: this.currentDir.clone()
                 });
+                
                 this.currentPos.copy(endPos);
+                this.currentLength *= this.lengthFactor;
                 break;
-            case '+':
-                // Turn right
-                this.currentDir.applyAxisAngle(new THREE.Vector3(0, 0, 1), this.angle);
+                
+            case '+': // Turn right
+                this.currentDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), this.angle);
                 break;
-            case '-':
-                // Turn left
-                this.currentDir.applyAxisAngle(new THREE.Vector3(0, 0, 1), -this.angle);
+                
+            case '-': // Turn left
+                this.currentDir.applyAxisAngle(new THREE.Vector3(0, 1, 0), -this.angle);
                 break;
-            case '[':
-                // Save state
+                
+            case '[': // Push state
                 this.stack.push({
                     pos: this.currentPos.clone(),
                     dir: this.currentDir.clone(),
                     length: this.currentLength
                 });
                 break;
-            case ']':
-                // Restore state
+                
+            case ']': // Pop state
                 if (this.stack.length > 0) {
                     const state = this.stack.pop();
                     this.currentPos.copy(state.pos);
@@ -278,136 +303,134 @@ class LSystemSkeleton {
 // IDX-TREEHYBRID-02: Space Colonization for Fine Branching
 class SpaceColonization {
     constructor(params = {}) {
-        this.influenceRadius = params.influenceRadius || 2.0;
+        this.influenceRadius = params.influenceRadius || 3.0;
         this.killRadius = params.killRadius || 0.5;
         this.stepSize = params.stepSize || 0.5;
-        this.pointDensity = params.pointDensity || 0.1;
         this.maxIterations = params.maxIterations || 100;
-        this.minSegmentLength = params.minSegmentLength || 0.1;
-        
         this.attractionPoints = [];
+        this.fineSegments = [];
         this.skeletonSegments = [];
-        this.fineBranches = [];
     }
 
     // Distribute attraction points in the crown volume
     distributeAttractionPoints(crownCenter, crownRadius, crownHeight) {
         this.attractionPoints = [];
-        const numPoints = Math.floor(crownRadius * crownRadius * crownHeight * this.pointDensity);
+        const pointCount = Math.floor(crownRadius * crownHeight * this.pointDensity || 0.1);
         
-        for (let i = 0; i < numPoints; i++) {
-            // Random position within crown volume (ellipsoid)
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.acos(2 * Math.random() - 1);
-            const r = Math.pow(Math.random(), 1/3) * crownRadius;
+        for (let i = 0; i < pointCount; i++) {
+            // Random position within crown volume
+            const angle = Math.random() * Math.PI * 2;
+            const radius = Math.random() * crownRadius;
+            const height = Math.random() * crownHeight;
             
-            const x = crownCenter.x + r * Math.sin(phi) * Math.cos(theta);
-            const y = crownCenter.y + Math.random() * crownHeight;
-            const z = crownCenter.z + r * Math.sin(phi) * Math.sin(theta);
+            const point = new THREE.Vector3(
+                crownCenter.x + Math.cos(angle) * radius,
+                crownCenter.y + height,
+                crownCenter.z + Math.sin(angle) * radius
+            );
             
-            this.attractionPoints.push(new THREE.Vector3(x, y, z));
+            this.attractionPoints.push({
+                position: point,
+                active: true
+            });
         }
     }
 
-    // Set the L-system skeleton as the base for fine branching
+    // Set the L-system skeleton for fine branching
     setSkeleton(skeletonSegments) {
         this.skeletonSegments = skeletonSegments;
-        this.fineBranches = [];
+        this.fineSegments = [];
         
         // Initialize fine branches from skeleton endpoints
-        skeletonSegments.forEach(segment => {
-            this.fineBranches.push({
-                start: segment.start.clone(),
+        for (const segment of skeletonSegments) {
+            this.fineSegments.push({
+                start: segment.end.clone(),
                 end: segment.end.clone(),
-                direction: segment.end.clone().sub(segment.start).normalize(),
-                length: segment.length,
-                radius: segment.radius * 0.5, // Smaller than main skeleton
-                active: true
+                direction: segment.direction.clone(),
+                active: true,
+                parent: segment
             });
-        });
+        }
     }
 
     // Grow fine branches toward attraction points
     growFineBranches() {
         for (let iteration = 0; iteration < this.maxIterations; iteration++) {
-            let hasGrowth = false;
+            let anyGrowth = false;
             
-            // For each active branch tip
-            for (let i = 0; i < this.fineBranches.length; i++) {
-                const branch = this.fineBranches[i];
+            // Calculate growth direction for each active fine branch
+            for (const branch of this.fineSegments) {
                 if (!branch.active) continue;
                 
-                // Find attraction points within influence radius
-                const nearbyPoints = [];
-                for (let j = this.attractionPoints.length - 1; j >= 0; j--) {
-                    const point = this.attractionPoints[j];
-                    const distance = branch.end.distanceTo(point);
+                const growthDir = this.calculateGrowthDirection(branch);
+                if (growthDir.length() > 0.01) {
+                    // Normalize and apply step size
+                    growthDir.normalize().multiplyScalar(this.stepSize);
                     
-                    if (distance <= this.killRadius) {
-                        // Kill this attraction point
-                        this.attractionPoints.splice(j, 1);
-                    } else if (distance <= this.influenceRadius) {
-                        nearbyPoints.push(point);
-                    }
-                }
-                
-                if (nearbyPoints.length > 0) {
-                    // Calculate growth direction (average toward nearby points)
-                    const growthDir = new THREE.Vector3();
-                    nearbyPoints.forEach(point => {
-                        const dir = point.clone().sub(branch.end).normalize();
-                        growthDir.add(dir);
-                    });
-                    growthDir.normalize();
+                    // Update branch end position
+                    branch.end.add(growthDir);
+                    branch.direction.copy(growthDir.normalize());
                     
-                    // Grow the branch
-                    const newEnd = branch.end.clone().add(
-                        growthDir.multiplyScalar(this.stepSize)
-                    );
-                    
-                    // Check if growth is significant
-                    const growthLength = branch.end.distanceTo(newEnd);
-                    if (growthLength >= this.minSegmentLength) {
-                        // Update branch
-                        branch.end.copy(newEnd);
-                        branch.direction.copy(growthDir);
-                        branch.length += growthLength;
-                        hasGrowth = true;
-                        
-                        // Occasionally spawn new branches
-                        if (Math.random() < 0.1 && branch.length < 5.0) {
-                            const newBranchDir = growthDir.clone().applyAxisAngle(
-                                new THREE.Vector3(0, 1, 0),
-                                (Math.random() - 0.5) * Math.PI / 3
-                            );
-                            
-                            this.fineBranches.push({
-                                start: branch.end.clone(),
-                                end: branch.end.clone().add(newBranchDir.multiplyScalar(this.stepSize)),
-                                direction: newBranchDir,
-                                length: this.stepSize,
-                                radius: branch.radius * 0.8,
-                                active: true
-                            });
-                        }
-                    }
-                } else {
-                    // No nearby points, deactivate branch
-                    branch.active = false;
+                    anyGrowth = true;
                 }
             }
             
-            // Stop if no growth occurred
-            if (!hasGrowth) break;
+            // Remove attraction points that are too close to branches
+            this.removeNearbyAttractionPoints();
+            
+            // Stop if no more growth or no more attraction points
+            if (!anyGrowth || this.attractionPoints.filter(p => p.active).length === 0) {
+                break;
+            }
         }
         
-        return this.fineBranches;
+        return this.fineSegments;
     }
 
-    // Generate fine branches from L-system skeleton
+    // Calculate growth direction for a fine branch
+    calculateGrowthDirection(branch) {
+        const growthDir = new THREE.Vector3();
+        let influenceCount = 0;
+        
+        for (const point of this.attractionPoints) {
+            if (!point.active) continue;
+            
+            const distance = branch.end.distanceTo(point.position);
+            
+            if (distance <= this.influenceRadius) {
+                const direction = point.position.clone().sub(branch.end).normalize();
+                const influence = 1 - (distance / this.influenceRadius);
+                growthDir.add(direction.multiplyScalar(influence));
+                influenceCount++;
+            }
+        }
+        
+        if (influenceCount > 0) {
+            growthDir.divideScalar(influenceCount);
+        }
+        
+        return growthDir;
+    }
+
+    // Remove attraction points that are too close to branches
+    removeNearbyAttractionPoints() {
+        for (const point of this.attractionPoints) {
+            if (!point.active) continue;
+            
+            for (const branch of this.fineSegments) {
+                const distance = branch.end.distanceTo(point.position);
+                if (distance <= this.killRadius) {
+                    point.active = false;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Generate fine branches from skeleton
     generate(skeletonSegments, crownCenter, crownRadius, crownHeight) {
-        this.setSkeleton(skeletonSegments);
         this.distributeAttractionPoints(crownCenter, crownRadius, crownHeight);
+        this.setSkeleton(skeletonSegments);
         return this.growFineBranches();
     }
 }
@@ -435,16 +458,42 @@ export class VoxelTree {
         this.trunkPath = [];
         this.branches = [];
         this.leafClusters = [];
+        this.hybridSegments = [];
         
-        // L-System and Space Colonization
-        this.lSystemParams = {
-            angle: this.branchAngleDeg * Math.PI / 180,
-            iterations: Math.max(2, Math.min(4, Math.floor(this.trunkHeight / 5)))
-        };
-        this.spaceColonizationParams = {};
+        // Initialize hybrid systems
+        this.initializeHybridSystems();
         
         // Generate the tree
         this.generate();
+    }
+
+    initializeHybridSystems() {
+        // Get tree type configuration
+        const treeType = TREE_TYPES[this.type] || TREE_TYPES.broadleaf;
+        
+        // Initialize L-System skeleton generator with tree-specific parameters
+        this.lSystemSkeleton = new LSystemSkeleton({
+            axiom: 'F',
+            rules: {
+                'F': 'FF+[+F-F-F]-[-F+F+F]'
+            },
+            iterations: Math.max(2, Math.min(6, Math.floor(this.trunkHeight / 4))),
+            angle: (treeType.branchAngleDeg * Math.PI) / 180,
+            length: treeType.trunkHeight / 4,
+            lengthFactor: 0.7,
+            tropism: new THREE.Vector3(0, 1, 0),
+            tropismStrength: 0.1,
+            randomness: 0.1
+        });
+
+        // Initialize Space Colonization with adaptive parameters
+        this.spaceColonization = new SpaceColonization({
+            influenceRadius: treeType.leafRadius * 2,
+            killRadius: treeType.leafRadius * 0.3,
+            stepSize: treeType.branchLength * 0.1,
+            maxIterations: 100,
+            pointDensity: 0.15
+        });
     }
 
     randomBetween(a, b) {
@@ -636,9 +685,72 @@ export class VoxelTree {
     }
 
     generate() {
-        // IDX-TREEVOX-05: Modular Tree Generation
-        this.generateTrunk();
-        this.generateBranches();
+        // IDX-TREEVOX-05: Main Generation Pipeline
+        logOutput('[VoxelTree] Starting generation with options:', this.options);
+        
+        if (this.useHybrid) {
+            // Use hybrid L-System + Space Colonization approach
+            this.generateHybridTree();
+        } else {
+            // Use traditional recursive method
+            this.generateTrunk();
+            this.generateBranches();
+        }
+        
+        logOutput('[VoxelTree] Generation complete. Branches:', this.branches.length, 'Leaf clusters:', this.leafClusters.length);
+    }
+
+    generateHybridTree() {
+        // Step 1: Generate L-System skeleton
+        const skeletonSegments = this.lSystemSkeleton.generate();
+        logOutput('[Hybrid] L-System skeleton generated:', skeletonSegments.length, 'segments');
+        
+        // Step 2: Calculate crown parameters for space colonization
+        const crownCenter = new THREE.Vector3(0, this.trunkHeight * 0.7, 0);
+        const crownRadius = this.trunkHeight * 0.6;
+        const crownHeight = this.trunkHeight * 0.8;
+        
+        // Step 3: Generate fine branches using space colonization
+        const fineSegments = this.spaceColonization.generate(skeletonSegments, crownCenter, crownRadius, crownHeight);
+        logOutput('[Hybrid] Space colonization fine branches:', fineSegments.length, 'segments');
+        
+        // Step 4: Combine segments
+        this.hybridSegments = [
+            ...skeletonSegments.map(s => ({ ...s, type: 'skeleton' })),
+            ...fineSegments.map(s => ({ ...s, type: 'fine' }))
+        ];
+        
+        // Step 5: Extract leaf clusters from fine branch endpoints
+        this.leafClusters = fineSegments
+            .filter(s => s.active)
+            .map(s => s.end.clone());
+        
+        // Step 6: Convert to traditional branch format for compatibility
+        this.branches = this.convertHybridToBranches();
+        
+        logOutput('[Hybrid] Tree generation complete. Total segments:', this.hybridSegments.length);
+    }
+
+    convertHybridToBranches() {
+        const branches = [];
+        
+        // Convert skeleton segments to branch paths
+        for (const segment of this.hybridSegments) {
+            if (segment.type === 'skeleton') {
+                const path = [segment.start, segment.end];
+                branches.push(path);
+            }
+        }
+        
+        // Convert fine segments to branch paths
+        for (const segment of this.hybridSegments) {
+            if (segment.type === 'fine' && segment.active) {
+                const path = [segment.start, segment.end];
+                branches.push(path);
+            }
+        }
+        
+        return branches;
     }
 
     // Helper: get branch tip directions for leaf orientation
