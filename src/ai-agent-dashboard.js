@@ -407,7 +407,12 @@ export class AIAgentDashboard {
             [AGENT_ROLES.TESTING_ENGINEER]: 'Testing Engineer',
             [AGENT_ROLES.DOCUMENTATION_WRITER]: 'Documentation Writer',
             [AGENT_ROLES.SECURITY_ANALYST]: 'Security Analyst',
-            [AGENT_ROLES.DEPLOYMENT_ENGINEER]: 'Deployment Engineer'
+            [AGENT_ROLES.DEPLOYMENT_ENGINEER]: 'Deployment Engineer',
+            [AGENT_ROLES.MANAGER_AGENT]: 'Manager Agent',
+            [AGENT_ROLES.AWS_SPECIALIST]: 'AWS Specialist',
+            [AGENT_ROLES.SALES_TEAM]: 'Sales Team',
+            [AGENT_ROLES.MESSENGER]: 'Messenger',
+            [AGENT_ROLES.CREATIVE_SPAWNER]: 'Creative Spawner'
         };
         return displayNames[role] || role;
     }
@@ -423,7 +428,17 @@ export class AIAgentDashboard {
             [JOB_TYPES.DOCUMENTATION_UPDATE]: 'Documentation Update',
             [JOB_TYPES.SECURITY_AUDIT]: 'Security Audit',
             [JOB_TYPES.DEPLOYMENT_CHECK]: 'Deployment Check',
-            [JOB_TYPES.TESTING]: 'Testing'
+            [JOB_TYPES.TESTING]: 'Testing',
+            [JOB_TYPES.AGENT_MANAGEMENT]: 'Agent Management',
+            [JOB_TYPES.PROMPT_OPTIMIZATION]: 'Prompt Optimization',
+            [JOB_TYPES.AGENT_EVALUATION]: 'Agent Evaluation',
+            [JOB_TYPES.AWS_DEPLOYMENT]: 'AWS Deployment',
+            [JOB_TYPES.AWS_OPTIMIZATION]: 'AWS Optimization',
+            [JOB_TYPES.SALES_ANALYSIS]: 'Sales Analysis',
+            [JOB_TYPES.MARKETING_STRATEGY]: 'Marketing Strategy',
+            [JOB_TYPES.COMMUNICATION_ROUTING]: 'Communication Routing',
+            [JOB_TYPES.CREATIVE_GENERATION]: 'Creative Generation',
+            [JOB_TYPES.MEMORY_MANAGEMENT]: 'Memory Management'
         };
         return displayNames[jobType] || jobType;
     }

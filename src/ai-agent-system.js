@@ -18,7 +18,13 @@ export const AGENT_ROLES = {
     TESTING_ENGINEER: 'testing_engineer',
     DOCUMENTATION_WRITER: 'documentation_writer',
     SECURITY_ANALYST: 'security_analyst',
-    DEPLOYMENT_ENGINEER: 'deployment_engineer'
+    DEPLOYMENT_ENGINEER: 'deployment_engineer',
+    // New specialized agents
+    MANAGER_AGENT: 'manager_agent',
+    AWS_SPECIALIST: 'aws_specialist',
+    SALES_TEAM: 'sales_team',
+    MESSENGER: 'messenger',
+    CREATIVE_SPAWNER: 'creative_spawner'
 };
 
 // ===== JOB TYPES =====
@@ -32,8 +38,120 @@ export const JOB_TYPES = {
     DOCUMENTATION_UPDATE: 'documentation_update',
     SECURITY_AUDIT: 'security_audit',
     DEPLOYMENT_CHECK: 'deployment_check',
-    TESTING: 'testing'
+    TESTING: 'testing',
+    // New job types
+    AGENT_MANAGEMENT: 'agent_management',
+    PROMPT_OPTIMIZATION: 'prompt_optimization',
+    AGENT_EVALUATION: 'agent_evaluation',
+    AWS_DEPLOYMENT: 'aws_deployment',
+    AWS_OPTIMIZATION: 'aws_optimization',
+    SALES_ANALYSIS: 'sales_analysis',
+    MARKETING_STRATEGY: 'marketing_strategy',
+    COMMUNICATION_ROUTING: 'communication_routing',
+    CREATIVE_GENERATION: 'creative_generation',
+    MEMORY_MANAGEMENT: 'memory_management'
 };
+
+// ===== AGENT MEMORY SYSTEM =====
+class AgentMemory {
+    constructor(agentId) {
+        this.agentId = agentId;
+        this.shortTerm = new Map(); // Recent interactions and context
+        this.longTerm = new Map(); // Persistent knowledge and patterns
+        this.performance = []; // Historical performance data
+        this.prompts = []; // Successful prompts and their outcomes
+        this.maxShortTermSize = 100;
+        this.maxLongTermSize = 1000;
+    }
+
+    addShortTerm(key, value) {
+        this.shortTerm.set(key, {
+            value,
+            timestamp: Date.now(),
+            accessCount: 0
+        });
+        
+        // Cleanup old entries
+        if (this.shortTerm.size > this.maxShortTermSize) {
+            const oldestKey = Array.from(this.shortTerm.entries())
+                .sort((a, b) => a[1].timestamp - b[1].timestamp)[0][0];
+            this.shortTerm.delete(oldestKey);
+        }
+    }
+
+    addLongTerm(key, value) {
+        this.longTerm.set(key, {
+            value,
+            timestamp: Date.now(),
+            accessCount: 0,
+            importance: 1.0
+        });
+        
+        // Cleanup least important entries
+        if (this.longTerm.size > this.maxLongTermSize) {
+            const leastImportantKey = Array.from(this.longTerm.entries())
+                .sort((a, b) => a[1].importance - b[1].importance)[0][0];
+            this.longTerm.delete(leastImportantKey);
+        }
+    }
+
+    getShortTerm(key) {
+        const entry = this.shortTerm.get(key);
+        if (entry) {
+            entry.accessCount++;
+            return entry.value;
+        }
+        return null;
+    }
+
+    getLongTerm(key) {
+        const entry = this.longTerm.get(key);
+        if (entry) {
+            entry.accessCount++;
+            return entry.value;
+        }
+        return null;
+    }
+
+    addPerformance(performance) {
+        this.performance.push({
+            ...performance,
+            timestamp: Date.now()
+        });
+        
+        // Keep only recent performance data
+        if (this.performance.length > 100) {
+            this.performance = this.performance.slice(-100);
+        }
+    }
+
+    addPrompt(prompt, outcome) {
+        this.prompts.push({
+            prompt,
+            outcome,
+            timestamp: Date.now(),
+            success: outcome.success || false
+        });
+        
+        // Keep only recent prompts
+        if (this.prompts.length > 50) {
+            this.prompts = this.prompts.slice(-50);
+        }
+    }
+
+    getContext() {
+        return {
+            shortTerm: Object.fromEntries(this.shortTerm),
+            longTerm: Object.fromEntries(this.longTerm),
+            recentPerformance: this.performance.slice(-10),
+            successfulPrompts: this.prompts.filter(p => p.success).slice(-5)
+        };
+    }
+
+    clearShortTerm() {
+        this.shortTerm.clear();
+    }
+}
 
 // ===== AGENT CLASS =====
 class AIAgent {
@@ -48,13 +166,60 @@ class AIAgent {
             jobsCompleted: 0,
             jobsFailed: 0,
             totalWorkTime: 0,
-            averageJobTime: 0
+            averageJobTime: 0,
+            successRate: 1.0,
+            rating: 5.0 // Agent rating (1-10)
         };
         this.neuralNetwork = new MathematicalAI();
         this.comfyUI = new ComfyUIIntegration();
+        this.memory = new AgentMemory(id);
+        this.prompts = this.getDefaultPrompts();
+        this.lastUpdate = Date.now();
         
         // Initialize agent-specific neural network
         this.initializeNeuralNetwork();
+    }
+
+    getDefaultPrompts() {
+        const defaultPrompts = {
+            [AGENT_ROLES.MANAGER_AGENT]: [
+                "Analyze the current project status and identify priority areas for improvement",
+                "Evaluate agent performance and suggest optimizations",
+                "Create and prioritize job queue based on project needs",
+                "Generate prompts for other agents based on their roles and current tasks"
+            ],
+            [AGENT_ROLES.AWS_SPECIALIST]: [
+                "Analyze AWS infrastructure and suggest cost optimizations",
+                "Design scalable deployment strategies for the game",
+                "Monitor AWS services and identify performance bottlenecks",
+                "Implement security best practices for cloud deployment"
+            ],
+            [AGENT_ROLES.SALES_TEAM]: [
+                "Analyze market trends and identify target audiences",
+                "Develop pricing strategies and revenue optimization",
+                "Create marketing campaigns and promotional materials",
+                "Track sales metrics and customer feedback"
+            ],
+            [AGENT_ROLES.MESSENGER]: [
+                "Route communications between agents efficiently",
+                "Maintain communication logs and ensure message delivery",
+                "Prioritize urgent messages and coordinate responses",
+                "Facilitate agent collaboration and information sharing"
+            ],
+            [AGENT_ROLES.CREATIVE_SPAWNER]: [
+                "Generate creative ideas and concepts for the game",
+                "Evaluate creative proposals and provide feedback",
+                "Spawn temporary creative agents for specific tasks",
+                "Manage creative workflow and quality control"
+            ]
+        };
+        
+        return defaultPrompts[this.role] || [
+            "Perform your assigned role efficiently and effectively",
+            "Provide regular updates on your progress and findings",
+            "Collaborate with other agents when needed",
+            "Maintain high quality standards in your work"
+        ];
     }
 
     async initializeNeuralNetwork() {
@@ -126,6 +291,36 @@ class AIAgent {
                 hiddenLayers: [10, 8],
                 learningRate: 0.01,
                 focus: 'deployment_reliability'
+            },
+            [AGENT_ROLES.MANAGER_AGENT]: {
+                inputs: 12,
+                hiddenLayers: [24, 16, 12],
+                learningRate: 0.002,
+                focus: 'agent_management'
+            },
+            [AGENT_ROLES.AWS_SPECIALIST]: {
+                inputs: 10,
+                hiddenLayers: [18, 14, 10],
+                learningRate: 0.005,
+                focus: 'aws_optimization'
+            },
+            [AGENT_ROLES.SALES_TEAM]: {
+                inputs: 8,
+                hiddenLayers: [14, 10],
+                learningRate: 0.01,
+                focus: 'sales_optimization'
+            },
+            [AGENT_ROLES.MESSENGER]: {
+                inputs: 6,
+                hiddenLayers: [12, 8],
+                learningRate: 0.015,
+                focus: 'communication_routing'
+            },
+            [AGENT_ROLES.CREATIVE_SPAWNER]: {
+                inputs: 10,
+                hiddenLayers: [16, 12, 8],
+                learningRate: 0.008,
+                focus: 'creative_generation'
             }
         };
         
@@ -163,6 +358,11 @@ class AIAgent {
             this.stats.jobsCompleted++;
             this.stats.totalWorkTime += Date.now() - startTime;
             this.stats.averageJobTime = this.stats.totalWorkTime / this.stats.jobsCompleted;
+            this.stats.successRate = this.stats.jobsCompleted / (this.stats.jobsCompleted + this.stats.jobsFailed);
+            
+            // Update memory with successful job
+            this.memory.addShortTerm(`job_${job.id}`, { job, result, success: true });
+            this.memory.addPerformance({ jobType: job.type, success: true, duration: Date.now() - startTime });
             
             console.log(`✅ Job ${job.id} completed successfully by ${this.role} agent`);
             
@@ -172,6 +372,12 @@ class AIAgent {
             job.failedAt = new Date();
             
             this.stats.jobsFailed++;
+            this.stats.successRate = this.stats.jobsCompleted / (this.stats.jobsCompleted + this.stats.jobsFailed);
+            
+            // Update memory with failed job
+            this.memory.addShortTerm(`job_${job.id}`, { job, error: error.message, success: false });
+            this.memory.addPerformance({ jobType: job.type, success: false, duration: Date.now() - startTime });
+            
             console.error(`❌ Job ${job.id} failed: ${error.message}`);
         }
         
@@ -195,7 +401,17 @@ class AIAgent {
             [JOB_TYPES.DOCUMENTATION_UPDATE]: () => this.handleDocumentationUpdate(job),
             [JOB_TYPES.SECURITY_AUDIT]: () => this.handleSecurityAudit(job),
             [JOB_TYPES.DEPLOYMENT_CHECK]: () => this.handleDeploymentCheck(job),
-            [JOB_TYPES.TESTING]: () => this.handleTesting(job)
+            [JOB_TYPES.TESTING]: () => this.handleTesting(job),
+            [JOB_TYPES.AGENT_MANAGEMENT]: () => this.handleAgentManagement(job),
+            [JOB_TYPES.PROMPT_OPTIMIZATION]: () => this.handlePromptOptimization(job),
+            [JOB_TYPES.AGENT_EVALUATION]: () => this.handleAgentEvaluation(job),
+            [JOB_TYPES.AWS_DEPLOYMENT]: () => this.handleAWSDeployment(job),
+            [JOB_TYPES.AWS_OPTIMIZATION]: () => this.handleAWSOptimization(job),
+            [JOB_TYPES.SALES_ANALYSIS]: () => this.handleSalesAnalysis(job),
+            [JOB_TYPES.MARKETING_STRATEGY]: () => this.handleMarketingStrategy(job),
+            [JOB_TYPES.COMMUNICATION_ROUTING]: () => this.handleCommunicationRouting(job),
+            [JOB_TYPES.CREATIVE_GENERATION]: () => this.handleCreativeGeneration(job),
+            [JOB_TYPES.MEMORY_MANAGEMENT]: () => this.handleMemoryManagement(job)
         };
         
         const handler = jobHandlers[job.type];
@@ -379,6 +595,268 @@ class AIAgent {
         };
     }
 
+    // ===== NEW JOB HANDLERS =====
+    async handleAgentManagement(job) {
+        const { action, targetAgent, data } = job.data;
+        
+        const result = await this.neuralNetwork.analyze({
+            type: 'agent_management',
+            action,
+            targetAgent,
+            data,
+            role: this.role,
+            context: this.memory.getContext()
+        });
+        
+        return {
+            action: result.action,
+            recommendations: result.recommendations,
+            priority: result.priority,
+            estimatedImpact: result.estimatedImpact
+        };
+    }
+
+    async handlePromptOptimization(job) {
+        const { targetAgent, currentPrompt, performance } = job.data;
+        
+        const result = await this.neuralNetwork.analyze({
+            type: 'prompt_optimization',
+            targetAgent,
+            currentPrompt,
+            performance,
+            role: this.role,
+            context: this.memory.getContext()
+        });
+        
+        // Store optimized prompt
+        this.memory.addPrompt(result.optimizedPrompt, { success: true });
+        
+        return {
+            optimizedPrompt: result.optimizedPrompt,
+            improvements: result.improvements,
+            expectedPerformance: result.expectedPerformance
+        };
+    }
+
+    async handleAgentEvaluation(job) {
+        const { targetAgent, criteria, metrics } = job.data;
+        
+        const result = await this.neuralNetwork.analyze({
+            type: 'agent_evaluation',
+            targetAgent,
+            criteria,
+            metrics,
+            role: this.role,
+            context: this.memory.getContext()
+        });
+        
+        return {
+            rating: result.rating,
+            strengths: result.strengths,
+            weaknesses: result.weaknesses,
+            recommendations: result.recommendations
+        };
+    }
+
+    async handleAWSDeployment(job) {
+        const { service, configuration, requirements } = job.data;
+        
+        const result = await this.neuralNetwork.analyze({
+            type: 'aws_deployment',
+            service,
+            configuration,
+            requirements,
+            role: this.role,
+            context: this.memory.getContext()
+        });
+        
+        return {
+            deploymentPlan: result.deploymentPlan,
+            estimatedCost: result.estimatedCost,
+            securityConfig: result.securityConfig,
+            scalingStrategy: result.scalingStrategy
+        };
+    }
+
+    async handleAWSOptimization(job) {
+        const { currentConfig, metrics, budget } = job.data;
+        
+        const result = await this.neuralNetwork.analyze({
+            type: 'aws_optimization',
+            currentConfig,
+            metrics,
+            budget,
+            role: this.role,
+            context: this.memory.getContext()
+        });
+        
+        return {
+            optimizations: result.optimizations,
+            costSavings: result.costSavings,
+            performanceGains: result.performanceGains,
+            recommendations: result.recommendations
+        };
+    }
+
+    async handleSalesAnalysis(job) {
+        const { marketData, salesMetrics, targetAudience } = job.data;
+        
+        const result = await this.neuralNetwork.analyze({
+            type: 'sales_analysis',
+            marketData,
+            salesMetrics,
+            targetAudience,
+            role: this.role,
+            context: this.memory.getContext()
+        });
+        
+        return {
+            marketInsights: result.marketInsights,
+            salesForecast: result.salesForecast,
+            opportunities: result.opportunities,
+            strategies: result.strategies
+        };
+    }
+
+    async handleMarketingStrategy(job) {
+        const { product, audience, budget, goals } = job.data;
+        
+        const result = await this.neuralNetwork.analyze({
+            type: 'marketing_strategy',
+            product,
+            audience,
+            budget,
+            goals,
+            role: this.role,
+            context: this.memory.getContext()
+        });
+        
+        return {
+            strategy: result.strategy,
+            channels: result.channels,
+            budgetAllocation: result.budgetAllocation,
+            expectedROI: result.expectedROI
+        };
+    }
+
+    async handleCommunicationRouting(job) {
+        const { message, sender, recipients, priority } = job.data;
+        
+        const result = await this.neuralNetwork.analyze({
+            type: 'communication_routing',
+            message,
+            sender,
+            recipients,
+            priority,
+            role: this.role,
+            context: this.memory.getContext()
+        });
+        
+        return {
+            routing: result.routing,
+            deliveryStatus: result.deliveryStatus,
+            responseTime: result.responseTime,
+            followUp: result.followUp
+        };
+    }
+
+    async handleCreativeGeneration(job) {
+        const { concept, requirements, constraints } = job.data;
+        
+        const result = await this.neuralNetwork.analyze({
+            type: 'creative_generation',
+            concept,
+            requirements,
+            constraints,
+            role: this.role,
+            context: this.memory.getContext()
+        });
+        
+        return {
+            ideas: result.ideas,
+            concepts: result.concepts,
+            prototypes: result.prototypes,
+            evaluation: result.evaluation
+        };
+    }
+
+    async handleMemoryManagement(job) {
+        const { action, data, targetAgent } = job.data;
+        
+        const result = await this.neuralNetwork.analyze({
+            type: 'memory_management',
+            action,
+            data,
+            targetAgent,
+            role: this.role,
+            context: this.memory.getContext()
+        });
+        
+        return {
+            memoryUpdate: result.memoryUpdate,
+            retention: result.retention,
+            optimization: result.optimization,
+            recommendations: result.recommendations
+        };
+    }
+
+    // ===== AGENT UPDATE METHODS =====
+    async getUpdate() {
+        const update = {
+            id: this.id,
+            role: this.role,
+            status: this.status,
+            currentJob: this.currentJob,
+            stats: this.stats,
+            lastUpdate: this.lastUpdate,
+            memorySummary: {
+                shortTermSize: this.memory.shortTerm.size,
+                longTermSize: this.memory.longTerm.size,
+                performanceCount: this.memory.performance.length,
+                promptCount: this.prompts.length
+            }
+        };
+        
+        this.lastUpdate = Date.now();
+        return update;
+    }
+
+    async receivePrompt(prompt, context = {}) {
+        // Store the prompt
+        this.memory.addShortTerm('current_prompt', { prompt, context });
+        
+        // Generate response using neural network
+        const response = await this.neuralNetwork.analyze({
+            type: 'prompt_response',
+            prompt,
+            context: { ...this.memory.getContext(), ...context },
+            role: this.role
+        });
+        
+        // Store the response
+        this.memory.addPrompt(prompt, { response, success: true });
+        
+        return response;
+    }
+
+    async improvePrompts() {
+        const promptAnalysis = await this.neuralNetwork.analyze({
+            type: 'prompt_improvement',
+            currentPrompts: this.prompts,
+            performance: this.memory.performance,
+            role: this.role,
+            context: this.memory.getContext()
+        });
+        
+        // Update prompts based on analysis
+        this.prompts = promptAnalysis.improvedPrompts;
+        
+        return {
+            improvements: promptAnalysis.improvements,
+            newPrompts: this.prompts
+        };
+    }
+
     getStatus() {
         return {
             id: this.id,
@@ -386,7 +864,13 @@ class AIAgent {
             status: this.status,
             currentJob: this.currentJob,
             queueLength: this.jobQueue.length,
-            stats: this.stats
+            stats: this.stats,
+            memorySummary: {
+                shortTermSize: this.memory.shortTerm.size,
+                longTermSize: this.memory.longTerm.size,
+                performanceCount: this.memory.performance.length,
+                promptCount: this.prompts.length
+            }
         };
     }
 }
@@ -488,7 +972,17 @@ export class AIAgentManager {
             [JOB_TYPES.DOCUMENTATION_UPDATE]: AGENT_ROLES.DOCUMENTATION_WRITER,
             [JOB_TYPES.SECURITY_AUDIT]: AGENT_ROLES.SECURITY_ANALYST,
             [JOB_TYPES.DEPLOYMENT_CHECK]: AGENT_ROLES.DEPLOYMENT_ENGINEER,
-            [JOB_TYPES.TESTING]: AGENT_ROLES.TESTING_ENGINEER
+            [JOB_TYPES.TESTING]: AGENT_ROLES.TESTING_ENGINEER,
+            [JOB_TYPES.AGENT_MANAGEMENT]: AGENT_ROLES.MANAGER_AGENT,
+            [JOB_TYPES.PROMPT_OPTIMIZATION]: AGENT_ROLES.MANAGER_AGENT,
+            [JOB_TYPES.AGENT_EVALUATION]: AGENT_ROLES.MANAGER_AGENT,
+            [JOB_TYPES.AWS_DEPLOYMENT]: AGENT_ROLES.AWS_SPECIALIST,
+            [JOB_TYPES.AWS_OPTIMIZATION]: AGENT_ROLES.AWS_SPECIALIST,
+            [JOB_TYPES.SALES_ANALYSIS]: AGENT_ROLES.SALES_TEAM,
+            [JOB_TYPES.MARKETING_STRATEGY]: AGENT_ROLES.SALES_TEAM,
+            [JOB_TYPES.COMMUNICATION_ROUTING]: AGENT_ROLES.MESSENGER,
+            [JOB_TYPES.CREATIVE_GENERATION]: AGENT_ROLES.CREATIVE_SPAWNER,
+            [JOB_TYPES.MEMORY_MANAGEMENT]: AGENT_ROLES.MANAGER_AGENT
         };
         
         const preferredRole = jobRoleMapping[job.type];

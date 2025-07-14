@@ -219,6 +219,50 @@
             color: var(--text-secondary);
             font-size: 0.875rem;
         }
+
+        .manager-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .manager-card {
+            background: var(--background-light);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+        }
+
+        .manager-card h3 {
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-md);
+            font-family: var(--font-primary);
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .status-label {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .status-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .status-value.active {
+            color: var(--success-color);
+        }
+
+        .status-value.inactive {
+            color: var(--error-color);
+        }
     </style>
 </head>
 <body>
@@ -240,10 +284,21 @@
             <span class="btn-icon">📋</span>
             <span class="btn-text">Test Job</span>
         </button>
+        <button class="btn btn-primary" id="spawnCreativeBtn">
+            <span class="btn-icon">🎨</span>
+            <span class="btn-text">Spawn Creative Agent</span>
+        </button>
         <button class="btn btn-secondary" id="clearLogBtn">
             <span class="btn-icon">🗑️</span>
             <span class="btn-text">Clear Log</span>
         </button>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Manager Agent Status</h2>
+        <div class="manager-status" id="managerStatus">
+            <!-- Manager agent status will be populated here -->
+        </div>
     </div>
 
     <div class="test-section">
@@ -271,11 +326,13 @@
         import AIAgentManager, { AGENT_ROLES, JOB_TYPES } from './src/ai-agent-system.js';
         import AIAgentAutomation from './src/ai-agent-automation.js';
         import AIAgentDashboard from './src/ai-agent-dashboard.js';
+        import ManagerAgent from './src/ai-agent-manager.js';
 
         // Global variables
         let agentManager = null;
         let automation = null;
         let dashboard = null;
+        let managerAgent = null;
 
         // Initialize the system
         async function initializeSystem() {
@@ -285,8 +342,15 @@
                 // Create agent manager
                 agentManager = new AIAgentManager();
                 
+                // Spawn all agents
+                await agentManager.spawnAllAgents();
+                
                 // Create automation system
                 automation = new AIAgentAutomation(agentManager);
+                
+                // Create manager agent
+                managerAgent = new ManagerAgent(agentManager);
+                await managerAgent.initialize();
                 
                 // Initialize dashboard
                 dashboard = new AIAgentDashboard('aiAgentDashboard');
@@ -296,6 +360,7 @@
                 
                 log('AI Agent System initialized successfully', 'success');
                 updateAutomationStatus();
+                updateManagerStatus();
                 
             } catch (error) {
                 log(`Error initializing system: ${error.message}`, 'error');
@@ -311,6 +376,65 @@
             logEntry.textContent = `[${timestamp}] ${message}`;
             logContainer.appendChild(logEntry);
             logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Update manager status
+        function updateManagerStatus() {
+            const statusContainer = document.getElementById('managerStatus');
+            
+            if (!managerAgent) {
+                statusContainer.innerHTML = '<div class="empty-state">Manager Agent not initialized</div>';
+                return;
+            }
+            
+            const status = managerAgent.getStatus();
+            const report = managerAgent.getPerformanceReport();
+            
+            statusContainer.innerHTML = `
+                <div class="manager-grid">
+                    <div class="manager-card">
+                        <h3>Manager Agent Status</h3>
+                        <div class="status-item">
+                            <span class="status-label">Active:</span>
+                            <span class="status-value ${status.isActive ? 'active' : 'inactive'}">
+                                ${status.isActive ? 'Running' : 'Stopped'}
+                            </span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Managed Agents:</span>
+                            <span class="status-value">${status.managedAgents}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Creative Agents:</span>
+                            <span class="status-value">${status.creativeAgents}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Communication Log:</span>
+                            <span class="status-value">${status.communicationLogSize}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="manager-card">
+                        <h3>System Performance</h3>
+                        <div class="status-item">
+                            <span class="status-label">Total Agents:</span>
+                            <span class="status-value">${report?.system?.totalAgents || 0}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Active Agents:</span>
+                            <span class="status-value">${report?.system?.activeAgents || 0}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Jobs Queued:</span>
+                            <span class="status-value">${report?.system?.totalJobs || 0}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Completed Jobs:</span>
+                            <span class="status-value">${report?.system?.completedJobs || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         // Update automation status
@@ -337,6 +461,11 @@
                     name: 'Scheduled Jobs',
                     description: 'Daily, weekly, and monthly automated job scheduling',
                     status: automation?.isRunning ? 'Running' : 'Stopped'
+                },
+                {
+                    name: 'Manager Agent',
+                    description: 'Coordinates agents, optimizes prompts, and manages performance',
+                    status: managerAgent?.getStatus()?.isActive ? 'Running' : 'Stopped'
                 }
             ];
             
@@ -399,6 +528,39 @@
             }
         });
 
+        document.getElementById('spawnCreativeBtn').addEventListener('click', async () => {
+            try {
+                if (managerAgent) {
+                    const concepts = [
+                        'Advanced AI-driven gameplay mechanics',
+                        'Procedural planet generation system',
+                        'Real-time multiplayer optimization',
+                        'Dynamic difficulty adjustment',
+                        'Player behavior analysis system'
+                    ];
+                    
+                    const randomConcept = concepts[Math.floor(Math.random() * concepts.length)];
+                    const rating = Math.random() * 5 + 5; // 5-10 rating
+                    
+                    const creativeAgentId = await managerAgent.spawnCreativeAgent(
+                        randomConcept,
+                        { innovation: 'high', feasibility: 'medium' },
+                        rating
+                    );
+                    
+                    if (creativeAgentId) {
+                        log(`Creative agent spawned: ${creativeAgentId} (rating: ${rating.toFixed(1)})`, 'success');
+                    } else {
+                        log('Creative agent spawn rejected (rating too low)', 'warning');
+                    }
+                    
+                    updateManagerStatus();
+                }
+            } catch (error) {
+                log(`Error spawning creative agent: ${error.message}`, 'error');
+            }
+        });
+
         document.getElementById('clearLogBtn').addEventListener('click', () => {
             const logContainer = document.getElementById('logContainer');
             logContainer.innerHTML = '<div class="log-entry info">[INFO] Log cleared</div>';
@@ -412,6 +574,9 @@
             if (automation) {
                 updateAutomationStatus();
             }
+            if (managerAgent) {
+                updateManagerStatus();
+            }
         }, 5000);
 
         // Log system events
@@ -421,7 +586,7 @@
 
         console.log = function(...args) {
             originalLog.apply(console, args);
-            if (args[0] && typeof args[0] === 'string' && args[0].includes('🤖')) {
+            if (args[0] && typeof args[0] === 'string' && (args[0].includes('🤖') || args[0].includes('🎯') || args[0].includes('🎨'))) {
                 log(args.join(' '), 'info');
             }
         };

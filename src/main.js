@@ -18,10 +18,12 @@ import { VoxelTree } from './procedural-tree-voxel.js';
 // ===== AI AGENT SYSTEM INTEGRATION =====
 import AIAgentManager, { AGENT_ROLES, JOB_TYPES } from './ai-agent-system.js';
 import AIAgentAutomation from './ai-agent-automation.js';
+import ManagerAgent from './ai-agent-manager.js';
 
 // Global AI agent system
 let aiAgentManager = null;
 let aiAutomation = null;
+let managerAgent = null;
 
 // Initialize AI agent system
 async function initializeAIAgentSystem() {
@@ -36,6 +38,10 @@ async function initializeAIAgentSystem() {
         
         // Create automation system
         aiAutomation = new AIAgentAutomation(aiAgentManager);
+        
+        // Create manager agent
+        managerAgent = new ManagerAgent(aiAgentManager);
+        await managerAgent.initialize();
         
         // Start automation
         aiAutomation.start();
@@ -53,59 +59,56 @@ async function initializeAIAgentSystem() {
 // Queue initial project analysis jobs
 async function queueInitialProjectJobs() {
     try {
-        // Code review for existing files
+        // Manager agent analysis
         await aiAgentManager.queueJob(
-            JOB_TYPES.CODE_REVIEW,
-            'Initial project code review and quality assessment',
-            { 
-                filePath: 'src/main.js',
-                code: '// Main application code',
-                scope: 'project_wide'
+            JOB_TYPES.AGENT_MANAGEMENT,
+            'Initial project analysis and agent coordination setup',
+            {
+                action: 'project_analysis',
+                targetAgent: 'all',
+                data: { scope: 'project_wide', priority: 'high' }
             },
             'high',
-            AGENT_ROLES.CODE_REVIEWER
+            AGENT_ROLES.MANAGER_AGENT
         );
         
-        // Performance analysis
+        // AWS deployment analysis
         await aiAgentManager.queueJob(
-            JOB_TYPES.PERFORMANCE_ANALYSIS,
-            'Initial performance analysis and optimization recommendations',
+            JOB_TYPES.AWS_DEPLOYMENT,
+            'Analyze AWS deployment requirements for rekursing.com',
             {
-                metrics: {
-                    fps: 60,
-                    memoryUsage: 50,
-                    loadTime: 2000,
-                    renderTime: 16.67
-                },
-                target: 'baseline_performance'
+                service: 'web_hosting',
+                configuration: { domain: 'rekursing.com', region: 'us-east-1' },
+                requirements: { scalability: 'high', security: 'high', cost: 'optimized' }
             },
-            'normal',
-            AGENT_ROLES.PERFORMANCE_OPTIMIZER
+            'high',
+            AGENT_ROLES.AWS_SPECIALIST
         );
         
-        // AI systems optimization
+        // Sales and marketing analysis
         await aiAgentManager.queueJob(
-            JOB_TYPES.AI_MODEL_TRAINING,
-            'Initial AI model training and optimization',
+            JOB_TYPES.SALES_ANALYSIS,
+            'Market analysis for multiplayer planetary shooter game',
             {
-                modelType: 'neural_network',
-                trainingData: 'project_data',
-                parameters: { epochs: 100, learningRate: 0.001 }
+                marketData: { genre: 'multiplayer_shooter', platform: 'web' },
+                salesMetrics: { targetUsers: 10000, monetization: 'freemium' },
+                targetAudience: { age: '18-35', interests: ['gaming', 'sci-fi'] }
             },
             'normal',
-            AGENT_ROLES.AI_SYSTEMS_ENGINEER
+            AGENT_ROLES.SALES_TEAM
         );
         
-        // Documentation update
+        // Creative concept generation
         await aiAgentManager.queueJob(
-            JOB_TYPES.DOCUMENTATION_UPDATE,
-            'Update project documentation with AI agent system',
+            JOB_TYPES.CREATIVE_GENERATION,
+            'Generate creative concepts for game enhancement',
             {
-                section: 'ai_systems',
-                content: 'AI Agent System integration details'
+                concept: 'advanced_ai_integration',
+                requirements: { innovation: 'high', feasibility: 'medium' },
+                constraints: { budget: 'reasonable', timeline: 'flexible' }
             },
             'normal',
-            AGENT_ROLES.DOCUMENTATION_WRITER
+            AGENT_ROLES.CREATIVE_SPAWNER
         );
         
         console.log('📋 Initial project jobs queued successfully');
@@ -122,6 +125,9 @@ window.AIAgentSystem = {
     
     // Get automation system
     getAutomation: () => aiAutomation,
+    
+    // Get manager agent
+    getManagerAgent: () => managerAgent,
     
     // Queue a job
     queueJob: async (jobType, description, data, priority = 'normal', targetRole = null) => {
@@ -153,6 +159,35 @@ window.AIAgentSystem = {
         if (aiAutomation) {
             aiAutomation.stop();
         }
+    },
+    
+    // Spawn creative agent
+    spawnCreativeAgent: async (concept, requirements, rating = 5.0) => {
+        if (managerAgent) {
+            return await managerAgent.spawnCreativeAgent(concept, requirements, rating);
+        }
+        throw new Error('Manager Agent not initialized');
+    },
+    
+    // Route communication
+    routeCommunication: async (message, sender, recipients, priority = 'normal') => {
+        if (managerAgent) {
+            return await managerAgent.routeCommunication(message, sender, recipients, priority);
+        }
+        throw new Error('Manager Agent not initialized');
+    },
+    
+    // Get performance report
+    getPerformanceReport: () => {
+        return managerAgent ? managerAgent.getPerformanceReport() : null;
+    },
+    
+    // Analyze project status
+    analyzeProjectStatus: async () => {
+        if (managerAgent) {
+            return await managerAgent.analyzeProjectStatus();
+        }
+        throw new Error('Manager Agent not initialized');
     }
 };
 
