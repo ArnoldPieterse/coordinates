@@ -15,6 +15,147 @@ import AdvancedRenderer from './advanced-renderer.js';
 import AdvancedPhysics from './advanced-physics.js';
 import { VoxelTree } from './procedural-tree-voxel.js';
 
+// ===== AI AGENT SYSTEM INTEGRATION =====
+import AIAgentManager, { AGENT_ROLES, JOB_TYPES } from './ai-agent-system.js';
+import AIAgentAutomation from './ai-agent-automation.js';
+
+// Global AI agent system
+let aiAgentManager = null;
+let aiAutomation = null;
+
+// Initialize AI agent system
+async function initializeAIAgentSystem() {
+    try {
+        console.log('🤖 Initializing AI Agent System...');
+        
+        // Create agent manager
+        aiAgentManager = new AIAgentManager();
+        
+        // Spawn all agents
+        await aiAgentManager.spawnAllAgents();
+        
+        // Create automation system
+        aiAutomation = new AIAgentAutomation(aiAgentManager);
+        
+        // Start automation
+        aiAutomation.start();
+        
+        console.log('✅ AI Agent System initialized successfully');
+        
+        // Queue initial project analysis jobs
+        await queueInitialProjectJobs();
+        
+    } catch (error) {
+        console.error('❌ Error initializing AI Agent System:', error);
+    }
+}
+
+// Queue initial project analysis jobs
+async function queueInitialProjectJobs() {
+    try {
+        // Code review for existing files
+        await aiAgentManager.queueJob(
+            JOB_TYPES.CODE_REVIEW,
+            'Initial project code review and quality assessment',
+            { 
+                filePath: 'src/main.js',
+                code: '// Main application code',
+                scope: 'project_wide'
+            },
+            'high',
+            AGENT_ROLES.CODE_REVIEWER
+        );
+        
+        // Performance analysis
+        await aiAgentManager.queueJob(
+            JOB_TYPES.PERFORMANCE_ANALYSIS,
+            'Initial performance analysis and optimization recommendations',
+            {
+                metrics: {
+                    fps: 60,
+                    memoryUsage: 50,
+                    loadTime: 2000,
+                    renderTime: 16.67
+                },
+                target: 'baseline_performance'
+            },
+            'normal',
+            AGENT_ROLES.PERFORMANCE_OPTIMIZER
+        );
+        
+        // AI systems optimization
+        await aiAgentManager.queueJob(
+            JOB_TYPES.AI_MODEL_TRAINING,
+            'Initial AI model training and optimization',
+            {
+                modelType: 'neural_network',
+                trainingData: 'project_data',
+                parameters: { epochs: 100, learningRate: 0.001 }
+            },
+            'normal',
+            AGENT_ROLES.AI_SYSTEMS_ENGINEER
+        );
+        
+        // Documentation update
+        await aiAgentManager.queueJob(
+            JOB_TYPES.DOCUMENTATION_UPDATE,
+            'Update project documentation with AI agent system',
+            {
+                section: 'ai_systems',
+                content: 'AI Agent System integration details'
+            },
+            'normal',
+            AGENT_ROLES.DOCUMENTATION_WRITER
+        );
+        
+        console.log('📋 Initial project jobs queued successfully');
+        
+    } catch (error) {
+        console.error('❌ Error queuing initial jobs:', error);
+    }
+}
+
+// AI Agent System API
+window.AIAgentSystem = {
+    // Get agent manager
+    getManager: () => aiAgentManager,
+    
+    // Get automation system
+    getAutomation: () => aiAutomation,
+    
+    // Queue a job
+    queueJob: async (jobType, description, data, priority = 'normal', targetRole = null) => {
+        if (aiAgentManager) {
+            return await aiAgentManager.queueJob(jobType, description, data, priority, targetRole);
+        }
+        throw new Error('AI Agent Manager not initialized');
+    },
+    
+    // Get system stats
+    getStats: () => {
+        return aiAgentManager ? aiAgentManager.getSystemStats() : null;
+    },
+    
+    // Get all agents status
+    getAgentsStatus: () => {
+        return aiAgentManager ? aiAgentManager.getAllAgentsStatus() : null;
+    },
+    
+    // Start automation
+    startAutomation: () => {
+        if (aiAutomation) {
+            aiAutomation.start();
+        }
+    },
+    
+    // Stop automation
+    stopAutomation: () => {
+        if (aiAutomation) {
+            aiAutomation.stop();
+        }
+    }
+};
+
 class MultiplayerPlanetaryShooter {
     constructor() {
         console.log('[DEBUG] MultiplayerPlanetaryShooter constructor called');
@@ -1272,3 +1413,13 @@ function addProceduralTree(scene) {
     treeMesh.position.set(0, 0, 0); // Adjust as needed
     scene.add(treeMesh);
 }
+
+// Initialize AI agent system after main initialization
+document.addEventListener('DOMContentLoaded', async () => {
+    // ... existing initialization code ...
+    
+    // Initialize AI agent system
+    await initializeAIAgentSystem();
+    
+    // ... rest of existing code ...
+});
