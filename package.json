@@ -34,6 +34,8 @@
     "deploy:aws": "node deploy-aws.js",
     "deploy:build": "node deploy-simple.js build",
     "deploy:help": "node deploy-simple.js help",
+    "domain:configure": "node aws-domain-config.js",
+    "domain:verify": "nslookup www.rekursing.com",
     "auto-git": "powershell -ExecutionPolicy Bypass -File ./auto-git.ps1"
   },
   "keywords": [
@@ -64,6 +66,7 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
+    "@aws-sdk/client-route-53": "^3.844.0",
     "@lmstudio/sdk": "^0.1.0",
     "cannon-es": "^0.20.0",
     "express": "^4.18.2",

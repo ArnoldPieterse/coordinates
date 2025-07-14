@@ -9,8 +9,8 @@
  * For index reference format, see INDEX_DESCRIBER.md
  */
 
-import { MathematicalAI } from './mathematical-ai.js';
-import { ComfyUIIntegration } from './comfyui-integration.js';
+import MathematicalAI from './mathematical-ai.js';
+import comfyUI from './comfyui-integration.js';
 
 // ===== AGENT ROLES =====
 // IDX-AI-005: Agent Role Definitions
@@ -179,7 +179,7 @@ class AIAgent {
             rating: 5.0 // Agent rating (1-10)
         };
         this.neuralNetwork = new MathematicalAI();
-        this.comfyUI = new ComfyUIIntegration();
+        this.comfyUI = comfyUI;
         this.memory = new AgentMemory(id);
         this.prompts = this.getDefaultPrompts();
         this.lastUpdate = Date.now();
