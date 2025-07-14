@@ -5,7 +5,7 @@ import MathematicalEngine from './mathematical-engine.js';
 
 class MathematicalAI {
     constructor(mathematicalEngine) {
-        this.mathEngine = mathematicalEngine;
+        this.mathEngine = mathematicalEngine || new MathematicalEngine();
         
         // AI State with mathematical integration
         this.aiState = {

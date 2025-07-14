@@ -418,6 +418,10 @@ class DynamicTextureGenerator {
     this.context = this.canvas.getContext('2d');
     this.canvas.width = 512;
     this.canvas.height = 512;
+    
+    // Initialize permutation table for Perlin noise
+    this.p = new Array(512);
+    this.initializePermutationTable();
   }
 
   generateNormalTexture(season, time) {
@@ -633,8 +637,8 @@ class DynamicTextureGenerator {
   // Permutation table for Perlin noise
   p = new Array(512);
   
-  constructor() {
-    // Initialize permutation table
+  // Initialize permutation table in the existing constructor
+  initializePermutationTable() {
     for (let i = 0; i < 256; i++) {
       this.p[i] = Math.floor(Math.random() * 256);
     }

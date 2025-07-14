@@ -266,3 +266,40 @@ The hybrid approach addresses limitations of single-method approaches:
 ---
 
 **Made with ❤️ and Mathematics** 
+
+# LLM Provider Setup & Usage
+
+This project supports multiple LLM providers for AI agent thinking and dashboard features. To enable real LLMs, follow these steps:
+
+## Local LLMs
+
+### LM Studio
+- Download and install LM Studio: https://lmstudio.ai/
+- Start the local server: `lms server start`
+- The backend will auto-detect LM Studio at `http://localhost:1234/v1`
+
+### Ollama
+- Download and install Ollama: https://ollama.com/
+- Start the Ollama server: `ollama serve`
+- The backend will auto-detect Ollama at `http://localhost:11434`
+
+## Cloud/Free APIs
+
+### OpenAI (Free Tier)
+- Get an API key from https://platform.openai.com/
+- Set the environment variable `OPENAI_API_KEY` before starting the server.
+
+### Anthropic (Free Tier)
+- Get an API key from https://console.anthropic.com/
+- Set the environment variable `ANTHROPIC_API_KEY` before starting the server.
+
+### HuggingFace (Free Tier)
+- Get an API key from https://huggingface.co/settings/tokens
+- Set the environment variable `HUGGINGFACE_API_KEY` before starting the server.
+
+## Usage
+- The backend will auto-detect and connect to any available LLM provider.
+- The dashboard will show LLM status and allow switching between providers.
+- To test LLM endpoints, run: `node test-llm-comprehensive.js`
+
+--- 

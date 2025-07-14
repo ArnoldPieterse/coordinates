@@ -1,16 +1,18 @@
 /**
  * Coordinates - AI Agent System
- * Manages specialized AI agents with role-based job queuing
+ * Manages specialized AI agents with role-based job queuing and LLM integration
  * IDX-AI-001: AI Agent System Implementation
  * IDX-AI-002: Agent Memory System
  * IDX-AI-003: Enhanced Agent Capabilities
  * IDX-AI-004: Job Management and Queuing
+ * IDX-AI-005: LLM-Enhanced Agent Intelligence
  * 
  * For index reference format, see INDEX_DESCRIBER.md
  */
 
 import MathematicalAI from './mathematical-ai.js';
 import comfyUI from './comfyui-integration.js';
+import { LLMManager, AgentLLMEnhancer } from './llm-integration.js';
 
 // ===== AGENT ROLES =====
 // IDX-AI-005: Agent Role Definitions
@@ -184,6 +186,12 @@ class AIAgent {
         this.prompts = this.getDefaultPrompts();
         this.lastUpdate = Date.now();
         
+        // LLM enhancement properties
+        this.llmEnhanced = false;
+        this.thinkingHistory = [];
+        this.llmConfidence = 0.5;
+        this.llmProvider = null;
+        
         // Initialize agent-specific neural network
         this.initializeNeuralNetwork();
     }
@@ -233,9 +241,8 @@ class AIAgent {
     async initializeNeuralNetwork() {
         // Configure neural network based on role
         const roleConfig = this.getRoleConfiguration();
-        await this.neuralNetwork.initialize(roleConfig);
-        
-        console.log(`🤖 Agent ${this.id} (${this.role}) initialized with neural network`);
+        // No initialize method on neuralNetwork; just log
+        console.log(`🤖 Agent ${this.id} (${this.role}) initialized with neural network config`, roleConfig);
     }
 
     getRoleConfiguration() {
@@ -865,6 +872,76 @@ class AIAgent {
         };
     }
 
+    async enableLLMEnhancement(llmManager, enhancer) {
+        this.llmEnhanced = true;
+        this.llmManager = llmManager;
+        this.llmEnhancer = enhancer;
+        
+        // Test LLM connection
+        try {
+            const testResponse = await this.llmManager.generateResponse('Test connection', { maxTokens: 10 });
+            this.llmProvider = testResponse.provider;
+            console.log(`✅ Agent ${this.id} LLM enhancement enabled with ${this.llmProvider}`);
+            return true;
+        } catch (error) {
+            console.warn(`❌ Agent ${this.id} LLM enhancement failed: ${error.message}`);
+            this.llmEnhanced = false;
+            return false;
+        }
+    }
+
+    async generateEnhancedThinking(context = {}) {
+        if (!this.llmEnhanced || !this.llmEnhancer) {
+            return {
+                thoughts: "LLM enhancement not available",
+                confidence: 0.3,
+                nextActions: [],
+                reasoning: []
+            };
+        }
+
+        try {
+            const enhancedThinking = await this.llmEnhancer.enhanceAgentThinking(this, context);
+            
+            // Store in thinking history
+            this.thinkingHistory.push({
+                ...enhancedThinking,
+                timestamp: Date.now(),
+                context
+            });
+            
+            // Keep only recent thinking history
+            if (this.thinkingHistory.length > 20) {
+                this.thinkingHistory = this.thinkingHistory.slice(-20);
+            }
+            
+            this.llmConfidence = enhancedThinking.confidence;
+            return enhancedThinking;
+            
+        } catch (error) {
+            console.error(`Enhanced thinking failed for agent ${this.id}:`, error);
+            return {
+                thoughts: "Enhanced thinking unavailable",
+                confidence: 0.3,
+                nextActions: [],
+                reasoning: []
+            };
+        }
+    }
+
+    getThinkingHistory() {
+        return this.thinkingHistory;
+    }
+
+    getLLMStatus() {
+        return {
+            enhanced: this.llmEnhanced,
+            provider: this.llmProvider,
+            confidence: this.llmConfidence,
+            thinkingHistoryCount: this.thinkingHistory.length
+        };
+    }
+
     getStatus() {
         return {
             id: this.id,
@@ -892,7 +969,115 @@ export class AIAgentManager {
         this.nextJobId = 1;
         this.nextAgentId = 1;
         
+        // LLM integration
+        this.llmManager = null;
+        this.llmEnhancer = null;
+        this.llmEnabled = false;
+        
         console.log('🤖 AI Agent Manager initialized');
+    }
+
+    async initializeLLM() {
+        try {
+            console.log('🚀 Initializing LLM integration...');
+            
+            this.llmManager = new LLMManager();
+            const llmInitialized = await this.llmManager.initializeServices();
+            
+            if (llmInitialized) {
+                this.llmEnhancer = new AgentLLMEnhancer(this.llmManager);
+                this.llmEnabled = true;
+                console.log('✅ LLM integration initialized successfully');
+                
+                // Enable LLM enhancement for existing agents
+                await this.enableLLMForAllAgents();
+                
+                return true;
+            } else {
+                console.warn('⚠️ LLM services not available, continuing without LLM enhancement');
+                return false;
+            }
+        } catch (error) {
+            console.error('❌ LLM initialization failed:', error);
+            return false;
+        }
+    }
+
+    async enableLLMForAllAgents() {
+        if (!this.llmEnabled || !this.llmManager || !this.llmEnhancer) {
+            console.warn('LLM not available for agent enhancement');
+            return;
+        }
+
+        console.log('🔧 Enabling LLM enhancement for all agents...');
+        
+        for (const [agentId, agent] of this.agents) {
+            try {
+                await agent.enableLLMEnhancement(this.llmManager, this.llmEnhancer);
+            } catch (error) {
+                console.warn(`Failed to enable LLM for agent ${agentId}:`, error.message);
+            }
+        }
+        
+        console.log(`✅ LLM enhancement enabled for ${this.agents.size} agents`);
+    }
+
+    async enableLLMForAgent(agentId) {
+        if (!this.llmEnabled || !this.llmManager || !this.llmEnhancer) {
+            throw new Error('LLM not available');
+        }
+
+        const agent = this.agents.get(agentId);
+        if (!agent) {
+            throw new Error(`Agent ${agentId} not found`);
+        }
+
+        return await agent.enableLLMEnhancement(this.llmManager, this.llmEnhancer);
+    }
+
+    async generateAgentThinking(agentId, context = {}) {
+        const agent = this.agents.get(agentId);
+        if (!agent) {
+            throw new Error(`Agent ${agentId} not found`);
+        }
+
+        return await agent.generateEnhancedThinking(context);
+    }
+
+    getLLMStatus() {
+        if (!this.llmManager) {
+            return { enabled: false, message: 'LLM not initialized' };
+        }
+
+        return {
+            enabled: this.llmEnabled,
+            services: this.llmManager.getServiceStatus(),
+            availableProviders: this.llmManager.getAvailableProviders(),
+            activeProvider: this.llmManager.activeProvider
+        };
+    }
+
+    async switchLLMProvider(provider) {
+        if (!this.llmManager) {
+            throw new Error('LLM not initialized');
+        }
+
+        const success = await this.llmManager.switchActiveProvider(provider);
+        if (success) {
+            console.log(`✅ Switched to LLM provider: ${provider}`);
+        }
+        return success;
+    }
+
+    getAllAgentThinkingHistory() {
+        const history = {};
+        for (const [agentId, agent] of this.agents) {
+            history[agentId] = {
+                thinkingHistory: agent.getThinkingHistory(),
+                llmStatus: agent.getLLMStatus()
+            };
+        }
+        return history;
     }
 
     spawnAgent(role, capabilities = []) {
@@ -1080,6 +1265,66 @@ export class AIAgentManager {
         }
         
         return stats;
+    }
+
+    // ====== MISSING METHODS FOR SERVER API ======
+    
+    getAllAgents() {
+        const agents = [];
+        for (const [agentId, agent] of this.agents) {
+            agents.push({
+                id: agent.id,
+                role: agent.role,
+                status: agent.status,
+                capabilities: agent.capabilities,
+                stats: agent.stats,
+                currentJob: agent.currentJob,
+                llmEnhanced: agent.llmEnhanced,
+                rating: agent.stats.rating
+            });
+        }
+        return agents;
+    }
+
+    getAgentCount() {
+        return this.agents.size;
+    }
+
+    getActiveAgentCount() {
+        let count = 0;
+        for (const [agentId, agent] of this.agents) {
+            if (agent.status === 'idle' || agent.status === 'busy') {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    async testLLMConnection() {
+        try {
+            if (!this.llmManager) {
+                return { success: false, error: 'LLM Manager not initialized' };
+            }
+            
+            const testResult = await this.llmManager.generateResponse(
+                'lm_studio', 
+                'Hello! This is a connection test.',
+                'meta-llama-3-70b-instruct-smashed'
+            );
+            
+            return { 
+                success: true, 
+                provider: 'lm_studio',
+                response: testResult.text,
+                responseTime: testResult.responseTime
+            };
+        } catch (error) {
+            return { 
+                success: false, 
+                error: error.message,
+                provider: 'lm_studio'
+            };
+        }
     }
 }
 

@@ -1,244 +1,413 @@
 /**
- * AI Agent Service for Unified UI
- * Connects the React UI to the real AI agent system
- * IDX-UI-001: AI Agent Service Integration
+ * AI Agent Service - Real API Integration
+ * Manages AI agents, job queuing, memory, and real-time operations via REST API
+ * IDX-AI-SERVICE-002
  */
 
-import { AGENT_ROLES, JOB_TYPES } from '../../ai-agent-system.js';
-
 class AIAgentService {
-    constructor() {
-        this.baseUrl = window.location.origin;
-        this.socket = null;
-        this.agents = new Map();
-        this.jobs = [];
-        this.listeners = new Set();
-    }
+  constructor() {
+    this.baseUrl = 'http://localhost:3001/api';
+    this.listeners = new Set();
+    this.isConnected = false;
+    this.updateInterval = null;
+    
+    // Agent roles and capabilities
+    this.agentRoles = {
+      navigator: {
+        name: 'Navigator',
+        description: 'Handles pathfinding and spatial awareness',
+        capabilities: ['pathfinding', 'spatial_analysis', 'route_optimization'],
+        baseMemory: { shortTerm: 50, longTerm: 200 },
+        baseRating: 4.2
+      },
+      strategist: {
+        name: 'Strategist',
+        description: 'Develops tactical plans and combat strategies',
+        capabilities: ['tactical_planning', 'combat_analysis', 'resource_management'],
+        baseMemory: { shortTerm: 75, longTerm: 300 },
+        baseRating: 4.5
+      },
+      engineer: {
+        name: 'Engineer',
+        description: 'Manages systems, repairs, and technical operations',
+        capabilities: ['system_repair', 'technical_analysis', 'equipment_optimization'],
+        baseMemory: { shortTerm: 60, longTerm: 250 },
+        baseRating: 4.3
+      },
+      scout: {
+        name: 'Scout',
+        description: 'Explores and gathers intelligence',
+        capabilities: ['exploration', 'intelligence_gathering', 'threat_assessment'],
+        baseMemory: { shortTerm: 40, longTerm: 150 },
+        baseRating: 4.0
+      },
+      coordinator: {
+        name: 'Coordinator',
+        description: 'Manages team coordination and communication',
+        capabilities: ['team_coordination', 'communication', 'priority_management'],
+        baseMemory: { shortTerm: 80, longTerm: 400 },
+        baseRating: 4.4
+      }
+    };
+    
+    // Job types and requirements
+    this.jobTypes = {
+      pathfinding: {
+        name: 'Pathfinding',
+        description: 'Find optimal route to destination',
+        requiredCapability: 'pathfinding',
+        estimatedDuration: 2,
+        priority: 'medium'
+      },
+      tactical_analysis: {
+        name: 'Tactical Analysis',
+        description: 'Analyze combat situation and recommend strategy',
+        requiredCapability: 'tactical_planning',
+        estimatedDuration: 5,
+        priority: 'high'
+      },
+      system_repair: {
+        name: 'System Repair',
+        description: 'Repair damaged systems or equipment',
+        requiredCapability: 'system_repair',
+        estimatedDuration: 8,
+        priority: 'high'
+      },
+      exploration: {
+        name: 'Exploration',
+        description: 'Explore new area and gather intelligence',
+        requiredCapability: 'exploration',
+        estimatedDuration: 10,
+        priority: 'medium'
+      },
+      team_coordination: {
+        name: 'Team Coordination',
+        description: 'Coordinate team activities and resources',
+        requiredCapability: 'team_coordination',
+        estimatedDuration: 3,
+        priority: 'high'
+      }
+    };
+  }
 
-    // Connect to the AI agent system
-    async connect() {
+  async connect() {
+    try {
+      // Test connection to API
+      const response = await fetch(`${this.baseUrl}/health`);
+      if (response.ok) {
+        this.isConnected = true;
+        this.startUpdateLoop();
+        console.log('AI Agent Service connected to API successfully');
+        return true;
+      } else {
+        throw new Error('API health check failed');
+      }
+    } catch (error) {
+      console.error('Failed to connect to AI Agent Service API:', error);
+      return false;
+    }
+  }
+
+  disconnect() {
+    this.isConnected = false;
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+      this.updateInterval = null;
+    }
+    console.log('AI Agent Service disconnected');
+  }
+
+  startUpdateLoop() {
+    this.updateInterval = setInterval(() => {
+      this.notifyListeners();
+    }, 2000); // Update every 2 seconds
+  }
+
+  async spawnAgent(role) {
+    try {
+      const response = await fetch(`${this.baseUrl}/agents/spawn`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ role })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to spawn agent: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log(`Agent spawned: ${result.agent.name}`);
+      return result.agent;
+    } catch (error) {
+      console.error('Failed to spawn agent:', error);
+      throw error;
+    }
+  }
+
+  async dismissAgent(agentId) {
+    try {
+      const response = await fetch(`${this.baseUrl}/agents/${agentId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to dismiss agent: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log(`Agent dismissed: ${result.message}`);
+      return result;
+    } catch (error) {
+      console.error('Failed to dismiss agent:', error);
+      throw error;
+    }
+  }
+
+  async upgradeAgent(agentId, capability) {
+    try {
+      const response = await fetch(`${this.baseUrl}/agents/${agentId}/upgrade`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ capability })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to upgrade agent: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log(`Agent upgraded: ${result.message}`);
+      return result.agent;
+    } catch (error) {
+      console.error('Failed to upgrade agent:', error);
+      throw error;
+    }
+  }
+
+  async createJob(type, description, priority = 'medium') {
+    try {
+      const response = await fetch(`${this.baseUrl}/jobs/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type, description, priority })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to create job: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log(`Job created: ${result.job.type}`);
+      return result.job;
+    } catch (error) {
+      console.error('Failed to create job:', error);
+      throw error;
+    }
+  }
+
+  async cancelJob(jobId) {
+    try {
+      const response = await fetch(`${this.baseUrl}/jobs/${jobId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to cancel job: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log(`Job cancelled: ${result.message}`);
+      return result;
+    } catch (error) {
+      console.error('Failed to cancel job:', error);
+      throw error;
+    }
+  }
+
+  async prioritizeJob(jobId, priority) {
+    try {
+      const response = await fetch(`${this.baseUrl}/jobs/${jobId}/priority`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ priority })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update job priority: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log(`Job priority updated: ${result.message}`);
+      return result.job;
+    } catch (error) {
+      console.error('Failed to update job priority:', error);
+      throw error;
+    }
+  }
+
+  async getAgents() {
+    try {
+      const response = await fetch(`${this.baseUrl}/agents`);
+      if (!response.ok) {
+        throw new Error(`Failed to get agents: ${response.statusText}`);
+      }
+      const result = await response.json();
+      return result.agents || [];
+    } catch (error) {
+      console.error('Failed to get agents:', error);
+      return [];
+    }
+  }
+
+  async getJobs() {
+    try {
+      const response = await fetch(`${this.baseUrl}/jobs`);
+      if (!response.ok) {
+        throw new Error(`Failed to get jobs: ${response.statusText}`);
+      }
+      const result = await response.json();
+      return result.jobs || [];
+    } catch (error) {
+      console.error('Failed to get jobs:', error);
+      return [];
+    }
+  }
+
+  async getStats() {
+    try {
+      const response = await fetch(`${this.baseUrl}/game/status`);
+      if (!response.ok) {
+        throw new Error(`Failed to get stats: ${response.statusText}`);
+      }
+      const result = await response.json();
+      return result.stats || {};
+    } catch (error) {
+      console.error('Failed to get stats:', error);
+      return {};
+    }
+  }
+
+  addListener(callback) {
+    this.listeners.add(callback);
+  }
+
+  removeListener(callback) {
+    this.listeners.delete(callback);
+  }
+
+  async notifyListeners() {
+    try {
+      const [agents, jobs, stats] = await Promise.all([
+        this.getAgents(),
+        this.getJobs(),
+        this.getStats()
+      ]);
+
+      const data = { agents, jobs, stats };
+      this.listeners.forEach(callback => {
         try {
-            // For now, simulate connection to the local AI agent system
-            console.log('🔗 Connecting to AI Agent System...');
-            
-            // Initialize with mock data that matches the real system
-            this.initializeMockData();
-            
-            // Start real-time updates
-            this.startRealTimeUpdates();
-            
-            console.log('✅ Connected to AI Agent System');
-            return true;
+          callback(data);
         } catch (error) {
-            console.error('❌ Failed to connect to AI Agent System:', error);
-            return false;
+          console.error('Error in listener callback:', error);
         }
+      });
+    } catch (error) {
+      console.error('Error updating listeners:', error);
     }
+  }
 
-    // Initialize mock data that matches the real AI agent system
-    initializeMockData() {
-        // Initialize agents based on the real AGENT_ROLES
-        Object.values(AGENT_ROLES).forEach((role, index) => {
-            this.agents.set(role, {
-                id: index + 1,
-                name: role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                role: role,
-                status: this.getRandomStatus(),
-                jobsCompleted: Math.floor(Math.random() * 50),
-                currentJob: this.getRandomJob(),
-                memory: {
-                    shortTerm: Math.floor(Math.random() * 50),
-                    longTerm: Math.floor(Math.random() * 200)
-                },
-                rating: Math.random() * 5,
-                lastActive: new Date()
-            });
-        });
+  // Get available roles and job types for UI
+  getAgentRoles() {
+    return this.agentRoles;
+  }
 
-        // Initialize job queue based on real JOB_TYPES
-        this.jobs = Object.values(JOB_TYPES).slice(0, 8).map((jobType, index) => ({
-            id: index + 1,
-            type: jobType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-            assignedTo: Object.values(AGENT_ROLES)[Math.floor(Math.random() * Object.values(AGENT_ROLES).length)],
-            status: Math.random() > 0.5 ? 'In Progress' : 'Queued',
-            priority: Math.random() > 0.7 ? 'High' : 'Normal',
-            createdAt: new Date(Date.now() - Math.random() * 3600000),
-            estimatedDuration: Math.floor(Math.random() * 30) + 5
-        }));
+  getJobTypes() {
+    return this.jobTypes;
+  }
+
+  // ===== LLM INTEGRATION METHODS =====
+  
+  async getLLMStatus() {
+    try {
+      const response = await fetch(`${this.baseUrl}/llm/status`);
+      if (!response.ok) {
+        throw new Error(`Failed to get LLM status: ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get LLM status:', error);
+      return { enabled: false, message: 'LLM service unavailable' };
     }
+  }
 
-    // Start real-time updates to simulate live AI agent activity
-    startRealTimeUpdates() {
-        setInterval(() => {
-            this.updateAgentStatuses();
-            this.updateJobQueue();
-            this.notifyListeners();
-        }, 3000);
+  async getAgentThinkingHistory() {
+    try {
+      const response = await fetch(`${this.baseUrl}/llm/agent-thinking`);
+      if (!response.ok) {
+        throw new Error(`Failed to get agent thinking history: ${response.statusText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get agent thinking history:', error);
+      return {};
     }
+  }
 
-    // Update agent statuses to simulate real activity
-    updateAgentStatuses() {
-        this.agents.forEach(agent => {
-            // Random status changes
-            if (Math.random() > 0.8) {
-                agent.status = this.getRandomStatus();
-            }
-            
-            // Random job completion
-            if (Math.random() > 0.9) {
-                agent.jobsCompleted++;
-                agent.currentJob = this.getRandomJob();
-            }
-            
-            // Update memory usage
-            agent.memory.shortTerm = Math.max(0, agent.memory.shortTerm + (Math.random() > 0.5 ? 1 : -1));
-            agent.memory.longTerm = Math.max(0, agent.memory.longTerm + (Math.random() > 0.7 ? 1 : -1));
-            
-            // Update rating based on performance
-            agent.rating = Math.max(0, Math.min(5, agent.rating + (Math.random() - 0.5) * 0.1));
-            
-            agent.lastActive = new Date();
-        });
+  async generateAgentThinking(agentId, context = {}) {
+    try {
+      const response = await fetch(`${this.baseUrl}/llm/agent-thinking/${agentId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ context })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate agent thinking: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log(`Generated thinking for agent ${agentId}`);
+      return result;
+    } catch (error) {
+      console.error('Failed to generate agent thinking:', error);
+      throw error;
     }
+  }
 
-    // Update job queue to simulate real job processing
-    updateJobQueue() {
-        this.jobs.forEach(job => {
-            // Random job status changes
-            if (Math.random() > 0.7) {
-                if (job.status === 'Queued') {
-                    job.status = 'In Progress';
-                } else if (job.status === 'In Progress' && Math.random() > 0.8) {
-                    job.status = 'Completed';
-                    // Remove completed jobs after a delay
-                    setTimeout(() => {
-                        this.jobs = this.jobs.filter(j => j.id !== job.id);
-                    }, 5000);
-                }
-            }
-        });
+  async switchLLMProvider(provider) {
+    try {
+      const response = await fetch(`${this.baseUrl}/llm/switch-provider`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ provider })
+      });
 
-        // Add new jobs occasionally
-        if (Math.random() > 0.8) {
-            const newJob = {
-                id: Date.now(),
-                type: this.getRandomJob(),
-                assignedTo: Object.values(AGENT_ROLES)[Math.floor(Math.random() * Object.values(AGENT_ROLES).length)],
-                status: 'Queued',
-                priority: Math.random() > 0.7 ? 'High' : 'Normal',
-                createdAt: new Date(),
-                estimatedDuration: Math.floor(Math.random() * 30) + 5
-            };
-            this.jobs.unshift(newJob);
-        }
+      if (!response.ok) {
+        throw new Error(`Failed to switch LLM provider: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log(`Switched to LLM provider: ${provider}`);
+      return result.success;
+    } catch (error) {
+      console.error('Failed to switch LLM provider:', error);
+      throw error;
     }
-
-    // Get random agent status
-    getRandomStatus() {
-        const statuses = ['Ready', 'Working', 'Idle', 'Busy', 'Processing'];
-        return statuses[Math.floor(Math.random() * statuses.length)];
-    }
-
-    // Get random job type
-    getRandomJob() {
-        const jobs = [
-            'Code Review', 'Performance Analysis', 'AI Model Training', 
-            'Texture Generation', 'Bug Fix', 'Feature Implementation',
-            'Documentation Update', 'Security Audit', 'Deployment Check',
-            'Testing', 'Agent Management', 'Prompt Optimization',
-            'AWS Deployment', 'Sales Analysis', 'Creative Generation'
-        ];
-        return jobs[Math.floor(Math.random() * jobs.length)];
-    }
-
-    // Get all agents
-    getAgents() {
-        return Array.from(this.agents.values());
-    }
-
-    // Get job queue
-    getJobs() {
-        return this.jobs;
-    }
-
-    // Get agent by role
-    getAgentByRole(role) {
-        return this.agents.get(role);
-    }
-
-    // Assign job to agent
-    async assignJob(jobId, agentRole) {
-        const job = this.jobs.find(j => j.id === jobId);
-        if (job) {
-            job.assignedTo = agentRole;
-            job.status = 'In Progress';
-            this.notifyListeners();
-            return true;
-        }
-        return false;
-    }
-
-    // Spawn new agent
-    async spawnAgent(role) {
-        const newAgent = {
-            id: Date.now(),
-            name: role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-            role: role,
-            status: 'Ready',
-            jobsCompleted: 0,
-            currentJob: 'Initializing',
-            memory: { shortTerm: 0, longTerm: 0 },
-            rating: 3.0,
-            lastActive: new Date()
-        };
-        
-        this.agents.set(role, newAgent);
-        this.notifyListeners();
-        return newAgent;
-    }
-
-    // Add event listener for real-time updates
-    addListener(callback) {
-        this.listeners.add(callback);
-    }
-
-    // Remove event listener
-    removeListener(callback) {
-        this.listeners.delete(callback);
-    }
-
-    // Notify all listeners of updates
-    notifyListeners() {
-        this.listeners.forEach(callback => {
-            try {
-                callback({
-                    agents: this.getAgents(),
-                    jobs: this.getJobs()
-                });
-            } catch (error) {
-                console.error('Error in listener callback:', error);
-            }
-        });
-    }
-
-    // Get system statistics
-    getStats() {
-        const agents = this.getAgents();
-        const jobs = this.getJobs();
-        
-        return {
-            totalAgents: agents.length,
-            activeAgents: agents.filter(a => a.status === 'Working' || a.status === 'Processing').length,
-            totalJobs: jobs.length,
-            queuedJobs: jobs.filter(j => j.status === 'Queued').length,
-            inProgressJobs: jobs.filter(j => j.status === 'In Progress').length,
-            completedJobs: agents.reduce((sum, a) => sum + a.jobsCompleted, 0),
-            averageRating: agents.reduce((sum, a) => sum + a.rating, 0) / agents.length
-        };
-    }
+  }
 }
 
-// Create singleton instance
+// Export singleton instance
 const aiAgentService = new AIAgentService();
-
 export default aiAgentService; 

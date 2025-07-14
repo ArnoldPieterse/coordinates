@@ -11,9 +11,10 @@
     "server": "node server.js",
     "start": "concurrently \"npx kill-port 3001 && npm run server\" \"npm run dev\"",
     "start:prod": "node server.js",
-    "test": "echo \"No tests specified\" && exit 0",
-    "test:watch": "echo \"No tests specified\" && exit 0",
-    "test:coverage": "echo \"No tests specified\" && exit 0",
+    "test": "node api-test-suite.js",
+    "test:api": "node api-test-suite.js",
+    "test:watch": "nodemon api-test-suite.js",
+    "test:coverage": "echo \"No coverage tool configured\" && exit 0",
     "lint": "echo \"No linter configured\" && exit 0",
     "lint:fix": "echo \"No linter configured\" && exit 0",
     "audit": "npm audit",
@@ -36,6 +37,17 @@
     "deploy:help": "node deploy-simple.js help",
     "domain:configure": "node aws-domain-config.js",
     "domain:verify": "nslookup www.rekursing.com",
+    "deploy:aws-complete": "node deploy-aws-complete.js",
+    "deploy:aws-static": "node deploy-aws-static.js",
+    "deploy:aws-robust": "node deploy-aws-robust.js",
+    "deploy:aws-final": "node deploy-aws-final.js",
+    "deploy:aws-auto": "node deploy-aws-auto.js",
+    "deploy:s3-simple": "node deploy-simple-s3.js",
+    "deploy:aws-cli": "node deploy-aws-cli.js",
+    "deploy:final": "node deploy-final.js",
+    "deploy:working": "node deploy-working.js",
+    "setup:infrastructure": "node setup-complete-infrastructure.js",
+    "deploy:full": "node deploy-full-project.cjs",
     "auto-git": "powershell -ExecutionPolicy Bypass -File ./auto-git.ps1"
   },
   "keywords": [
@@ -66,10 +78,15 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
+    "@aws-sdk/client-acm": "^3.844.0",
+    "@aws-sdk/client-cloudfront": "^3.844.0",
     "@aws-sdk/client-route-53": "^3.844.0",
+    "@aws-sdk/client-s3": "^3.844.0",
+    "@aws-sdk/client-sts": "^3.844.0",
     "@lmstudio/sdk": "^0.1.0",
     "cannon-es": "^0.20.0",
     "express": "^4.18.2",
+    "mime-types": "^3.0.1",
     "node-fetch": "^3.3.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
@@ -79,8 +96,9 @@
     "vite-plugin-node-polyfills": "^0.23.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.6.0",
     "concurrently": "^8.2.2",
     "puppeteer": "^24.10.2",
-    "vite": "^7.0.0"
+    "vite": "^6.3.5"
   }
 }
