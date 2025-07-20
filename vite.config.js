@@ -1,10 +1,8 @@
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
-import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [
-    react(),
     nodePolyfills({
       // Include specific polyfills and exclude problematic ones
       include: ['buffer', 'process', 'util', 'events'],
@@ -18,12 +16,11 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: true,
     rollupOptions: {
-      // input: {
-      //   main: './src/main.jsx'
-      // },
+      input: {
+        main: './index.html'
+      },
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom'],
           three: ['three'],
           game: ['cannon-es']
         }
@@ -52,7 +49,7 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'three', 'cannon-es'],
+    include: ['three', 'cannon-es'],
     exclude: [
       'stream-browserify', 
       'fetch-blob',
