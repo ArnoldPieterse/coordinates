@@ -760,7 +760,7 @@ aws iam update-role-policy \
 
 # Rotate access keys
 aws iam create-access-key --user-name coordinates-deployer
-aws iam delete-access-key --user-name coordinates-deployer --access-key-id AKIA1234567890ABCDEF
+aws iam delete-access-key --user-name coordinates-deployer --access-key-id YOUR_ACCESS_KEY_ID
 ```
 
 ---
