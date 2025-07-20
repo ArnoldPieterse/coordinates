@@ -1,373 +1,346 @@
 /**
  * LM Studio Bridge
- * Bridges GPU streaming system with LM Studio instances
+ * Handles connection and communication with LM Studio instances
  */
 
-import { EventEmitter } from 'events';
-import { LMStudioDetector } from './lm-studio-detector.js';
+import fetch from 'node-fetch';
 
-export class LMStudioBridge extends EventEmitter {
+export class LMStudioBridge {
   constructor() {
-    super();
-    this.detector = new LMStudioDetector();
-    this.connectedInstances = new Map();
-    this.activeConnections = new Map();
-    this.loadBalancer = new Map(); // Track load per instance
-    
-    this.setupEventHandlers();
+    this.connections = new Map();
+    this.defaultUrl = 'http://10.3.129.26:1234';
+    this.healthCheckInterval = 30000; // 30 seconds
+    this.initializeConnections();
   }
 
-  setupEventHandlers() {
-    this.detector.on('instance:discovered', (instance) => {
-      this.connectToInstance(instance);
-    });
-    
-    this.detector.on('scan:complete', (instances) => {
-      console.log(`🔗 LM Studio Bridge: ${instances.length} instances available`);
-      this.emit('instances:updated', instances);
-    });
-  }
-
-  async start() {
-    console.log('🚀 Starting LM Studio Bridge...');
-    
-    // Start network scanning
-    await this.detector.scanNetwork();
-    
-    // Start continuous monitoring
-    this.detector.startMonitoring(60000); // Scan every minute
-    
-    console.log('✅ LM Studio Bridge started');
-  }
-
-  async connectToInstance(instance) {
-    const instanceKey = `${instance.host}:${instance.port}`;
-    
-    if (this.connectedInstances.has(instanceKey)) {
-      return this.connectedInstances.get(instanceKey);
-    }
-    
+  /**
+   * Initialize connections to LM Studio instances
+   */
+  async initializeConnections() {
     try {
-      console.log(`🔗 Connecting to LM Studio: ${instance.name} at ${instance.host}:${instance.port}`);
+      // Connect to default LM Studio instance
+      await this.addConnection('default', this.defaultUrl);
       
-      // Test connection and get models
-      const models = await this.detector.getInstanceModels(instance.host, instance.port);
+      // Start health check
+      this.startHealthCheck();
       
+      console.log('🔗 LM Studio Bridge initialized');
+    } catch (error) {
+      console.error('Failed to initialize LM Studio Bridge:', error);
+    }
+  }
+
+  /**
+   * Add a new LM Studio connection
+   */
+  async addConnection(name, url) {
+    try {
       const connection = {
-        ...instance,
-        models,
-        status: 'connected',
-        connectedAt: new Date(),
-        lastUsed: null,
-        load: 0,
-        totalRequests: 0,
-        totalTokens: 0
+        name,
+        url,
+        status: 'connecting',
+        lastHealthCheck: null,
+        models: [],
+        capabilities: []
       };
+
+      // Test connection
+      await this.testConnection(connection);
       
-      this.connectedInstances.set(instanceKey, connection);
-      this.loadBalancer.set(instanceKey, 0);
-      
-      console.log(`✅ Connected to ${instance.name} with ${models.length} models`);
-      this.emit('instance:connected', connection);
+      this.connections.set(name, connection);
+      console.log(`🔗 LM Studio connection added: ${name} (${url})`);
       
       return connection;
-      
     } catch (error) {
-      console.error(`❌ Failed to connect to ${instance.name}:`, error);
-      this.emit('instance:connection:failed', { instance, error });
+      console.error(`Failed to add LM Studio connection ${name}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Test connection to LM Studio
+   */
+  async testConnection(connection) {
+    try {
+      const response = await fetch(`${connection.url}/v1/models`, {
+        method: 'GET',
+        timeout: 5000
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      connection.status = 'connected';
+      connection.lastHealthCheck = new Date();
+      connection.models = data.data || [];
+      connection.capabilities = this.extractCapabilities(data.data || []);
+
+      console.log(`✅ LM Studio ${connection.name} connected with ${connection.models.length} models`);
+      return true;
+    } catch (error) {
+      connection.status = 'disconnected';
+      connection.lastHealthCheck = new Date();
+      console.error(`❌ LM Studio ${connection.name} connection failed:`, error.message);
+      return false;
+    }
+  }
+
+  /**
+   * Extract model capabilities from LM Studio response
+   */
+  extractCapabilities(models) {
+    const capabilities = [];
+    
+    for (const model of models) {
+      const modelName = model.id.toLowerCase();
+      
+      if (modelName.includes('llama')) {
+        capabilities.push('llama-3-70b', 'llama-3-8b', 'llama-2-70b', 'llama-2-13b', 'llama-2-7b');
+      }
+      
+      if (modelName.includes('gpt')) {
+        capabilities.push('gpt-4', 'gpt-3.5-turbo');
+      }
+      
+      if (modelName.includes('mistral')) {
+        capabilities.push('mistral-7b', 'mistral-8x7b');
+      }
+      
+      if (modelName.includes('gemini')) {
+        capabilities.push('gemini-pro');
+      }
+      
+      if (modelName.includes('claude')) {
+        capabilities.push('claude-3-haiku', 'claude-3-sonnet', 'claude-3-opus');
+      }
+    }
+    
+    return [...new Set(capabilities)]; // Remove duplicates
+  }
+
+  /**
+   * Get available connections
+   */
+  getConnections() {
+    return Array.from(this.connections.values());
+  }
+
+  /**
+   * Get connection by name
+   */
+  getConnection(name) {
+    return this.connections.get(name);
+  }
+
+  /**
+   * Get best connection for a model
+   */
+  getBestConnection(model) {
+    const availableConnections = Array.from(this.connections.values())
+      .filter(conn => conn.status === 'connected' && conn.capabilities.includes(model));
+    
+    if (availableConnections.length === 0) {
       return null;
     }
+    
+    // Return the first available connection (could be enhanced with load balancing)
+    return availableConnections[0];
   }
 
-  async routeInference(prompt, model, options = {}) {
-    const availableInstances = this.getAvailableInstancesForModel(model);
-    
-    if (availableInstances.length === 0) {
-      throw new Error(`No LM Studio instances available for model: ${model}`);
-    }
-    
-    // Select best instance based on load balancing
-    const selectedInstance = this.selectBestInstance(availableInstances);
-    
+  /**
+   * Make inference request to LM Studio
+   */
+  async makeInferenceRequest(connection, prompt, model, options = {}) {
     try {
-      console.log(`📤 Routing inference to ${selectedInstance.name} (${selectedInstance.host}:${selectedInstance.port})`);
-      
-      const result = await this.sendInferenceRequest(selectedInstance, prompt, model, options);
-      
-      // Update instance stats
-      this.updateInstanceStats(selectedInstance, result.tokens || 0);
-      
-      console.log(`📥 Received response from ${selectedInstance.name} (${result.tokens} tokens)`);
-      
-      return {
-        ...result,
-        instance: selectedInstance,
-        routedAt: new Date()
+      const requestBody = {
+        model: model,
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: options.maxTokens || 1000,
+        temperature: options.temperature || 0.7,
+        top_p: options.topP || 1.0,
+        stream: options.stream || false
       };
-      
-    } catch (error) {
-      console.error(`❌ Inference failed on ${selectedInstance.name}:`, error);
-      
-      // Mark instance as failed and try another
-      this.markInstanceFailed(selectedInstance);
-      
-      // Retry with another instance
-      const remainingInstances = availableInstances.filter(i => i !== selectedInstance);
-      if (remainingInstances.length > 0) {
-        console.log(`🔄 Retrying with another instance...`);
-        return await this.routeInference(prompt, model, options);
-      }
-      
-      throw error;
-    }
-  }
 
-  async sendInferenceRequest(instance, prompt, model, options) {
-    const url = `http://${instance.host}:${instance.port}/v1/chat/completions`;
-    
-    const requestBody = {
-      model: model,
-      messages: [
-        { role: 'user', content: prompt }
-      ],
-      max_tokens: options.maxTokens || 2048,
-      temperature: options.temperature || 0.7,
-      top_p: options.topP || 0.9,
-      stream: options.stream || false
-    };
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody),
-      signal: AbortSignal.timeout(30000) // 30 second timeout
-    });
-    
-    if (!response.ok) {
-      throw new Error(`LM Studio request failed: ${response.status} ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    
-    return {
-      response: data.choices[0]?.message?.content || '',
-      tokens: data.usage?.total_tokens || 0,
-      promptTokens: data.usage?.prompt_tokens || 0,
-      completionTokens: data.usage?.completion_tokens || 0,
-      model: data.model,
-      finishReason: data.choices[0]?.finish_reason
-    };
-  }
-
-  async startStreamingInference(instance, prompt, model, options = {}) {
-    const url = `http://${instance.host}:${instance.port}/v1/chat/completions`;
-    
-    const requestBody = {
-      model: model,
-      messages: [
-        { role: 'user', content: prompt }
-      ],
-      max_tokens: options.maxTokens || 2048,
-      temperature: options.temperature || 0.7,
-      top_p: options.topP || 0.9,
-      stream: true
-    };
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
-    
-    if (!response.ok) {
-      throw new Error(`LM Studio streaming request failed: ${response.status} ${response.statusText}`);
-    }
-    
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    
-    return {
-      reader,
-      decoder,
-      instance,
-      model,
-      startTime: Date.now()
-    };
-  }
-
-  async processStreamingResponse(streamData, onToken) {
-    const { reader, decoder, instance } = streamData;
-    let fullResponse = '';
-    let totalTokens = 0;
-    
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) break;
-        
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-        
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            
-            if (data === '[DONE]') {
-              break;
-            }
-            
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices[0]?.delta?.content;
-              
-              if (content) {
-                fullResponse += content;
-                totalTokens++;
-                
-                if (onToken) {
-                  onToken(content, {
-                    instance,
-                    totalTokens,
-                    fullResponse
-                  });
-                }
-              }
-            } catch (parseError) {
-              // Skip malformed JSON
-            }
-          }
-        }
-      }
-      
-      return {
-        response: fullResponse,
-        tokens: totalTokens,
-        instance,
-        duration: Date.now() - streamData.startTime
-      };
-      
-    } catch (error) {
-      console.error('Streaming error:', error);
-      throw error;
-    }
-  }
-
-  getAvailableInstancesForModel(model) {
-    return Array.from(this.connectedInstances.values())
-      .filter(instance => 
-        instance.status === 'connected' &&
-        instance.models.some(m => m.id === model || m.id.includes(model))
-      );
-  }
-
-  selectBestInstance(availableInstances) {
-    // Simple load balancing - select instance with lowest load
-    return availableInstances.reduce((best, current) => {
-      const bestLoad = this.loadBalancer.get(`${best.host}:${best.port}`) || 0;
-      const currentLoad = this.loadBalancer.get(`${current.host}:${current.port}`) || 0;
-      
-      return currentLoad < bestLoad ? current : best;
-    });
-  }
-
-  updateInstanceStats(instance, tokens) {
-    const instanceKey = `${instance.host}:${instance.port}`;
-    const connection = this.connectedInstances.get(instanceKey);
-    
-    if (connection) {
-      connection.lastUsed = new Date();
-      connection.totalRequests++;
-      connection.totalTokens += tokens;
-      
-      // Update load balancer
-      const currentLoad = this.loadBalancer.get(instanceKey) || 0;
-      this.loadBalancer.set(instanceKey, currentLoad + 1);
-      
-      // Decay load over time
-      setTimeout(() => {
-        const load = this.loadBalancer.get(instanceKey) || 0;
-        this.loadBalancer.set(instanceKey, Math.max(0, load - 1));
-      }, 60000); // Decay after 1 minute
-    }
-  }
-
-  markInstanceFailed(instance) {
-    const instanceKey = `${instance.host}:${instance.port}`;
-    const connection = this.connectedInstances.get(instanceKey);
-    
-    if (connection) {
-      connection.status = 'failed';
-      connection.failedAt = new Date();
-      
-      console.log(`⚠️ Marked ${instance.name} as failed`);
-      this.emit('instance:failed', connection);
-      
-      // Try to reconnect after 5 minutes
-      setTimeout(() => {
-        this.reconnectInstance(instance);
-      }, 300000);
-    }
-  }
-
-  async reconnectInstance(instance) {
-    console.log(`🔄 Attempting to reconnect to ${instance.name}...`);
-    
-    const isAvailable = await this.detector.testInstanceConnection(instance.host, instance.port);
-    
-    if (isAvailable) {
-      const connection = await this.connectToInstance(instance);
-      if (connection) {
-        connection.status = 'connected';
-        console.log(`✅ Reconnected to ${instance.name}`);
-        this.emit('instance:reconnected', connection);
-      }
-    }
-  }
-
-  getConnectedInstances() {
-    return Array.from(this.connectedInstances.values());
-  }
-
-  getInstanceStats() {
-    const stats = {
-      totalInstances: this.connectedInstances.size,
-      connectedInstances: 0,
-      failedInstances: 0,
-      totalRequests: 0,
-      totalTokens: 0,
-      instances: []
-    };
-    
-    for (const instance of this.connectedInstances.values()) {
-      if (instance.status === 'connected') stats.connectedInstances++;
-      if (instance.status === 'failed') stats.failedInstances++;
-      
-      stats.totalRequests += instance.totalRequests;
-      stats.totalTokens += instance.totalTokens;
-      
-      stats.instances.push({
-        name: instance.name,
-        host: instance.host,
-        port: instance.port,
-        status: instance.status,
-        modelCount: instance.modelCount,
-        totalRequests: instance.totalRequests,
-        totalTokens: instance.totalTokens,
-        lastUsed: instance.lastUsed,
-        load: this.loadBalancer.get(`${instance.host}:${instance.port}`) || 0
+      const response = await fetch(`${connection.url}/v1/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody),
+        timeout: options.timeout || 30000
       });
+
+      if (!response.ok) {
+        throw new Error(`LM Studio API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      return {
+        success: true,
+        response: data.choices[0].message.content,
+        model: data.model,
+        usage: data.usage,
+        finishReason: data.choices[0].finish_reason
+      };
+    } catch (error) {
+      console.error(`LM Studio inference failed for ${connection.name}:`, error);
+      throw error;
     }
-    
-    return stats;
   }
 
-  stop() {
-    this.detector.stopMonitoring();
-    console.log('🛑 LM Studio Bridge stopped');
+  /**
+   * Stream inference request to LM Studio
+   */
+  async streamInferenceRequest(connection, prompt, model, options = {}) {
+    try {
+      const requestBody = {
+        model: model,
+        messages: [
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: options.maxTokens || 1000,
+        temperature: options.temperature || 0.7,
+        top_p: options.topP || 1.0,
+        stream: true
+      };
+
+      const response = await fetch(`${connection.url}/v1/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody),
+        timeout: options.timeout || 30000
+      });
+
+      if (!response.ok) {
+        throw new Error(`LM Studio API error: ${response.status} ${response.statusText}`);
+      }
+
+      return response.body;
+    } catch (error) {
+      console.error(`LM Studio streaming failed for ${connection.name}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get models from LM Studio
+   */
+  async getModels(connection) {
+    try {
+      const response = await fetch(`${connection.url}/v1/models`, {
+        method: 'GET',
+        timeout: 5000
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.data || [];
+    } catch (error) {
+      console.error(`Failed to get models from ${connection.name}:`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Get system status
+   */
+  async getSystemStatus() {
+    const status = {
+      totalConnections: this.connections.size,
+      connectedConnections: 0,
+      totalModels: 0,
+      connections: []
+    };
+
+    for (const [name, connection] of this.connections) {
+      status.connections.push({
+        name,
+        url: connection.url,
+        status: connection.status,
+        lastHealthCheck: connection.lastHealthCheck,
+        modelCount: connection.models.length
+      });
+
+      if (connection.status === 'connected') {
+        status.connectedConnections++;
+        status.totalModels += connection.models.length;
+      }
+    }
+
+    return status;
+  }
+
+  /**
+   * Start health check interval
+   */
+  startHealthCheck() {
+    setInterval(async () => {
+      for (const [name, connection] of this.connections) {
+        await this.testConnection(connection);
+      }
+    }, this.healthCheckInterval);
+  }
+
+  /**
+   * Remove connection
+   */
+  removeConnection(name) {
+    const connection = this.connections.get(name);
+    if (connection) {
+      this.connections.delete(name);
+      console.log(`🔗 LM Studio connection removed: ${name}`);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Update connection URL
+   */
+  async updateConnectionUrl(name, newUrl) {
+    const connection = this.connections.get(name);
+    if (!connection) {
+      throw new Error(`Connection ${name} not found`);
+    }
+
+    connection.url = newUrl;
+    await this.testConnection(connection);
+    
+    console.log(`🔗 LM Studio connection updated: ${name} -> ${newUrl}`);
+    return connection;
+  }
+
+  /**
+   * Get connection statistics
+   */
+  getConnectionStats() {
+    const stats = {
+      total: this.connections.size,
+      connected: 0,
+      disconnected: 0,
+      totalModels: 0,
+      averageResponseTime: 0
+    };
+
+    for (const connection of this.connections.values()) {
+      if (connection.status === 'connected') {
+        stats.connected++;
+        stats.totalModels += connection.models.length;
+      } else {
+        stats.disconnected++;
+      }
+    }
+
+    return stats;
   }
 } 

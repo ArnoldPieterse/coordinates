@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Rekursing GPU Streaming Plugin",
+  "version": "1.0.0",
+  "description": "Share your GPU power with rekursing.com for distributed AI inference",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://rekursing.com/*",
+    "http://localhost:3002/*",
+    "http://10.3.129.26:1234/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://rekursing.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "GPU Streaming Plugin"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["https://rekursing.com/*"]
+    }
+  ]
+} 

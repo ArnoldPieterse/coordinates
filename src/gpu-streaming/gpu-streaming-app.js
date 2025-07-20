@@ -13,6 +13,8 @@ import { AdInjectionService } from './ad-injection-service.js';
 import { LLMInferenceEngine } from './llm-inference-engine.js';
 import { PaymentProcessor } from './payment-processor.js';
 import { StreamQualityManager } from './stream-quality-manager.js';
+import { UserPluginManager } from './user-plugin-manager.js';
+import { LMStudioBridge } from './lm-studio-bridge.js';
 
 class GPUStreamingApp {
   constructor() {
@@ -31,6 +33,8 @@ class GPUStreamingApp {
     this.inferenceEngine = new LLMInferenceEngine();
     this.paymentProcessor = new PaymentProcessor();
     this.qualityManager = new StreamQualityManager();
+    this.pluginManager = new UserPluginManager();
+    this.lmStudioBridge = new LMStudioBridge();
     
     this.setupMiddleware();
     this.setupRoutes();
@@ -45,6 +49,66 @@ class GPUStreamingApp {
   }
 
   setupRoutes() {
+    // Plugin Management Routes
+    this.app.post('/api/plugin/register', async (req, res) => {
+      try {
+        const { gpuInfo, lmStudioUrl, pricing, capabilities } = req.body;
+        const userId = req.headers['x-user-id'] || 'anonymous';
+        
+        const result = await this.pluginManager.registerPlugin(userId, {
+          gpuInfo,
+          lmStudioUrl,
+          pricing,
+          capabilities
+        });
+        
+        res.json({ success: true, ...result });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    this.app.get('/api/plugin/status/:pluginId', async (req, res) => {
+      try {
+        const { pluginId } = req.params;
+        const plugins = await this.pluginManager.getConnectedPlugins();
+        const plugin = plugins.find(p => p.id === pluginId);
+        
+        if (!plugin) {
+          return res.status(404).json({ success: false, error: 'Plugin not found' });
+        }
+        
+        res.json({ success: true, plugin });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    this.app.get('/api/plugin/earnings/:pluginId', async (req, res) => {
+      try {
+        const { pluginId } = req.params;
+        const connection = this.pluginManager.pluginConnections.get(pluginId);
+        
+        if (!connection) {
+          return res.status(404).json({ success: false, error: 'Plugin not found' });
+        }
+        
+        const earnings = connection.provider.totalEarnings || 0;
+        res.json({ success: true, earnings });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    this.app.get('/api/plugin/stats', async (req, res) => {
+      try {
+        const stats = await this.pluginManager.getPluginStats();
+        res.json({ success: true, stats });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
     // GPU Provider Routes
     this.app.post('/api/gpu/register', async (req, res) => {
       try {
@@ -99,7 +163,17 @@ class GPUStreamingApp {
     this.app.get('/api/llm/status', async (req, res) => {
       try {
         const status = await this.gpuManager.getSystemStatus();
-        res.json({ success: true, status });
+        const pluginStats = await this.pluginManager.getPluginStats();
+        
+        // Combine GPU manager status with plugin stats
+        const combinedStatus = {
+          ...status,
+          pluginStats,
+          totalPlugins: pluginStats.totalPlugins,
+          connectedPlugins: pluginStats.connectedPlugins
+        };
+        
+        res.json({ success: true, status: combinedStatus });
       } catch (error) {
         res.status(500).json({ success: false, error: error.message });
       }
@@ -139,7 +213,41 @@ class GPUStreamingApp {
     this.app.get('/api/analytics/usage', async (req, res) => {
       try {
         const usage = await this.gpuManager.getUsageAnalytics();
-        res.json({ success: true, usage });
+        const pluginStats = await this.pluginManager.getPluginStats();
+        
+        const combinedUsage = {
+          ...usage,
+          pluginStats
+        };
+        
+        res.json({ success: true, usage: combinedUsage });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    // Provider and Stream Routes
+    this.app.get('/api/providers', async (req, res) => {
+      try {
+        const providers = await this.gpuManager.getProviders();
+        const connectedPlugins = await this.pluginManager.getConnectedPlugins();
+        
+        // Combine regular providers with plugin providers
+        const allProviders = [
+          ...providers,
+          ...connectedPlugins.map(plugin => plugin.provider)
+        ];
+        
+        res.json({ success: true, providers: allProviders });
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    this.app.get('/api/streams', async (req, res) => {
+      try {
+        const streams = await this.gpuManager.getStreams();
+        res.json({ success: true, streams });
       } catch (error) {
         res.status(500).json({ success: false, error: error.message });
       }
@@ -149,6 +257,17 @@ class GPUStreamingApp {
   setupWebSocket() {
     this.io.on('connection', (socket) => {
       console.log(`🔌 Client connected: ${socket.id}`);
+
+      // Plugin Connection Events
+      socket.on('plugin:connect', async (data) => {
+        try {
+          const { pluginId, connectionToken } = data;
+          const result = await this.pluginManager.connectPlugin(pluginId, connectionToken, socket);
+          socket.emit('plugin:connected', result);
+        } catch (error) {
+          socket.emit('plugin:error', { error: error.message });
+        }
+      });
 
       // GPU Provider Events
       socket.on('gpu:register', async (data) => {
@@ -212,59 +331,97 @@ class GPUStreamingApp {
   }
 
   setupEventHandlers() {
-    // GPU Manager Events
+    // Handle GPU provider events
     this.gpuManager.on('provider:registered', (provider) => {
-      this.io.emit('gpu:provider:new', { provider });
+      console.log(`🖥️ GPU Provider registered: ${provider.name}`);
     });
 
     this.gpuManager.on('stream:started', (stream) => {
-      this.io.emit('gpu:stream:new', { stream });
+      console.log(`📡 GPU Stream started: ${stream.name}`);
     });
 
-    this.gpuManager.on('stream:completed', (stream) => {
-      this.io.emit('gpu:stream:completed', { stream });
+    this.gpuManager.on('stream:stopped', (stream) => {
+      console.log(`📡 GPU Stream stopped: ${stream.name}`);
     });
 
-    // Ad Service Events
+    // Handle ad injection events
     this.adService.on('ad:injected', (data) => {
-      this.io.emit('ad:injected', data);
+      console.log(`💰 Ad injected: ${data.adType} for ${data.userId}`);
     });
 
-    this.adService.on('revenue:earned', (data) => {
-      this.io.emit('revenue:earned', data);
-    });
-
-    // Payment Events
-    this.paymentProcessor.on('payment:processed', (payment) => {
-      this.io.emit('payment:processed', { payment });
+    // Handle payment events
+    this.paymentProcessor.on('payment:processed', (transaction) => {
+      console.log(`💳 Payment processed: $${transaction.amount} for ${transaction.providerId}`);
     });
   }
 
   async processInferenceRequest(prompt, model, userId, adPreferences) {
-    // Find available GPU provider
-    const provider = await this.gpuManager.findAvailableProvider(model);
-    if (!provider) {
-      throw new Error('No available GPU providers for this model');
-    }
+    try {
+      // Try to route through plugin first
+      try {
+        const pluginResult = await this.pluginManager.routeInferenceRequest(prompt, model, userId, adPreferences);
+        return {
+          success: true,
+          response: pluginResult.response,
+          model: pluginResult.model,
+          cost: pluginResult.cost,
+          latency: pluginResult.latency,
+          provider: 'plugin',
+          source: 'user_plugin'
+        };
+      } catch (pluginError) {
+        console.log('Plugin routing failed, using regular GPU providers:', pluginError.message);
+      }
 
-    // Inject ads based on user preferences and prompt content
-    const adInjectedPrompt = await this.adService.injectAds(prompt, adPreferences, userId);
-    
-    // Process inference
-    const result = await this.inferenceEngine.processInference(adInjectedPrompt, model, provider);
-    
-    // Track usage and revenue
-    await this.gpuManager.trackUsage(provider.id, model, result.tokens);
-    await this.adService.trackRevenue(userId, result.adRevenue);
-    
-    return {
-      success: true,
-      result: result.response,
-      ads: result.ads,
-      tokens: result.tokens,
-      cost: result.cost,
-      provider: provider.id
-    };
+      // Fallback to regular GPU providers
+      const startTime = Date.now();
+      
+      // Inject ads into prompt
+      const enhancedPrompt = await this.adService.injectAds(prompt, adPreferences);
+      
+      // Get available providers for the model
+      const providers = await this.gpuManager.getProvidersForModel(model);
+      
+      if (providers.length === 0) {
+        throw new Error(`No providers available for model: ${model}`);
+      }
+      
+      // Select best provider based on pricing and availability
+      const selectedProvider = providers.reduce((best, current) => {
+        if (current.pricing < best.pricing) return current;
+        return best;
+      });
+      
+      // Process inference
+      const result = await this.inferenceEngine.processInference(enhancedPrompt, model, selectedProvider);
+      
+      const latency = Date.now() - startTime;
+      
+      // Calculate cost
+      const cost = this.calculateCost(result.length, selectedProvider.pricing);
+      
+      // Update provider earnings
+      await this.paymentProcessor.addEarnings(selectedProvider.id, cost);
+      
+      return {
+        success: true,
+        response: result,
+        model: model,
+        cost: cost,
+        latency: latency,
+        provider: selectedProvider.name,
+        source: 'gpu_provider',
+        adInjected: enhancedPrompt !== prompt
+      };
+      
+    } catch (error) {
+      console.error('Inference request failed:', error);
+      throw error;
+    }
+  }
+
+  calculateCost(tokenCount, pricing) {
+    return tokenCount * pricing;
   }
 
   start() {
@@ -282,4 +439,4 @@ class GPUStreamingApp {
   }
 }
 
-export default GPUStreamingApp; 
+export { GPUStreamingApp }; 
