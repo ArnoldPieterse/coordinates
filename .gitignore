@@ -122,3 +122,8 @@ screenshots/
 *.backup 
 # Local Netlify folder
 .netlify
+
+# AWS credentials
+rootkey.csv
+*.pem
+aws-credentials.json
