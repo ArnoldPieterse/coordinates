@@ -59,7 +59,11 @@
     "deploy:working": "node deploy-working.js",
     "setup:infrastructure": "node setup-complete-infrastructure.js",
     "deploy:full": "node deploy-full-project.cjs",
-    "auto-git": "powershell -ExecutionPolicy Bypass -File ./auto-git.ps1"
+    "auto-git": "powershell -ExecutionPolicy Bypass -File ./auto-git.ps1",
+    "gpu-streaming": "node launch-gpu-streaming.js",
+    "gpu-streaming:dev": "concurrently \"npm run gpu-streaming\" \"npm run dev\"",
+    "gpu-streaming:test": "node test-gpu-streaming.js",
+    "gpu-streaming:demo": "node demo-gpu-streaming.js"
   },
   "keywords": [
     "threejs",

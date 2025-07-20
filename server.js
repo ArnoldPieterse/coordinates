@@ -9,6 +9,7 @@ import fs from 'fs';
 import { AIAgentManager } from './src/ai-agent-system.js';
 import { exec } from 'child_process';
 import path from 'path';
+import { ProjectObjectives } from './src/relativity/project-objectives.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -483,6 +484,27 @@ app.put('/api/jobs/:jobId/priority', (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// Prioritize a job
+app.put('/api/jobs/:jobId/priority', (req, res) => {
+  const { jobId } = req.params;
+  const { priority } = req.body;
+  const job = agentManager.jobQueue.find(j => j.id === jobId);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  job.priority = priority || 'high';
+  // Re-sort the queue
+  agentManager.jobQueue.sort((a, b) => {
+    const priorityOrder = { high: 3, normal: 2, low: 1 };
+    return priorityOrder[b.priority] - priorityOrder[a.priority];
+  });
+  res.json({ success: true, job });
+});
+// Restart an agent
+app.post('/api/agents/:agentId/restart', (req, res) => {
+  const { agentId } = req.params;
+  agentManager.restartAgent(agentId);
+  res.json({ success: true });
 });
 
 // Game API Endpoints (IDX-GAME-API-001)
@@ -1458,4 +1480,51 @@ app.get('/api/llm/test-status', (req, res) => {
   } else {
     res.json({ status: 'pending', message: 'Test not run yet' });
   }
+}); 
+
+// Get objectives status
+app.get('/api/objectives/status', (req, res) => {
+  const objectives = new ProjectObjectives();
+  res.json(objectives.getObjectiveStatus());
+});
+
+// Update current focus
+app.put('/api/objectives/focus', (req, res) => {
+  const { focus } = req.body;
+  const objectives = new ProjectObjectives();
+  objectives.updateCurrentFocus(focus);
+  res.json({ success: true, currentFocus: objectives.currentFocus });
+});
+
+// Update thresholds
+app.put('/api/objectives/thresholds', (req, res) => {
+  const { taskExecution, memoryRetrieval } = req.body;
+  const objectives = new ProjectObjectives();
+  
+  if (taskExecution !== undefined) objectives.relativityThreshold = taskExecution;
+  if (memoryRetrieval !== undefined) objectives.memoryRelevanceThreshold = memoryRetrieval;
+  
+  res.json({ 
+    success: true, 
+    thresholds: {
+      taskExecution: objectives.relativityThreshold,
+      memoryRetrieval: objectives.memoryRelevanceThreshold
+    }
+  });
+});
+
+// Get jobs with relativity ratings
+app.get('/api/jobs/relativity', (req, res) => {
+  const jobs = Array.from(agentManager.jobQueue).map(job => ({
+    id: job.id,
+    type: job.type,
+    description: job.description,
+    priority: job.priority,
+    status: job.status,
+    relativity: job.relativity,
+    createdAt: job.createdAt,
+    skipReason: job.skipReason
+  }));
+  
+  res.json({ jobs });
 }); 

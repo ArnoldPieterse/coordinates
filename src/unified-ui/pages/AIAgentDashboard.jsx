@@ -18,6 +18,11 @@ export default function AIAgentDashboard() {
   const [generatedThinking, setGeneratedThinking] = useState(null);
   const [selectedLlmProvider, setSelectedLlmProvider] = useState('');
 
+  const [objectives, setObjectives] = useState(null);
+  const [focusObjective, setFocusObjective] = useState('');
+  const [taskThreshold, setTaskThreshold] = useState(0.3);
+  const [memoryThreshold, setMemoryThreshold] = useState(0.2);
+
   useEffect(() => {
     // Connect to AI agent service
     const connectToService = async () => {
@@ -159,6 +164,78 @@ export default function AIAgentDashboard() {
       alert('Failed to switch LLM provider');
     }
   };
+
+  const handlePrioritizeJob = async (jobId) => {
+    try {
+      await fetch(`http://localhost:3001/api/jobs/${jobId}/priority`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priority: 'high' })
+      });
+      alert('Job prioritized!');
+    } catch (error) {
+      alert('Failed to prioritize job: ' + error.message);
+    }
+  };
+
+  const handleRestartAgent = async (agentId) => {
+    try {
+      await fetch(`http://localhost:3001/api/agents/${agentId}/restart`, { method: 'POST' });
+      alert('Agent restarted!');
+    } catch (error) {
+      alert('Failed to restart agent: ' + error.message);
+    }
+  };
+
+  const fetchObjectives = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/api/objectives/status');
+      const data = await response.json();
+      setObjectives(data);
+      setFocusObjective(data.currentFocus);
+      setTaskThreshold(data.thresholds.taskExecution);
+      setMemoryThreshold(data.thresholds.memoryRetrieval);
+    } catch (error) {
+      console.error('Failed to fetch objectives:', error);
+    }
+  };
+
+  const updateFocus = async () => {
+    try {
+      await fetch('http://localhost:3001/api/objectives/focus', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ focus: focusObjective })
+      });
+      alert('Focus updated!');
+      fetchObjectives();
+    } catch (error) {
+      alert('Failed to update focus: ' + error.message);
+    }
+  };
+
+  const updateThresholds = async () => {
+    try {
+      await fetch('http://localhost:3001/api/objectives/thresholds', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          taskExecution: taskThreshold, 
+          memoryRetrieval: memoryThreshold 
+        })
+      });
+      alert('Thresholds updated!');
+      fetchObjectives();
+    } catch (error) {
+      alert('Failed to update thresholds: ' + error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetchObjectives();
+    const interval = setInterval(fetchObjectives, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
@@ -363,6 +440,59 @@ export default function AIAgentDashboard() {
         )}
       </div>
 
+      <div className="dashboard-section">
+        <h3>🎯 Objectives Management</h3>
+        {objectives && (
+          <div className="objectives-panel">
+            <div className="objective-controls">
+              <div className="control-group">
+                <label>Current Focus:</label>
+                <select value={focusObjective} onChange={(e) => setFocusObjective(e.target.value)}>
+                  {objectives.objectives.map(obj => (
+                    <option key={obj.id} value={obj.id}>{obj.name}</option>
+                  ))}
+                </select>
+                <button onClick={updateFocus}>Update Focus</button>
+              </div>
+              <div className="control-group">
+                <label>Task Execution Threshold:</label>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="1" 
+                  step="0.1" 
+                  value={taskThreshold} 
+                  onChange={(e) => setTaskThreshold(parseFloat(e.target.value))}
+                />
+                <span>{taskThreshold}</span>
+              </div>
+              <div className="control-group">
+                <label>Memory Retrieval Threshold:</label>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="1" 
+                  step="0.1" 
+                  value={memoryThreshold} 
+                  onChange={(e) => setMemoryThreshold(parseFloat(e.target.value))}
+                />
+                <span>{memoryThreshold}</span>
+              </div>
+              <button onClick={updateThresholds}>Update Thresholds</button>
+            </div>
+            <div className="objectives-list">
+              {objectives.objectives.map(obj => (
+                <div key={obj.id} className={`objective-item ${obj.id === objectives.currentFocus ? 'focused' : ''}`}>
+                  <h4>{obj.name}</h4>
+                  <p>Priority: {obj.priority} | Weight: {(obj.weight * 100).toFixed(0)}%</p>
+                  <p>Criteria: {obj.criteria.join(', ')}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="control-panels">
         <div className="agent-controls">
           <h3>Spawn New Agent</h3>
@@ -448,6 +578,7 @@ export default function AIAgentDashboard() {
                 >
                   Dismiss
                 </button>
+                <button onClick={() => handleRestartAgent(agent.id)} className="btn-restart">Restart</button>
               </div>
             </div>
           ))}
@@ -461,29 +592,43 @@ export default function AIAgentDashboard() {
           {jobs.map(job => (
             <div key={job.id} className="job-item">
               <div className="job-header">
-                <h4>{job.name}</h4>
-                <span className={`job-priority ${getPriorityColor(job.priority)}`}>
-                  {job.priority}
-                </span>
+                <h4>{job.type}</h4>
+                <span className={`status ${job.status}`}>{job.status}</span>
               </div>
-              <p className="job-description">{job.description}</p>
-              <div className="job-details">
-                <span className={`job-status ${getStatusColor(job.status)}`}>
-                  {job.status}
-                </span>
-                <span className="job-assigned">
-                  Assigned: {job.assignedAgent || 'Unassigned'}
-                </span>
-                <span className="job-progress">
-                  Progress: {job.progress || 0}%
-                </span>
-              </div>
+              <p>{job.description}</p>
+              {job.relativity && (
+                <div className="relativity-info">
+                  <div className="relativity-rating">
+                    <span className={`priority ${job.relativity.priority}`}>
+                      Relativity: {job.relativity.rating.toFixed(2)} ({job.relativity.priority})
+                    </span>
+                  </div>
+                  {job.relativity.breakdown && (
+                    <details>
+                      <summary>Objective Breakdown</summary>
+                      <div className="breakdown-list">
+                        {job.relativity.breakdown.map((item, index) => (
+                          <div key={index} className="breakdown-item">
+                            <span>{item.objective}: {item.score.toFixed(2)}</span>
+                            <span>Weight: {(item.weight * 100).toFixed(0)}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              )}
+              {job.skipReason && (
+                <div className="skip-reason">
+                  <span>⏭️ Skipped: {job.skipReason}</span>
+                </div>
+              )}
               <div className="job-actions">
-                <button 
-                  onClick={() => handleCancelJob(job.id)}
-                  className="btn-danger"
-                >
+                <button onClick={() => handleCancelJob(job.id)} className="btn-cancel">
                   Cancel
+                </button>
+                <button onClick={() => handlePrioritizeJob(job.id)} className="btn-prioritize">
+                  Prioritize
                 </button>
               </div>
             </div>

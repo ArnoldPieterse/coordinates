@@ -1302,3 +1302,259 @@ tr:hover {
     gap: 8px;
   }
 } 
+
+/* Objectives Management Styles */
+.objectives-panel {
+  background: #1a1a2e;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.objective-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.control-group label {
+  min-width: 200px;
+  font-weight: 600;
+  color: #64ffda;
+}
+
+.control-group select,
+.control-group input[type="range"] {
+  padding: 8px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #16213e;
+  color: #fff;
+}
+
+.control-group span {
+  min-width: 40px;
+  text-align: center;
+  color: #64ffda;
+  font-weight: 600;
+}
+
+.objectives-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.objective-item {
+  background: #16213e;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 15px;
+  transition: all 0.3s ease;
+}
+
+.objective-item.focused {
+  border-color: #64ffda;
+  box-shadow: 0 0 10px rgba(100, 255, 218, 0.3);
+}
+
+.objective-item h4 {
+  margin: 0 0 10px 0;
+  color: #64ffda;
+  font-size: 16px;
+}
+
+.objective-item p {
+  margin: 5px 0;
+  color: #ccc;
+  font-size: 14px;
+}
+
+/* Relativity Rating Styles */
+.relativity-info {
+  margin: 10px 0;
+  padding: 10px;
+  background: #16213e;
+  border-radius: 4px;
+  border-left: 3px solid #64ffda;
+}
+
+.relativity-rating {
+  margin-bottom: 10px;
+}
+
+.priority {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.priority.critical {
+  background: #ff4757;
+  color: white;
+}
+
+.priority.high {
+  background: #ffa502;
+  color: white;
+}
+
+.priority.medium {
+  background: #2ed573;
+  color: white;
+}
+
+.priority.low {
+  background: #5352ed;
+  color: white;
+}
+
+.priority.minimal {
+  background: #747d8c;
+  color: white;
+}
+
+.breakdown-list {
+  margin-top: 10px;
+  padding: 10px;
+  background: #0f3460;
+  border-radius: 4px;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid #333;
+  font-size: 12px;
+}
+
+.breakdown-item:last-child {
+  border-bottom: none;
+}
+
+.skip-reason {
+  margin: 10px 0;
+  padding: 8px;
+  background: #ff4757;
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Enhanced Job Item Styles */
+.job-item {
+  background: #16213e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  transition: all 0.3s ease;
+}
+
+.job-item:hover {
+  border-color: #64ffda;
+  transform: translateY(-2px);
+}
+
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.job-header h4 {
+  margin: 0;
+  color: #64ffda;
+  font-size: 16px;
+}
+
+.status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status.queued {
+  background: #5352ed;
+  color: white;
+}
+
+.status.busy {
+  background: #ffa502;
+  color: white;
+}
+
+.status.completed {
+  background: #2ed573;
+  color: white;
+}
+
+.status.failed {
+  background: #ff4757;
+  color: white;
+}
+
+.status.skipped {
+  background: #747d8c;
+  color: white;
+}
+
+.job-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn-cancel,
+.btn-prioritize,
+.btn-restart {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel {
+  background: #ff4757;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background: #ff3742;
+}
+
+.btn-prioritize {
+  background: #64ffda;
+  color: #0f3460;
+}
+
+.btn-prioritize:hover {
+  background: #4cd6b3;
+}
+
+.btn-restart {
+  background: #ffa502;
+  color: white;
+}
+
+.btn-restart:hover {
+  background: #ff9500;
+} 
