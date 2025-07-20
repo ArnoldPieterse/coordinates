@@ -165,8 +165,8 @@ class ConsolidatedDeployer {
             
             // Check Node.js version
             const nodeVersion = process.version;
-            if (!nodeVersion.startsWith('v18') && !nodeVersion.startsWith('v20')) {
-                throw new Error(`Node.js version ${nodeVersion} not supported. Please use Node.js 18+ or 20+`);
+            if (!nodeVersion.startsWith('v18') && !nodeVersion.startsWith('v20') && !nodeVersion.startsWith('v22')) {
+                throw new Error(`Node.js version ${nodeVersion} not supported. Please use Node.js 18+, 20+, or 22+`);
             }
 
             // Clean previous build
@@ -807,8 +807,6 @@ async function main() {
 }
 
 // Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-    main().catch(console.error);
-}
+main().catch(console.error);
 
 export default ConsolidatedDeployer; 
