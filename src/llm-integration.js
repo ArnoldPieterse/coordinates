@@ -10,7 +10,7 @@
 
 // Import LM Studio SDK with proper CommonJS interop
 let LMStudioClient = null;
-import fetch from 'node-fetch';
+// Using browser's built-in fetch API instead of node-fetch
 
 // ===== LLM PROVIDER CONFIGURATIONS =====
 // IDX-LLM-004: Provider Configuration Management
@@ -42,21 +42,21 @@ const LLM_CONFIGS = {
     },
     [LLM_PROVIDERS.OPENAI_FREE]: {
         baseUrl: 'https://api.openai.com/v1',
-        apiKey: process.env.OPENAI_API_KEY || '',
+        apiKey: '', // API keys should be configured via UI or secure storage
         models: ['gpt-3.5-turbo', 'gpt-4'],
         maxTokens: 2048,
         temperature: 0.7
     },
     [LLM_PROVIDERS.ANTHROPIC_FREE]: {
         baseUrl: 'https://api.anthropic.com/v1',
-        apiKey: process.env.ANTHROPIC_API_KEY || '',
+        apiKey: '', // API keys should be configured via UI or secure storage
         models: ['claude-3-haiku-20240307', 'claude-3-sonnet-20240229'],
         maxTokens: 4096,
         temperature: 0.7
     },
     [LLM_PROVIDERS.HUGGINGFACE_FREE]: {
         baseUrl: 'https://api-inference.huggingface.co',
-        apiKey: process.env.HUGGINGFACE_API_KEY || '',
+        apiKey: '', // API keys should be configured via UI or secure storage
         models: ['microsoft/DialoGPT-medium', 'gpt2', 'distilgpt2'],
         maxTokens: 1024,
         temperature: 0.7
