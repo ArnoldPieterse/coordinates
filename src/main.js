@@ -359,6 +359,9 @@ class MultiplayerPlanetaryShooter {
         this.frameRate = 0;
         this.performanceMetrics = {};
         
+        // Game state management
+        this.gameState = 'menu'; // menu, playing, paused
+        
         // Advanced systems for Crysis 1-level capabilities
         this.advancedRenderer = null;
         this.advancedPhysics = null;
@@ -429,119 +432,303 @@ class MultiplayerPlanetaryShooter {
     }
 
     async init() {
-        console.log('[DEBUG] init() called');
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x222244); // fallback background color
-        // Add Hello World spinning cube
-        this.helloWorldCube = new THREE.Mesh(
-            new THREE.BoxGeometry(2, 2, 2),
-            new THREE.MeshStandardMaterial({ color: 0xff00ff })
-        );
-        this.helloWorldCube.position.set(0, 5, -10);
-        this.scene.add(this.helloWorldCube);
-        // Automated asset/dependency check
-        await this.checkCriticalAssets();
-        // Automated UI/UX health check
-        this.checkUIElements();
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.clock = new THREE.Clock();
-        this.audioListener = new THREE.AudioListener();
-        this.camera.add(this.audioListener);
-        this.mathEngine.initializeTHREE(THREE);
-        this.aiAnalysis.playerData.position = new THREE.Vector3();
-        this.aiAnalysis.playerData.velocity = new THREE.Vector3();
-        this.playerVelocity = new THREE.Vector3();
-        this.playerAcceleration = new THREE.Vector3();
-        this.sky = new Sky();
-        this.sky.scale.setScalar(450000);
-        this.scene.add(this.sky);
-        this.sun = new THREE.Vector3();
-        const effectController = { turbidity: 10, rayleigh: 2, mieCoefficient: 0.005, mieDirectionalG: 0.8, elevation: 2, azimuth: 180, };
-        const uniforms = this.sky.material.uniforms;
-        uniforms['turbidity'].value = effectController.turbidity;
-        uniforms['rayleigh'].value = effectController.rayleigh;
-        uniforms['mieCoefficient'].value = effectController.mieCoefficient;
-        uniforms['mieDirectionalG'].value = effectController.mieDirectionalG;
-        const phi = THREE.MathUtils.degToRad(90 - effectController.elevation);
-        const theta = THREE.MathUtils.degToRad(effectController.azimuth);
-        this.sun.setFromSphericalCoords(1, phi, theta);
-        uniforms['sunPosition'].value.copy(this.sun);
-        for (const [weaponKey, weapon] of Object.entries(this.weapons)) { weapon.damage = this.mathEngine.calculateMathematicalWeaponDamage(weapon.damage, weaponKey); }
-        this.mathematicalVisualizer = null;
-        this.flowDiagramVisualizer = null;
-        this.systemInterconnectivityMatrix = new SystemInterconnectivityMatrix(this.scene, this.mathEngine);
-        this.spatialFunctionClusteringMatrix = new SpatialFunctionClusteringMatrix(this.scene, this.mathEngine);
-        this.mathematicalConstants = this.mathEngine.getMathematicalConstants();
-        this.socket = null;
-        this.players = new Map();
-        this.playerId = null;
-        this.isConnected = false;
-        this.jumpForce = 15;
-        this.gravity = -30;
-        this.isGrounded = false;
-        this.playerRadius = 1.0;
-        this.playerHeight = 2.0;
-        this.playerSpeed *= (1 + this.mathematicalConstants.alphaInfluence);
-        this.jumpForce *= (1 + this.mathematicalConstants.alphaInfluence);
-        this.gravity *= (1 + this.mathematicalConstants.alphaInfluence);
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 0.5;
-        const container = document.getElementById('gameContainer');
-        if (container) {
-            container.appendChild(this.renderer.domElement);
-            this.renderer.domElement.style.position = 'absolute';
-            this.renderer.domElement.style.top = '0';
-            this.renderer.domElement.style.left = '0';
-            this.renderer.domElement.style.width = '100%';
-            this.renderer.domElement.style.height = '100%';
-        } else {
-            document.body.appendChild(this.renderer.domElement);
-        }
-        
-        // Initialize advanced systems
-        this.advancedRenderer = new AdvancedRenderer(this.scene, this.camera, this.renderer);
-        this.advancedPhysics = new AdvancedPhysics();
-        
         try {
-            console.log('[DEBUG] setupScene()');
+            console.log('🚀 Initializing Multiplayer Planetary Shooter...');
+            
+            // Show loading progress
+            this.updateLoadingProgress(10);
+            
+            // Initialize mathematical engine
+            this.mathEngine = new MathematicalEngine();
+            this.updateLoadingProgress(20);
+            
+            // Initialize mathematical visualizer
+            this.mathVisualizer = new MathematicalVisualizer(this.scene, this.camera);
+            this.updateLoadingProgress(30);
+            
+            // Initialize mathematical AI
+            this.mathAI = new MathematicalAI(this.mathEngine);
+            this.updateLoadingProgress(40);
+            
+            // Initialize flow diagram visualizer
+            this.flowVisualizer = new FlowDiagramVisualizer(this.scene);
+            this.updateLoadingProgress(50);
+            
+            // Initialize system interconnectivity matrix
+            this.systemMatrix = new SystemInterconnectivityMatrix();
+            this.updateLoadingProgress(60);
+            
+            // Initialize spatial function clustering matrix
+            this.spatialMatrix = new SpatialFunctionClusteringMatrix();
+            this.updateLoadingProgress(70);
+            
+            // Initialize enhanced FPS system
+            this.enhancedFPS = new EnhancedFPSSystem(this, {
+                enableThoughtMonitoring: true,
+                enableAdvancedWeapons: true,
+                enablePlayerMovement: true,
+                enablePhysics: true,
+                enableAI: true,
+                enableEnvironmentalDestruction: true
+            });
+            this.updateLoadingProgress(80);
+            
+            // Initialize thought frame rating system
+            this.thoughtFrameRating = new ThoughtFrameRatingSystem({
+                enableThoughtMonitoring: true,
+                enableGitIntegration: true,
+                enableAPIIntegration: true
+            });
+            this.updateLoadingProgress(90);
+            
+            // Setup UI integration
+            this.setupUI();
+            this.updateLoadingProgress(95);
+            
+            // Setup scene and game elements
             this.setupScene();
-            console.log('[DEBUG] setupPlayer()');
             this.setupPlayer();
-            console.log('[DEBUG] setupCamera()');
             this.setupCamera();
-            console.log('[DEBUG] setupLights()');
             this.setupLights();
-            console.log('[DEBUG] setupRocket()');
             this.setupRocket();
-            console.log('[DEBUG] setupInput()');
             this.setupInput();
-            console.log('[DEBUG] setupNetworking()');
+            
+            // Setup networking
             this.setupNetworking();
-            console.log('[DEBUG] setupDestructibleEnvironment()');
-            this.setupDestructibleEnvironment();
-            console.log('[DEBUG] setupVehicles()');
-            this.setupVehicles();
-            console.log('[DEBUG] setupFluidSimulation()');
-            this.setupFluidSimulation();
-            this.flowDiagramVisualizer = new FlowDiagramVisualizer(this.scene);
-            this.flowDiagramVisualizer.loadAndRender('./game_describers/flow-diagram.json');
-            this.universalObjectGenerator = new UniversalObjectGenerator(this.scene);
-            // Setup Matrix controls
-            this.setupMatrixControls();
-            this.setupSpatialControls();
-            console.log('[DEBUG] Loading universal-object-descriptor.json');
-            await this.universalObjectGenerator.load('./universal-object-descriptor.json');
+            
+            // Hide loading screen
+            this.hideLoadingScreen();
+            
+            // Start animation loop
+            this.animate();
+            
+            console.log('✅ Multiplayer Planetary Shooter initialized successfully');
+            
         } catch (error) {
+            console.error('❌ Error initializing game:', error);
             this.showErrorOverlay(error);
-            console.error('[CRITICAL INIT ERROR]', error);
-            return;
         }
-        console.log('[DEBUG] Initialization complete, starting animation loop');
-        this.animate();
+    }
+
+    updateLoadingProgress(percent) {
+        const progressBar = document.getElementById('progressBar');
+        if (progressBar) {
+            progressBar.style.width = `${percent}%`;
+        }
+    }
+
+    hideLoadingScreen() {
+        const loadingScreen = document.getElementById('loadingScreen');
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+        }
+    }
+
+    setupUI() {
+        // Connect button event listeners
+        this.connectUIButtons();
+        
+        // Initialize UI with game data
+        this.updateUI();
+        
+        // Start UI update loop
+        this.startUIUpdateLoop();
+    }
+
+    connectUIButtons() {
+        // Start Game button
+        const startBtn = document.getElementById('startBtn');
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                this.startGame();
+            });
+        }
+
+        // Pause button
+        const pauseBtn = document.getElementById('pauseBtn');
+        if (pauseBtn) {
+            pauseBtn.addEventListener('click', () => {
+                this.togglePause();
+            });
+        }
+
+        // Weapon switch button
+        const weaponBtn = document.getElementById('weaponBtn');
+        if (weaponBtn) {
+            weaponBtn.addEventListener('click', () => {
+                this.switchWeapon();
+            });
+        }
+
+        // Reload button
+        const reloadBtn = document.getElementById('reloadBtn');
+        if (reloadBtn) {
+            reloadBtn.addEventListener('click', () => {
+                this.reload();
+            });
+        }
+
+        // Fullscreen button
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', () => {
+                this.toggleFullscreen();
+            });
+        }
+
+        // Settings button
+        const settingsBtn = document.getElementById('settingsBtn');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', () => {
+                this.showSettings();
+            });
+        }
+
+        // Help button
+        const helpBtn = document.getElementById('helpBtn');
+        if (helpBtn) {
+            helpBtn.addEventListener('click', () => {
+                this.showHelp();
+            });
+        }
+    }
+
+    startGame() {
+        if (this.gameState === 'menu') {
+            this.gameState = 'playing';
+            this.addChatMessage('System', 'Game started!', true);
+            this.updateUI();
+        }
+    }
+
+    togglePause() {
+        if (this.gameState === 'playing') {
+            this.gameState = 'paused';
+            this.addChatMessage('System', 'Game paused', true);
+        } else if (this.gameState === 'paused') {
+            this.gameState = 'playing';
+            this.addChatMessage('System', 'Game resumed', true);
+        }
+        this.updateUI();
+    }
+
+    switchWeapon() {
+        if (this.enhancedFPS) {
+            const weapons = Object.keys(this.enhancedFPS.weapons);
+            const currentIndex = weapons.indexOf(this.enhancedFPS.currentWeapon);
+            const nextIndex = (currentIndex + 1) % weapons.length;
+            this.enhancedFPS.currentWeapon = weapons[nextIndex];
+            
+            const weaponName = this.enhancedFPS.weapons[this.enhancedFPS.currentWeapon].name;
+            this.addChatMessage('System', `Switched to ${weaponName}`, true);
+            this.updateUI();
+        }
+    }
+
+    reload() {
+        if (this.enhancedFPS && !this.enhancedFPS.weaponState.isReloading) {
+            this.enhancedFPS.weaponState.isReloading = true;
+            this.enhancedFPS.weaponState.reloadTimer = this.enhancedFPS.weapons[this.enhancedFPS.currentWeapon].reloadTime;
+            this.addChatMessage('System', 'Reloading...', true);
+            this.updateUI();
+        }
+    }
+
+    toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    }
+
+    showSettings() {
+        this.addChatMessage('System', 'Settings panel - Coming soon!', true);
+    }
+
+    showHelp() {
+        this.addChatMessage('System', 'Controls: WASD to move, mouse to look, click to shoot, R to reload', true);
+    }
+
+    updateUI() {
+        // Update health bar
+        this.updateHealthBar();
+        
+        // Update ammo counter
+        this.updateAmmoCounter();
+        
+        // Update score board
+        this.updateScoreBoard();
+        
+        // Update button states
+        this.updateButtonStates();
+    }
+
+    updateHealthBar() {
+        const healthFill = document.getElementById('healthFill');
+        if (healthFill && this.player) {
+            const healthPercent = (this.playerHealth / 100) * 100;
+            healthFill.style.width = `${healthPercent}%`;
+        }
+    }
+
+    updateAmmoCounter() {
+        const ammoCount = document.getElementById('ammoCount');
+        const ammoMax = document.getElementById('ammoMax');
+        
+        if (this.enhancedFPS && ammoCount && ammoMax) {
+            const currentAmmo = this.enhancedFPS.ammo[this.enhancedFPS.currentWeapon] || 0;
+            const maxAmmo = this.enhancedFPS.weapons[this.enhancedFPS.currentWeapon]?.ammoCapacity || 30;
+            
+            ammoCount.textContent = currentAmmo;
+            ammoMax.textContent = maxAmmo;
+        }
+    }
+
+    updateScoreBoard() {
+        const score = document.getElementById('score');
+        const kills = document.getElementById('kills');
+        const deaths = document.getElementById('deaths');
+        const accuracy = document.getElementById('accuracy');
+        
+        if (this.enhancedFPS && score && kills && deaths && accuracy) {
+            const combatStats = this.enhancedFPS.getCombatStatistics();
+            
+            score.textContent = Math.floor(combatStats.damageDealt / 10);
+            kills.textContent = combatStats.kills;
+            deaths.textContent = combatStats.deaths;
+            accuracy.textContent = combatStats.accuracy;
+        }
+    }
+
+    updateButtonStates() {
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const reloadBtn = document.getElementById('reloadBtn');
+        
+        if (startBtn) {
+            startBtn.textContent = this.gameState === 'menu' ? 'Start Game' : 'Restart Game';
+            startBtn.disabled = this.gameState === 'playing';
+        }
+        
+        if (pauseBtn) {
+            pauseBtn.textContent = this.gameState === 'paused' ? 'Resume' : 'Pause';
+            pauseBtn.disabled = this.gameState === 'menu';
+        }
+        
+        if (reloadBtn) {
+            reloadBtn.disabled = !this.enhancedFPS || this.enhancedFPS.weaponState.isReloading;
+            reloadBtn.textContent = this.enhancedFPS?.weaponState.isReloading ? 'Reloading...' : 'Reload';
+        }
+    }
+
+    startUIUpdateLoop() {
+        // Update UI every 100ms for smooth updates
+        setInterval(() => {
+            if (this.gameState === 'playing') {
+                this.updateUI();
+            }
+        }, 100);
     }
 
     async checkCriticalAssets() {

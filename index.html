@@ -3,10 +3,209 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Coordinates Unified Project UI</title>
+    <title>Coordinates - Multiplayer Planetary Shooter</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: #000;
+        color: #fff;
+        font-family: 'Arial', sans-serif;
+        overflow: hidden;
+      }
+      
+      #gameContainer {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+      }
+      
+      #ui {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 10;
+      }
+      
+      .ui-element {
+        pointer-events: auto;
+        position: absolute;
+        background: rgba(0, 0, 0, 0.7);
+        border: 1px solid #3498db;
+        border-radius: 5px;
+        padding: 10px;
+        color: #fff;
+        font-size: 14px;
+      }
+      
+      #healthBar {
+        top: 20px;
+        left: 20px;
+        width: 200px;
+        height: 20px;
+        background: rgba(255, 0, 0, 0.3);
+        border: 1px solid #ff0000;
+      }
+      
+      #healthBar .fill {
+        height: 100%;
+        background: #ff0000;
+        width: 100%;
+        transition: width 0.3s;
+      }
+      
+      #ammoCounter {
+        top: 50px;
+        left: 20px;
+        width: 150px;
+      }
+      
+      #scoreBoard {
+        top: 20px;
+        right: 20px;
+        width: 200px;
+      }
+      
+      #controls {
+        bottom: 20px;
+        left: 20px;
+        width: 300px;
+        background: rgba(0, 0, 0, 0.8);
+      }
+      
+      #controls button {
+        background: #3498db;
+        border: none;
+        color: white;
+        padding: 8px 16px;
+        margin: 5px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+      
+      #controls button:hover {
+        background: #2980b9;
+      }
+      
+      #controls button:active {
+        background: #1f5f8b;
+      }
+      
+      #chat {
+        bottom: 20px;
+        right: 20px;
+        width: 300px;
+        height: 200px;
+        background: rgba(0, 0, 0, 0.8);
+        overflow-y: auto;
+      }
+      
+      #chat .message {
+        margin: 5px 0;
+        padding: 5px;
+        border-radius: 3px;
+      }
+      
+      #chat .system {
+        background: rgba(255, 255, 0, 0.2);
+        color: #ffff00;
+      }
+      
+      #chat .player {
+        background: rgba(0, 255, 0, 0.2);
+        color: #00ff00;
+      }
+      
+      #loadingScreen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+      }
+      
+      #loadingScreen h1 {
+        color: #3498db;
+        margin-bottom: 20px;
+      }
+      
+      #loadingScreen .progress {
+        width: 300px;
+        height: 20px;
+        background: #333;
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      
+      #loadingScreen .progress-bar {
+        height: 100%;
+        background: #3498db;
+        width: 0%;
+        transition: width 0.3s;
+      }
+      
+      .hidden {
+        display: none !important;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <div id="gameContainer">
+      <div id="loadingScreen">
+        <h1>🪐 Coordinates</h1>
+        <p>Loading Multiplayer Planetary Shooter...</p>
+        <div class="progress">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+      
+      <div id="ui">
+        <div id="healthBar" class="ui-element">
+          <div class="fill" id="healthFill"></div>
+        </div>
+        
+        <div id="ammoCounter" class="ui-element">
+          Ammo: <span id="ammoCount">30</span> / <span id="ammoMax">30</span>
+        </div>
+        
+        <div id="scoreBoard" class="ui-element">
+          <div>Score: <span id="score">0</span></div>
+          <div>Kills: <span id="kills">0</span></div>
+          <div>Deaths: <span id="deaths">0</span></div>
+          <div>Accuracy: <span id="accuracy">0%</span></div>
+        </div>
+        
+        <div id="controls" class="ui-element">
+          <div>
+            <button id="startBtn">Start Game</button>
+            <button id="pauseBtn">Pause</button>
+            <button id="weaponBtn">Switch Weapon</button>
+            <button id="reloadBtn">Reload</button>
+          </div>
+          <div>
+            <button id="fullscreenBtn">Fullscreen</button>
+            <button id="settingsBtn">Settings</button>
+            <button id="helpBtn">Help</button>
+          </div>
+        </div>
+        
+        <div id="chat" class="ui-element">
+          <div class="message system">Welcome to Coordinates!</div>
+          <div class="message system">Use WASD to move, mouse to look, click to shoot</div>
+        </div>
+      </div>
+    </div>
+    
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>
