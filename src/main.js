@@ -197,6 +197,10 @@ window.AIAgentSystem = {
     }
 };
 
+// Import enhanced systems
+import EnhancedFPSSystem from './enhanced-fps-system.js';
+import ThoughtFrameRatingSystem from './thought-frame-rating-system.js';
+
 class MultiplayerPlanetaryShooter {
     constructor() {
         console.log('[DEBUG] MultiplayerPlanetaryShooter constructor called');
@@ -205,6 +209,23 @@ class MultiplayerPlanetaryShooter {
         this.mathEngine.initializeTHREE(THREE);
         this.mathematicalVisualizer = null;
         this.mathematicalAI = new MathematicalAI(this.mathEngine);
+        
+        // Initialize enhanced systems
+        this.enhancedFPS = new EnhancedFPSSystem(this, {
+            enableThoughtMonitoring: true,
+            enableAdvancedWeapons: true,
+            enablePlayerMovement: true,
+            enablePhysics: true,
+            enableAI: true
+        });
+
+        this.thoughtFrameRating = new ThoughtFrameRatingSystem({
+            enableThoughtMonitoring: true,
+            enableGitIntegration: true,
+            enableAPIIntegration: true,
+            ratingThreshold: 0.3
+        });
+
         this.aiAnalysis = {
             lastAnalysis: null,
             playerData: { position: null, velocity: null, actions: [], mathematicalInteractions: 0, fractalComplexity: 0, quantumState: 0, complexRelationships: 0, fineStructureInfluence: 0 },
@@ -1027,6 +1048,10 @@ class MultiplayerPlanetaryShooter {
         }
         requestAnimationFrame(() => this.animate());
         const deltaTime = this.clock.getDelta();
+        
+        // Update enhanced systems
+        this.enhancedFPS.update(deltaTime);
+        
         if (this.player) { this.updatePlayer(deltaTime); }
         if (this.cameraControls) { this.updateCamera(deltaTime); }
         this.updateBullets(deltaTime);
@@ -1051,32 +1076,51 @@ class MultiplayerPlanetaryShooter {
         this.frameCount++;
     }
     shoot() {
-        if (this.isReloading || this.isDead || this.isInRocket) return;
-        const weapon = this.weapons[this.currentWeapon];
-        const now = this.clock.getElapsedTime();
-        if (now - this.lastShotTime < weapon.fireRate) return;
-        if (this.ammo[this.currentWeapon] <= 0) return;
-        this.lastShotTime = now;
-        this.ammo[this.currentWeapon]--;
-        this.updateWeaponUI();
-        const bulletMaterial = new THREE.MeshBasicMaterial({ color: weapon.bulletColor });
-        const cameraDirection = new THREE.Vector3();
-        this.camera.getWorldDirection(cameraDirection);
-        for (let i = 0; i < (weapon.pelletCount || 1); i++) {
-            const bulletGeometry = new THREE.SphereGeometry(weapon.bulletSize, 8, 8);
-            const bullet = new THREE.Mesh(bulletGeometry, bulletMaterial);
-            bullet.position.copy(this.player.position).add(new THREE.Vector3(0, 1.5, 0));
-            const spread = new THREE.Vector3((Math.random() - 0.5) * weapon.spread, (Math.random() - 0.5) * weapon.spread, (Math.random() - 0.5) * weapon.spread);
-            bullet.velocity = cameraDirection.clone().add(spread).normalize().multiplyScalar(weapon.bulletSpeed);
-            bullet.owner = this.playerId;
-            bullet.weapon = this.currentWeapon;
-            bullet.userData.isBullet = true;
-            this.bullets.push(bullet);
-            this.scene.add(bullet);
+        const weaponFired = this.enhancedFPS.fireWeapon();
+        
+        if (weaponFired) {
+            // Record thought about weapon usage
+            this.thoughtFrameRating.recordThought('weapon_system', {
+                thought: `Fired ${this.enhancedFPS.weapons[this.enhancedFPS.currentWeapon].name}`,
+                reasoning: [
+                    `Ammo remaining: ${this.enhancedFPS.ammo[this.enhancedFPS.currentWeapon]}`,
+                    `Weapon heat: ${this.enhancedFPS.weaponState.heat.toFixed(2)}`,
+                    `Recoil: x=${this.enhancedFPS.weaponState.recoil.x.toFixed(2)}, y=${this.enhancedFPS.weaponState.recoil.y.toFixed(2)}`,
+                    `Mathematical influence: ${this.enhancedFPS.weapons[this.enhancedFPS.currentWeapon].mathematicalInfluence}`
+                ],
+                confidence: 0.9
+            }, {
+                role: 'weapon_system',
+                phase: 'combat',
+                context: 'weapon_fire',
+                weapon: this.enhancedFPS.currentWeapon,
+                ammo: this.enhancedFPS.ammo[this.enhancedFPS.currentWeapon]
+            });
         }
-        if (this.socket) { this.socket.emit('shoot', { position: this.player.position.toArray(), direction: cameraDirection.toArray(), weapon: this.currentWeapon }); }
     }
     updatePlayer(deltaTime) {
+        // Use enhanced movement system
+        this.enhancedFPS.updatePlayerMovement(deltaTime);
+        
+        // Record movement thoughts periodically
+        if (this.frameCount % 60 === 0) { // Every second at 60 FPS
+            this.thoughtFrameRating.recordThought('movement_system', {
+                thought: `Player movement update: ${this.enhancedFPS.movementState.isSprinting ? 'sprinting' : 'walking'}`,
+                reasoning: [
+                    `Velocity: ${this.enhancedFPS.movementState.velocity.length().toFixed(2)} m/s`,
+                    `On ground: ${this.enhancedFPS.movementState.onGround}`,
+                    `Position: (${this.player.position.x.toFixed(1)}, ${this.player.position.y.toFixed(1)}, ${this.player.position.z.toFixed(1)})`,
+                    `Mathematical influence: ${this.mathEngine.ALPHA}`
+                ],
+                confidence: 0.8
+            }, {
+                role: 'movement_system',
+                phase: 'update',
+                context: 'player_movement',
+                mathematicalInfluence: this.mathEngine.ALPHA
+            });
+        }
+
         if (this.isDead) return;
         const moveDirection = new THREE.Vector3();
         const cameraDirection = new THREE.Vector3();
@@ -1101,6 +1145,9 @@ class MultiplayerPlanetaryShooter {
         if (this.socket && this.frameCount % 2 === 0) { this.socket.emit('playerState', { position: this.player.position.toArray(), quaternion: this.player.quaternion.toArray() }); }
     }
     updateBullets(deltaTime) {
+        // Use enhanced physics system
+        this.enhancedFPS.updatePhysics(deltaTime);
+        
         for (let i = this.bullets.length - 1; i >= 0; i--) {
             const bullet = this.bullets[i];
             bullet.position.add(bullet.velocity.clone().multiplyScalar(deltaTime));
@@ -1432,6 +1479,167 @@ class MultiplayerPlanetaryShooter {
             overlay.innerHTML = '<b>Critical Error</b><br>' + (error && error.message ? error.message : error);
             overlay.style.display = 'flex';
         }
+    }
+
+    // Enhanced shooting with thought monitoring
+    shoot() {
+        const weaponFired = this.enhancedFPS.fireWeapon();
+        
+        if (weaponFired) {
+            // Record thought about weapon usage
+            this.thoughtFrameRating.recordThought('weapon_system', {
+                thought: `Fired ${this.enhancedFPS.weapons[this.enhancedFPS.currentWeapon].name}`,
+                reasoning: [
+                    `Ammo remaining: ${this.enhancedFPS.ammo[this.enhancedFPS.currentWeapon]}`,
+                    `Weapon heat: ${this.enhancedFPS.weaponState.heat.toFixed(2)}`,
+                    `Recoil: x=${this.enhancedFPS.weaponState.recoil.x.toFixed(2)}, y=${this.enhancedFPS.weaponState.recoil.y.toFixed(2)}`,
+                    `Mathematical influence: ${this.enhancedFPS.weapons[this.enhancedFPS.currentWeapon].mathematicalInfluence}`
+                ],
+                confidence: 0.9
+            }, {
+                role: 'weapon_system',
+                phase: 'combat',
+                context: 'weapon_fire',
+                weapon: this.enhancedFPS.currentWeapon,
+                ammo: this.enhancedFPS.ammo[this.enhancedFPS.currentWeapon]
+            });
+        }
+    }
+
+    // Enhanced player movement with thought monitoring
+    updatePlayer(deltaTime) {
+        // Use enhanced movement system
+        this.enhancedFPS.updatePlayerMovement(deltaTime);
+        
+        // Record movement thoughts periodically
+        if (this.frameCount % 60 === 0) { // Every second at 60 FPS
+            this.thoughtFrameRating.recordThought('movement_system', {
+                thought: `Player movement update: ${this.enhancedFPS.movementState.isSprinting ? 'sprinting' : 'walking'}`,
+                reasoning: [
+                    `Velocity: ${this.enhancedFPS.movementState.velocity.length().toFixed(2)} m/s`,
+                    `On ground: ${this.enhancedFPS.movementState.onGround}`,
+                    `Position: (${this.player.position.x.toFixed(1)}, ${this.player.position.y.toFixed(1)}, ${this.player.position.z.toFixed(1)})`,
+                    `Mathematical influence: ${this.mathEngine.ALPHA}`
+                ],
+                confidence: 0.8
+            }, {
+                role: 'movement_system',
+                phase: 'update',
+                context: 'player_movement',
+                mathematicalInfluence: this.mathEngine.ALPHA
+            });
+        }
+
+        if (this.isDead) return;
+        const moveDirection = new THREE.Vector3();
+        const cameraDirection = new THREE.Vector3();
+        this.camera.getWorldDirection(cameraDirection);
+        cameraDirection.y = 0;
+        cameraDirection.normalize();
+        const cameraRight = new THREE.Vector3();
+        cameraRight.crossVectors(cameraDirection, new THREE.Vector3(0, 1, 0));
+        if (this.keys['KeyW']) { moveDirection.add(cameraDirection); }
+        if (this.keys['KeyS']) { moveDirection.sub(cameraDirection); }
+        if (this.keys['KeyA']) { moveDirection.sub(cameraRight); }
+        if (this.keys['KeyD']) { moveDirection.add(cameraRight); }
+        if (moveDirection.lengthSq() > 0) { this.player.quaternion.slerp(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, -1), moveDirection), 0.15); }
+        this.playerAcceleration.copy(moveDirection).normalize().multiplyScalar(this.playerSpeed);
+        this.playerVelocity.add(this.playerAcceleration.clone().multiplyScalar(deltaTime));
+        this.playerVelocity.x *= 0.9;
+        this.playerVelocity.z *= 0.9;
+        this.playerVelocity.y += this.gravity * deltaTime;
+        if (this.keys['Space'] && this.isGrounded) { this.playerVelocity.y = this.playerJumpForce; this.isGrounded = false; }
+        this.player.position.add(this.playerVelocity.clone().multiplyScalar(deltaTime));
+        if (this.player.position.y < 1) { this.player.position.y = 1; this.playerVelocity.y = 0; this.isGrounded = true; }
+        if (this.socket && this.frameCount % 2 === 0) { this.socket.emit('playerState', { position: this.player.position.toArray(), quaternion: this.player.quaternion.toArray() }); }
+    }
+
+    // Enhanced physics update
+    updateBullets(deltaTime) {
+        // Use enhanced physics system
+        this.enhancedFPS.updatePhysics(deltaTime);
+        
+        for (let i = this.bullets.length - 1; i >= 0; i--) {
+            const bullet = this.bullets[i];
+            bullet.position.add(bullet.velocity.clone().multiplyScalar(deltaTime));
+            for (const [id, otherPlayer] of this.players) {
+                if (otherPlayer.mesh && bullet.owner !== id) {
+                    if (bullet.position.distanceTo(otherPlayer.mesh.position) < 1.0) {
+                        this.scene.remove(bullet);
+                        this.bullets.splice(i, 1);
+                        if (this.socket) { this.socket.emit('playerHit', { targetId: id, damage: this.bulletDamage, weapon: bullet.weapon }); }
+                        break;
+                    }
+                }
+            }
+            if (bullet.position.length() > 500) { this.scene.remove(bullet); this.bullets.splice(i, 1); }
+        }
+    }
+
+    // Get thought frame recommendations
+    getThoughtFrameRecommendations() {
+        return this.thoughtFrameRating.getRecommendations();
+    }
+
+    // Get prioritized thought frames
+    getPrioritizedThoughtFrames(limit = 10) {
+        return this.thoughtFrameRating.getPrioritizedFrames(limit);
+    }
+
+    // Complete a thought frame
+    completeThoughtFrame(frameId, results = {}) {
+        return this.thoughtFrameRating.completeFrame(frameId, results);
+    }
+
+    // Skip a thought frame
+    skipThoughtFrame(frameId, reason = '') {
+        return this.thoughtFrameRating.skipFrame(frameId, reason);
+    }
+
+    // Get system statistics
+    getSystemStatistics() {
+        return {
+            fps: this.enhancedFPS.metrics,
+            thoughtFrames: this.thoughtFrameRating.getStatistics(),
+            combat: this.enhancedFPS.getCombatStatistics(),
+            environment: this.enhancedFPS.getEnvironmentalStatistics(),
+            game: {
+                players: this.players ? this.players.size : 0,
+                bullets: this.bullets ? this.bullets.length : 0,
+                planets: this.planets ? this.planets.size : 0,
+                frameCount: this.frameCount
+            }
+        };
+    }
+
+    // Get combat statistics
+    getCombatStatistics() {
+        return this.enhancedFPS.getCombatStatistics();
+    }
+
+    // Get prioritized thought frames
+    getPrioritizedThoughtFrames(limit = 10) {
+        return this.thoughtFrameRating.getPrioritizedFrames(limit);
+    }
+
+    // Complete a thought frame
+    completeThoughtFrame(frameId, results = {}) {
+        return this.thoughtFrameRating.completeFrame(frameId, results);
+    }
+
+    // Skip a thought frame
+    skipThoughtFrame(frameId, reason = '') {
+        return this.thoughtFrameRating.skipFrame(frameId, reason);
+    }
+
+    // Get thought frame recommendations
+    getThoughtFrameRecommendations() {
+        return this.thoughtFrameRating.getRecommendations();
+    }
+
+    // Record a thought with relative rating
+    recordThought(agentId, thought, context) {
+        return this.thoughtFrameRating.recordThought(agentId, thought, context);
     }
 }
 
