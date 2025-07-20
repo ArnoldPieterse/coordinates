@@ -3,6 +3,7 @@
  * Based on Browser FPS Template insights with relative rating integration
  */
 
+import * as THREE from 'three';
 import ChainOfThoughtMonitor from './chain-of-thought-monitor.js';
 
 export class EnhancedFPSSystem {
