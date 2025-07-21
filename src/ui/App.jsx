@@ -8,6 +8,8 @@ import GenLab from './pages/GenLab';
 import Docs from './pages/Docs';
 import Tools from './pages/Tools';
 import Settings from './pages/Settings';
+import SocialAI from './pages/SocialAI';
+import ContextDashboard from './pages/ContextDashboard';
 import unifiedService from '../core/services/unifiedService';
 import './styles/global.css';
 
@@ -124,6 +126,8 @@ export default function App() {
             <Route path="/tools" element={<Tools appContext={appContext} />} />
             <Route path="/docs" element={<Docs appContext={appContext} />} />
             <Route path="/settings" element={<Settings appContext={appContext} />} />
+            <Route path="/social-ai" element={<SocialAI appContext={appContext} />} />
+            <Route path="/context" element={<ContextDashboard appContext={appContext} />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

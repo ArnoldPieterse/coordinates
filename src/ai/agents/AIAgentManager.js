@@ -11,7 +11,7 @@
  */
 
 import MathematicalAI from '../neural/MathematicalAI.js';
-import comfyUI from '../../utils/helpers/ComfyUIIntegration.js';
+import comfyUI from '../../utils/helpers/comfyui-integration.js';
 import { LLMManager, AgentLLMEnhancer } from '../llm/LLMManager.js';
 import { ProjectObjectives } from '../../core/relativity/project-objectives.js';
 

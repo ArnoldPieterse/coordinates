@@ -4,7 +4,7 @@
  * IDX-COMFYUI-001: Core integration module
  */
 
-import * as THREE from './three.module.js';
+import * as THREE from '../../graphics/renderers/three.module.js';
 
 class ComfyUIIntegration {
     constructor() {

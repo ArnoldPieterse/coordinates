@@ -8,6 +8,31 @@ export default defineConfig({
       include: ['buffer', 'process', 'util', 'events'],
       exclude: ['stream-browserify', 'fetch-blob', 'node-fetch']
     }),
+    // Context automation plugin
+    {
+      name: 'context-automation',
+      async buildStart() {
+        try {
+          const { BuildHook } = await import('./src/core/context/BuildHook.js');
+          const buildHook = new BuildHook();
+          await buildHook.preBuild();
+        } catch (error) {
+          console.warn('Context automation pre-build failed:', error.message);
+        }
+      },
+      async closeBundle() {
+        try {
+          const { BuildHook } = await import('./src/core/context/BuildHook.js');
+          const buildHook = new BuildHook();
+          await buildHook.postBuild({
+            timestamp: Date.now(),
+            buildType: 'production'
+          });
+        } catch (error) {
+          console.warn('Context automation post-build failed:', error.message);
+        }
+      }
+    }
   ],
   root: '.',
   base: '', // Use relative paths for S3 deployment
