@@ -66,7 +66,9 @@
     "gpu-streaming:test": "node test-gpu-streaming.js",
     "gpu-streaming:demo": "node demo-gpu-streaming.js",
     "run-persona": "node src/personas/run-persona.js graphic-designer",
-    "run-persona-network": "node src/personas/run-persona-network.js"
+    "run-persona-network": "node src/personas/run-persona-network.js",
+    "test:widgets": "node test-widget-system.js",
+    "test:notifications": "node test-notification-system.js"
   },
   "keywords": [
     "rekursing",
