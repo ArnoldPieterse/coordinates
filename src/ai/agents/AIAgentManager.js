@@ -10,10 +10,10 @@
  * For index reference format, see INDEX_DESCRIBER.md
  */
 
-import MathematicalAI from './mathematical-ai.js';
-import comfyUI from './comfyui-integration.js';
-import { LLMManager, AgentLLMEnhancer } from './llm-integration.js';
-import { ProjectObjectives } from './relativity/project-objectives.js';
+import MathematicalAI from '../neural/MathematicalAI.js';
+import comfyUI from '../../utils/helpers/ComfyUIIntegration.js';
+import { LLMManager, AgentLLMEnhancer } from '../llm/LLMManager.js';
+import { ProjectObjectives } from '../../core/relativity/project-objectives.js';
 
 // ===== AGENT ROLES =====
 // IDX-AI-005: Agent Role Definitions

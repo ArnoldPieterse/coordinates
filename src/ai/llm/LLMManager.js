@@ -4,6 +4,7 @@
  * IDX-LLM-001: LLM Service Integration
  * IDX-LLM-002: Multi-Provider Support
  * IDX-LLM-003: Agent Enhancement System
+ * IDX-LLM-004: Terminal Access for Fast Local Transfers
  * 
  * For index reference format, see INDEX_DESCRIBER.md
  */
@@ -15,6 +16,7 @@ let LMStudioClient = null;
 // ===== LLM PROVIDER CONFIGURATIONS =====
 // IDX-LLM-004: Provider Configuration Management
 export const LLM_PROVIDERS = {
+    LM_STUDIO_LOCAL: 'lm_studio_local', // User's local instance
     LM_STUDIO: 'lm_studio',
     OLLAMA: 'ollama',
     OPENAI_FREE: 'openai_free',
@@ -26,6 +28,14 @@ export const LLM_PROVIDERS = {
 
 // ===== LLM SERVICE CONFIGURATIONS =====
 const LLM_CONFIGS = {
+    [LLM_PROVIDERS.LM_STUDIO_LOCAL]: {
+        baseUrl: 'http://10.3.129.26:1234/v1',
+        apiKey: 'not-needed',
+        models: ['meta-llama-3-70b-instruct-smashed', 'text-embedding-nomic-embed-text-v1.5@q4_k_m'],
+        maxTokens: 4096,
+        temperature: 0.7,
+        priority: 'high' // Local instance gets priority
+    },
     [LLM_PROVIDERS.LM_STUDIO]: {
         baseUrl: 'http://localhost:1234/v1',
         apiKey: 'not-needed',
@@ -63,10 +73,338 @@ const LLM_CONFIGS = {
     }
 };
 
+// ===== TERMINAL ACCESS SYSTEM =====
+// IDX-LLM-005: Terminal Access for Fast Local Transfers
+export class TerminalAccess {
+    constructor(llmService) {
+        this.llmService = llmService;
+        this.messageQueue = [];
+        this.isProcessing = false;
+        this.terminalHistory = [];
+        this.maxHistorySize = 1000;
+        this.connectionStatus = 'disconnected';
+        this.lastPing = 0;
+        
+        // Terminal configuration
+        this.terminalConfig = {
+            maxConcurrentRequests: 5,
+            requestTimeout: 15000, // 15 seconds for local
+            retryAttempts: 3,
+            batchSize: 10,
+            enableStreaming: true
+        };
+        
+        this.initializeTerminal();
+    }
+
+    async initializeTerminal() {
+        console.log('🚀 Initializing Terminal Access for LM Studio Local...');
+        
+        // Test connection to local LM Studio
+        try {
+            const response = await fetch(`${LLM_CONFIGS[LLM_PROVIDERS.LM_STUDIO_LOCAL].baseUrl}/models`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                signal: AbortSignal.timeout(5000) // 5 second timeout
+            });
+            
+            if (response.ok) {
+                this.connectionStatus = 'connected';
+                this.lastPing = Date.now();
+                console.log('✅ Terminal connected to local LM Studio');
+                
+                // Start ping monitoring
+                this.startPingMonitor();
+                
+                // Process any queued messages
+                this.processMessageQueue();
+            } else {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        } catch (error) {
+            console.error('❌ Terminal connection failed:', error.message);
+            this.connectionStatus = 'error';
+            this.scheduleReconnection();
+        }
+    }
+
+    startPingMonitor() {
+        setInterval(async () => {
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${LLM_CONFIGS[LLM_PROVIDERS.LM_STUDIO_LOCAL].baseUrl}/models`, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(2000)
+                });
+                
+                if (response.ok) {
+                    this.connectionStatus = 'connected';
+                    this.lastPing = Date.now();
+                    const latency = Date.now() - startTime;
+                    
+                    // Log low latency connections
+                    if (latency < 100) {
+                        console.log(`⚡ Terminal ping: ${latency}ms`);
+                    }
+                } else {
+                    this.connectionStatus = 'error';
+                }
+            } catch (error) {
+                this.connectionStatus = 'disconnected';
+                console.warn('⚠️ Terminal ping failed:', error.message);
+            }
+        }, 10000); // Ping every 10 seconds
+    }
+
+    scheduleReconnection() {
+        setTimeout(() => {
+            console.log('🔄 Attempting terminal reconnection...');
+            this.initializeTerminal();
+        }, 5000); // Retry every 5 seconds
+    }
+
+    async sendMessage(message, options = {}) {
+        const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        const messageData = {
+            id: messageId,
+            content: message,
+            timestamp: Date.now(),
+            options: {
+                maxTokens: options.maxTokens || 1024,
+                temperature: options.temperature || 0.7,
+                model: options.model || LLM_CONFIGS[LLM_PROVIDERS.LM_STUDIO_LOCAL].models[0],
+                streaming: options.streaming !== false,
+                priority: options.priority || 'normal'
+            },
+            status: 'queued'
+        };
+
+        // Add to history
+        this.addToHistory('user', message);
+        
+        // Add to queue
+        this.messageQueue.push(messageData);
+        
+        // Process queue if not already processing
+        if (!this.isProcessing) {
+            this.processMessageQueue();
+        }
+
+        return messageId;
+    }
+
+    async processMessageQueue() {
+        if (this.isProcessing || this.connectionStatus !== 'connected') {
+            return;
+        }
+
+        this.isProcessing = true;
+        
+        try {
+            while (this.messageQueue.length > 0) {
+                const batch = this.messageQueue.splice(0, this.terminalConfig.batchSize);
+                
+                // Process batch concurrently
+                const promises = batch.map(messageData => this.processMessage(messageData));
+                await Promise.allSettled(promises);
+                
+                // Small delay between batches to prevent overwhelming
+                if (this.messageQueue.length > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+        } catch (error) {
+            console.error('❌ Terminal message processing error:', error);
+        } finally {
+            this.isProcessing = false;
+        }
+    }
+
+    async processMessage(messageData) {
+        try {
+            messageData.status = 'processing';
+            
+            const startTime = Date.now();
+            
+            if (messageData.options.streaming) {
+                await this.processStreamingMessage(messageData);
+            } else {
+                await this.processStandardMessage(messageData);
+            }
+            
+            const processingTime = Date.now() - startTime;
+            console.log(`⚡ Terminal message processed in ${processingTime}ms: ${messageData.content.substring(0, 50)}...`);
+            
+            messageData.status = 'completed';
+            messageData.processingTime = processingTime;
+            
+        } catch (error) {
+            console.error(`❌ Terminal message processing failed:`, error);
+            messageData.status = 'error';
+            messageData.error = error.message;
+            
+            // Retry logic
+            if (messageData.retryCount < this.terminalConfig.retryAttempts) {
+                messageData.retryCount = (messageData.retryCount || 0) + 1;
+                this.messageQueue.unshift(messageData); // Add back to front of queue
+            }
+        }
+    }
+
+    async processStandardMessage(messageData) {
+        const response = await fetch(`${LLM_CONFIGS[LLM_PROVIDERS.LM_STUDIO_LOCAL].baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: messageData.options.model,
+                messages: [{ role: 'user', content: messageData.content }],
+                max_tokens: messageData.options.maxTokens,
+                temperature: messageData.options.temperature,
+                stream: false
+            }),
+            signal: AbortSignal.timeout(this.terminalConfig.requestTimeout)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const responseText = data.choices?.[0]?.message?.content || '';
+        
+        // Add to history
+        this.addToHistory('assistant', responseText);
+        
+        // Emit response event
+        this.emitResponse(messageData.id, responseText, data);
+    }
+
+    async processStreamingMessage(messageData) {
+        const response = await fetch(`${LLM_CONFIGS[LLM_PROVIDERS.LM_STUDIO_LOCAL].baseUrl}/chat/completions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: messageData.options.model,
+                messages: [{ role: 'user', content: messageData.content }],
+                max_tokens: messageData.options.maxTokens,
+                temperature: messageData.options.temperature,
+                stream: true
+            }),
+            signal: AbortSignal.timeout(this.terminalConfig.requestTimeout)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullResponse = '';
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const data = line.slice(6);
+                        if (data === '[DONE]') break;
+
+                        try {
+                            const parsed = JSON.parse(data);
+                            const content = parsed.choices?.[0]?.delta?.content || '';
+                            fullResponse += content;
+                            
+                            // Emit streaming chunk
+                            this.emitStreamingChunk(messageData.id, content);
+                        } catch (e) {
+                            // Ignore parsing errors for incomplete chunks
+                        }
+                    }
+                }
+            }
+        } finally {
+            reader.releaseLock();
+        }
+
+        // Add complete response to history
+        this.addToHistory('assistant', fullResponse);
+        
+        // Emit final response
+        this.emitResponse(messageData.id, fullResponse);
+    }
+
+    addToHistory(role, content) {
+        this.terminalHistory.push({
+            role,
+            content,
+            timestamp: Date.now()
+        });
+
+        // Keep history size manageable
+        if (this.terminalHistory.length > this.maxHistorySize) {
+            this.terminalHistory = this.terminalHistory.slice(-this.maxHistorySize);
+        }
+    }
+
+    emitResponse(messageId, response, data = null) {
+        // Dispatch custom event for response
+        const event = new CustomEvent('terminalResponse', {
+            detail: {
+                messageId,
+                response,
+                data,
+                timestamp: Date.now()
+            }
+        });
+        window.dispatchEvent(event);
+    }
+
+    emitStreamingChunk(messageId, chunk) {
+        // Dispatch custom event for streaming chunk
+        const event = new CustomEvent('terminalStreamingChunk', {
+            detail: {
+                messageId,
+                chunk,
+                timestamp: Date.now()
+            }
+        });
+        window.dispatchEvent(event);
+    }
+
+    getStatus() {
+        return {
+            connectionStatus: this.connectionStatus,
+            lastPing: this.lastPing,
+            queueLength: this.messageQueue.length,
+            isProcessing: this.isProcessing,
+            historySize: this.terminalHistory.length,
+            config: this.terminalConfig
+        };
+    }
+
+    getHistory(limit = 50) {
+        return this.terminalHistory.slice(-limit);
+    }
+
+    clearHistory() {
+        this.terminalHistory = [];
+    }
+
+    updateConfig(newConfig) {
+        this.terminalConfig = { ...this.terminalConfig, ...newConfig };
+    }
+}
+
 // ===== LLM SERVICE CLASS =====
-// IDX-LLM-005: Unified LLM Service Implementation
+// IDX-LLM-006: Unified LLM Service Implementation
 class LLMService {
-    constructor(provider = LLM_PROVIDERS.LM_STUDIO) {
+    constructor(provider = LLM_PROVIDERS.LM_STUDIO_LOCAL) {
         this.provider = provider;
         this.config = LLM_CONFIGS[provider];
         this.client = null;
@@ -79,12 +417,18 @@ class LLMService {
             averageResponseTime: 0
         };
         
+        // Initialize terminal access for local providers
+        if (provider === LLM_PROVIDERS.LM_STUDIO_LOCAL) {
+            this.terminalAccess = new TerminalAccess(this);
+        }
+        
         this.initializeClient();
     }
 
     async initializeClient() {
         try {
             switch (this.provider) {
+                case LLM_PROVIDERS.LM_STUDIO_LOCAL:
                 case LLM_PROVIDERS.LM_STUDIO:
                     // Use direct HTTP calls instead of SDK
                     this.client = { type: 'http', baseUrl: this.config.baseUrl };
@@ -104,10 +448,9 @@ class LLMService {
     }
 
     async testConnection() {
-        console.log('[LLM] LM Studio testConnection');
+        console.log(`[LLM] Testing connection for provider: ${this.provider}`);
         try {
             const startTime = Date.now();
-            console.log(`[LLM] Testing connection for provider: ${this.provider}`);
             const response = await this.generateResponse('Hello', { maxTokens: 10 });
             const responseTime = Date.now() - startTime;
             this.isConnected = true;
@@ -122,18 +465,25 @@ class LLMService {
     }
 
     async generateResponse(prompt, options = {}) {
-        console.log(`[LLM] LM Studio generateResponse: prompt='${prompt}', model='${options.model}'`);
-        // Remove the isConnected check that's blocking LM Studio connections
+        console.log(`[LLM] generateResponse: prompt='${prompt}', model='${options.model}'`);
+        
+        // Use terminal access for local providers if available
+        if (this.provider === LLM_PROVIDERS.LM_STUDIO_LOCAL && this.terminalAccess) {
+            return await this.generateResponseViaTerminal(prompt, options);
+        }
+        
         const startTime = Date.now();
         const requestOptions = {
             maxTokens: options.maxTokens || this.config.maxTokens,
             temperature: options.temperature || this.config.temperature,
             model: options.model || this.config.models[0]
         };
+        
         try {
             let response;
             console.log(`[LLM] generateResponse for provider: ${this.provider}, model: ${requestOptions.model}`);
             switch (this.provider) {
+                case LLM_PROVIDERS.LM_STUDIO_LOCAL:
                 case LLM_PROVIDERS.LM_STUDIO:
                     response = await this.callLMStudioAPI(prompt, requestOptions);
                     break;
@@ -168,6 +518,51 @@ class LLMService {
             console.error(`[LLM] generateResponse error for provider: ${this.provider}:`, error.message, error.stack);
             throw new Error(`LLM generation failed: ${error.message}`);
         }
+    }
+
+    async generateResponseViaTerminal(prompt, options = {}) {
+        return new Promise((resolve, reject) => {
+            const messageId = this.terminalAccess.sendMessage(prompt, options);
+            let responseText = '';
+            let isComplete = false;
+
+            const handleResponse = (event) => {
+                if (event.detail.messageId === messageId) {
+                    responseText = event.detail.response;
+                    isComplete = true;
+                    cleanup();
+                    resolve({
+                        text: responseText,
+                        provider: this.provider,
+                        model: options.model || this.config.models[0],
+                        responseTime: Date.now(),
+                        usage: { terminal: true }
+                    });
+                }
+            };
+
+            const handleStreaming = (event) => {
+                if (event.detail.messageId === messageId) {
+                    responseText += event.detail.chunk;
+                }
+            };
+
+            const cleanup = () => {
+                window.removeEventListener('terminalResponse', handleResponse);
+                window.removeEventListener('terminalStreamingChunk', handleStreaming);
+            };
+
+            window.addEventListener('terminalResponse', handleResponse);
+            window.addEventListener('terminalStreamingChunk', handleStreaming);
+
+            // Timeout after 30 seconds
+            setTimeout(() => {
+                if (!isComplete) {
+                    cleanup();
+                    reject(new Error('Terminal response timeout'));
+                }
+            }, 30000);
+        });
     }
 
     async callLMStudioAPI(prompt, options) {
@@ -306,6 +701,7 @@ class LLMService {
 
     extractResponseText(response) {
         switch (this.provider) {
+            case LLM_PROVIDERS.LM_STUDIO_LOCAL:
             case LLM_PROVIDERS.LM_STUDIO:
             case LLM_PROVIDERS.OPENAI_FREE:
                 return response.choices?.[0]?.message?.content || '';
@@ -326,6 +722,7 @@ class LLMService {
 
     extractUsageInfo(response) {
         switch (this.provider) {
+            case LLM_PROVIDERS.LM_STUDIO_LOCAL:
             case LLM_PROVIDERS.LM_STUDIO:
             case LLM_PROVIDERS.OPENAI_FREE:
                 return response.usage || {};
@@ -361,7 +758,8 @@ class LLMService {
             provider: this.provider,
             isConnected: this.isConnected,
             lastUsed: this.lastUsed,
-            usageStats: { ...this.usageStats }
+            usageStats: { ...this.usageStats },
+            terminalStatus: this.terminalAccess?.getStatus()
         };
     }
 
@@ -379,12 +777,13 @@ class LLMService {
 }
 
 // ===== LLM MANAGER =====
-// IDX-LLM-006: Multi-Provider LLM Management
+// IDX-LLM-007: Multi-Provider LLM Management
 export class LLMManager {
     constructor() {
         this.services = new Map();
-        this.activeProvider = LLM_PROVIDERS.LM_STUDIO;
+        this.activeProvider = LLM_PROVIDERS.LM_STUDIO_LOCAL; // Prioritize local instance
         this.fallbackProviders = [
+            LLM_PROVIDERS.LM_STUDIO,
             LLM_PROVIDERS.OLLAMA,
             LLM_PROVIDERS.OPENAI_FREE,
             LLM_PROVIDERS.ANTHROPIC_FREE
@@ -392,10 +791,12 @@ export class LLMManager {
     }
 
     async initializeServices() {
-        console.log('🚀 Initializing LLM services...');
-        // Initialize primary service
+        console.log('🚀 Initializing LLM services with terminal access...');
+        
+        // Initialize primary service (local LM Studio)
         const primaryService = new LLMService(this.activeProvider);
         this.services.set(this.activeProvider, primaryService);
+        
         // Initialize fallback services
         for (const provider of this.fallbackProviders) {
             try {
@@ -405,17 +806,26 @@ export class LLMManager {
                 console.warn(`⚠️ Failed to initialize provider ${provider}:`, err.message);
             }
         }
+        
         // Test all services
         const results = await Promise.allSettled(
             Array.from(this.services.values()).map(service => service.testConnection())
         );
         const connectedServices = results.filter(result => result.status === 'fulfilled' && result.value);
         console.log(`✅ ${connectedServices.length}/${this.services.size} LLM services connected`);
+        
+        // Log terminal status if available
+        const primaryServiceInstance = this.services.get(this.activeProvider);
+        if (primaryServiceInstance?.terminalAccess) {
+            const terminalStatus = primaryServiceInstance.terminalAccess.getStatus();
+            console.log('🔌 Terminal Access Status:', terminalStatus);
+        }
+        
         return connectedServices.length > 0;
     }
 
     async generateResponse(prompt, options = {}) {
-        // Try active provider first
+        // Try active provider first (local LM Studio)
         const activeService = this.services.get(this.activeProvider);
         if (activeService && activeService.isConnected) {
             try {
@@ -470,10 +880,15 @@ export class LLMManager {
             .filter(([_, service]) => service.isConnected)
             .map(([provider, _]) => provider);
     }
+
+    getTerminalAccess() {
+        const activeService = this.services.get(this.activeProvider);
+        return activeService?.terminalAccess;
+    }
 }
 
 // ===== AGENT ENHANCEMENT FUNCTIONS =====
-// IDX-LLM-007: Agent LLM Enhancement System
+// IDX-LLM-008: Agent LLM Enhancement System
 export class AgentLLMEnhancer {
     constructor(llmManager) {
         this.llmManager = llmManager;

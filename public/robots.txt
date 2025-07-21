@@ -2,23 +2,11 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://www.rekursing.com/sitemap.xml
+Sitemap: https://rekursing.com/sitemap.xml
 
-# Crawl-delay for respectful crawling
+# Crawl delay (optional)
 Crawl-delay: 1
 
-# Disallow admin and private areas
-Disallow: /admin/
-Disallow: /private/
-Disallow: /api/
-Disallow: /tools/
-Disallow: /.git/
-Disallow: /node_modules/
-
-# Allow important pages
-Allow: /game/
-Allow: /docs/
-Allow: /blog/
-Allow: /assets/
-Allow: /css/
-Allow: /js/ 
+# Disallow specific paths (if needed)
+# Disallow: /admin/
+# Disallow: /private/ 

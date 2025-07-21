@@ -1,18 +1,19 @@
-# 🌌 Multiplayer Planetary Shooter
+# 🌌 Rekursing - Recursive AI Gaming
 
 > For index reference format, see [INDEX_DESCRIBER.md](./INDEX_DESCRIBER.md)  <!-- IDX-DOC-00 -->
 
 # IDX-DOC-01: Features
 
-A cutting-edge multiplayer first-person shooter game built with Three.js, featuring procedurally generated worlds, mathematical physics integration, and AI-driven gameplay systems.
+A revolutionary multiplayer planetary shooter where AI systems recursively learn and improve from every player interaction, creating an ever-evolving gaming experience built with Three.js, mathematical physics integration, and coordinate-based thinking.
 
 ## 🚀 Features
 
 ### Core Gameplay
-- **Multiplayer FPS**: Real-time multiplayer combat across multiple planets
+- **Recursive AI Gaming**: AI systems that continuously learn and improve from every interaction
+- **Multiplayer Planetary Combat**: Real-time multiplayer combat across 4 unique planets
 - **Planetary Physics**: Each planet has unique gravity, atmosphere, and environmental effects
 - **Advanced Weapon System**: 7 different weapon types with unique mechanics
-- **Mathematical Integration**: Fine structure constant and complex mathematical systems influence gameplay
+- **Mathematical Integration**: Fine structure constant (α = 1/137) and complex mathematical systems influence gameplay
 
 ### Procedural Generation
 - **Universal Object Generator**: Voxel-based procedural object generation with Marching Cubes algorithm
@@ -20,9 +21,12 @@ A cutting-edge multiplayer first-person shooter game built with Three.js, featur
 - **Flow Diagram Visualization**: 3D visualization of system architecture and data flows
 
 ### AI Systems
+- **15 Specialized AI Agents**: Each with unique roles and capabilities for system optimization
+- **Recursive Learning**: AI systems that continuously improve from every interaction
 - **Mathematical AI**: Neural network-driven AI that adapts to player behavior
 - **Pattern Recognition**: Real-time analysis of player actions and mathematical patterns
 - **Adaptive Difficulty**: Dynamic difficulty adjustment based on player performance
+- **Thought Monitoring**: Real-time observation of AI reasoning processes
 
 ### Technical Features
 - **Real-time Networking**: Socket.io-based multiplayer with low latency
@@ -31,6 +35,7 @@ A cutting-edge multiplayer first-person shooter game built with Three.js, featur
 - **Modular Architecture**: Clean, maintainable codebase with comprehensive documentation
 - **System Interconnectivity Matrix**: Revolutionary visualization of program interconnectivity and butterfly effects
 - **Spatial Function Clustering Matrix**: Spatial optimization and refactoring suggestions
+- **Coordinate-Based Thinking**: Functions positioned in 3D space based on calling relationships
 
 ## 🛠️ Technology Stack
 
@@ -49,8 +54,8 @@ A cutting-edge multiplayer first-person shooter game built with Three.js, featur
 ### Setup
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/multiplayer-planetary-shooter.git
-cd multiplayer-planetary-shooter
+git clone https://github.com/yourusername/rekursing.git
+cd rekursing
 
 # Install dependencies
 npm install
@@ -62,6 +67,7 @@ npm start
 The game will be available at:
 - **Game**: http://localhost:3001
 - **Development Server**: http://localhost:3000
+- **Live Demo**: https://rekursing.com
 
 ## 🎮 Controls
 

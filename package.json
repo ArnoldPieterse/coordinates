@@ -1,7 +1,7 @@
 {
-  "name": "multiplayer-planetary-shooter",
+  "name": "rekursing-ai-gaming",
   "version": "1.0.0",
-  "description": "A cutting-edge multiplayer first-person shooter game built with Three.js, featuring procedurally generated worlds, mathematical physics integration, and AI-driven gameplay systems",
+  "description": "Revolutionary multiplayer planetary shooter where AI systems recursively learn and improve from every player interaction, built with Three.js, mathematical physics integration, and recursive AI systems",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -56,6 +56,8 @@
     "deploy:aws-cli": "node deploy.js aws",
     "deploy:final": "node deploy.js aws --prod",
     "deploy:working": "node deploy.js aws",
+    "deploy:rekursing": "node deploy-rekursing-complete.js",
+    "deploy:rekursing:prod": "set NODE_ENV=production && node deploy-rekursing-complete.js",
     "setup:infrastructure": "node setup-complete-infrastructure.js",
     "deploy:full": "node deploy-full-project.cjs",
     "auto-git": "powershell -ExecutionPolicy Bypass -File ./auto-git.ps1",
@@ -65,15 +67,17 @@
     "gpu-streaming:demo": "node demo-gpu-streaming.js"
   },
   "keywords": [
-    "threejs",
+    "rekursing",
+    "ai-gaming",
+    "recursive-ai",
     "multiplayer",
-    "fps",
-    "game",
-    "procedural-generation",
+    "planetary-shooter",
+    "threejs",
     "mathematical-physics",
-    "ai",
+    "neural-networks",
     "socket.io",
     "vite",
+    "react",
     "javascript",
     "es6"
   ],
@@ -81,12 +85,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/multiplayer-planetary-shooter.git"
+    "url": "https://github.com/yourusername/rekursing-ai-gaming.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/multiplayer-planetary-shooter/issues"
+    "url": "https://github.com/yourusername/rekursing-ai-gaming/issues"
   },
-  "homepage": "https://github.com/yourusername/multiplayer-planetary-shooter#readme",
+  "homepage": "https://rekursing.com",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"
@@ -109,6 +113,7 @@
     "node-fetch": "^3.3.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-router-dom": "^7.7.0",
     "socket.io": "^4.7.4",
     "socket.io-client": "^4.7.4",
     "three": "^0.158.0",

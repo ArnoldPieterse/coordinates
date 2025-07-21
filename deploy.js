@@ -65,11 +65,11 @@ const __dirname = path.dirname(__filename);
 class ConsolidatedDeployer {
     constructor(config = {}) {
         this.config = {
-            projectName: 'coordinates-game',
+            projectName: 'rekursing-ai-gaming',
             domain: 'rekursing.com',
             region: 'us-east-1',
             secondaryRegion: 'us-west-2',
-            bucketName: 'rekursing-game-assets',
+            bucketName: 'rekursing-ai-gaming-assets',
             distributionId: null,
             accountId: process.env.AWS_ACCOUNT_ID,
             environment: process.env.NODE_ENV || 'production',
@@ -161,7 +161,7 @@ class ConsolidatedDeployer {
         const startTime = Date.now();
         
         try {
-            await this.logStep('Build Application', 'progress', { message: 'Starting build process' });
+            await this.logStep('Build Application', 'progress', { message: 'Starting Rekursing build process' });
             
             // Check Node.js version
             const nodeVersion = process.version;
@@ -180,12 +180,16 @@ class ConsolidatedDeployer {
             execSync('npm install', { stdio: 'inherit' });
             
             // Build the application
-            await this.logStep('Build with Vite', 'progress', { message: 'Building with Vite' });
+            await this.logStep('Build with Vite', 'progress', { message: 'Building Rekursing with Vite' });
             execSync('npm run build', { stdio: 'inherit' });
+            
+            // Copy additional assets for Rekursing
+            await this.logStep('Copy Assets', 'progress', { message: 'Copying additional assets' });
+            this.copyAdditionalAssets();
             
             const duration = Date.now() - startTime;
             await this.logStep('Build Complete', 'success', { 
-                message: 'Application built successfully',
+                message: 'Rekursing application built successfully',
                 duration: duration
             });
             
@@ -193,6 +197,71 @@ class ConsolidatedDeployer {
         } catch (error) {
             await this.logStep('Build Failed', 'error', { message: error.message });
             return false;
+        }
+    }
+
+    copyAdditionalAssets() {
+        const distPath = path.join(__dirname, 'dist');
+        const publicPath = path.join(__dirname, 'public');
+        
+        // Copy favicon and other static assets
+        const assetsToCopy = [
+            { src: path.join(publicPath, 'favicon.svg'), dest: path.join(distPath, 'favicon.svg') },
+            { src: path.join(publicPath, 'favicon.png'), dest: path.join(distPath, 'favicon.png') },
+            { src: path.join(publicPath, 'og-image.jpg'), dest: path.join(distPath, 'og-image.jpg') },
+            { src: path.join(publicPath, 'robots.txt'), dest: path.join(distPath, 'robots.txt') },
+            { src: path.join(publicPath, 'sitemap.xml'), dest: path.join(distPath, 'sitemap.xml') }
+        ];
+        
+        assetsToCopy.forEach(({ src, dest }) => {
+            if (fs.existsSync(src)) {
+                fs.copyFileSync(src, dest);
+                console.log(`✅ Copied ${path.basename(src)} to dist/`);
+            }
+        });
+        
+        // Create robots.txt if it doesn't exist
+        const robotsPath = path.join(distPath, 'robots.txt');
+        if (!fs.existsSync(robotsPath)) {
+            const robotsContent = `User-agent: *
+Allow: /
+Sitemap: https://rekursing.com/sitemap.xml`;
+            fs.writeFileSync(robotsPath, robotsContent);
+            console.log('✅ Created robots.txt');
+        }
+        
+        // Create sitemap.xml if it doesn't exist
+        const sitemapPath = path.join(distPath, 'sitemap.xml');
+        if (!fs.existsSync(sitemapPath)) {
+            const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://rekursing.com/</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://rekursing.com/play</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rekursing.com/ai-dashboard</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rekursing.com/tools</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>`;
+            fs.writeFileSync(sitemapPath, sitemapContent);
+            console.log('✅ Created sitemap.xml');
         }
     }
 
