@@ -1,0 +1,46 @@
+{
+  "name": "coordinates-ai-assistant",
+  "version": "1.0.0",
+  "description": "AI Assistant for Coordinates Project with Docker Model Runner Integration",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest",
+    "lint": "eslint .",
+    "build": "echo 'No build step required for Node.js'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.3.1",
+    "axios": "^1.6.0",
+    "redis": "^4.6.10",
+    "ws": "^8.14.2",
+    "uuid": "^9.0.1",
+    "winston": "^3.11.0",
+    "joi": "^17.11.0",
+    "compression": "^1.7.4",
+    "express-rate-limit": "^7.1.5",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.7.0",
+    "eslint": "^8.54.0",
+    "supertest": "^6.3.3"
+  },
+  "keywords": [
+    "ai",
+    "assistant",
+    "docker",
+    "model-runner",
+    "coordinates",
+    "git-issue-solver"
+  ],
+  "author": "Coordinates Team",
+  "license": "MIT"
+} 

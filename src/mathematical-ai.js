@@ -1,7 +1,5 @@
 // Mathematical AI System
 
-import MathematicalEngine from './mathematical-engine.js';
-
 class MathematicalAI {
     constructor(mathematicalEngine) {
         this.mathEngine = mathematicalEngine;
@@ -123,14 +121,11 @@ class MathematicalAI {
     // Calculate complex relationships from player actions
     calculateComplexRelationships(actions) {
         if (!actions || actions.length === 0) return 0;
-        
         let totalComplexity = 0;
-        for (const action of actions) {
-            // Use mathematical constants to weight different action types
+        for (let i = 0; i < actions.length; i++) {
             const actionWeight = this.mathEngine.ALPHA * this.mathEngine.SQRT_TEN.x;
             totalComplexity += actionWeight * Math.random();
         }
-        
         return Math.min(totalComplexity / actions.length, 1.0);
     }
     
@@ -157,11 +152,10 @@ class MathematicalAI {
     }
     
     // Calculate mathematical influence on overall gameplay
-    calculateMathematicalInfluence(playerData) {
+    calculateMathematicalInfluence() {
         const fractalInfluence = this.patterns.fractal.influence * this.mathEngine.ALPHA;
         const quantumInfluence = this.patterns.quantum.influence * this.mathEngine.SQRT_TEN.x;
         const complexInfluence = this.patterns.complex.influence * this.mathEngine.SQRT_POINT_ONE.x;
-        
         return (fractalInfluence + quantumInfluence + complexInfluence) / 3;
     }
     
@@ -294,7 +288,7 @@ class MathematicalAI {
     }
 
     // Apply AI effects to game mechanics
-    applyAIEffects(gameState) {
+    applyAIEffects() {
         const effects = {
             playerSpeed: 1.0 + (this.aiState.mathematicalInfluence * 0.2),
             weaponDamage: 1.0 + (this.patterns.fractal.influence * 0.3),

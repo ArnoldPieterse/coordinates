@@ -4,7 +4,7 @@ import { Octree } from "three/examples/jsm/Addons.js";
 import { createRenderer } from "./renderer";
 
 // Animations
-import { createCamera, playGunAnimation } from "../components/camera";
+import { playGunAnimation } from "../components/camera";
 
 const GRAVITY = 30;
 const NUM_SPHERES = 100;
@@ -15,8 +15,7 @@ const spheres = [];
 let sphereIdx = 0;
 
 // Animation Variables
-let lastShotTime = 0; // ✅ Keeps track of last shot time
-let isGunLoaded = false; // ✅ Track gun reload status
+let isAnimationPlaying = false; // Flag to track if animation is playing
 const renderer = createRenderer();
 const clock = new THREE.Clock();
 let mixer = null; // ✅ Global mixer for animations
@@ -27,6 +26,7 @@ const camera = new THREE.PerspectiveCamera(
   1000
 );
 camera.position.z = 5;
+
 
 function createPhysics(scene) {
   const worldOctree = new Octree();
@@ -68,7 +68,6 @@ function createPhysics(scene) {
 
   // Reload flag to prevent shooting during reload
   let isReloading = false; // Prevent shooting during reload
-  let isAnimationPlaying = false; // Flag to track if animation is playing
 
   // ✅ **Play Animation + Sound**
   function playAction(
@@ -133,7 +132,7 @@ function createPhysics(scene) {
 
     // ✅ **Update shot count and last shot time**
     shotCount++;
-    lastShotTime = performance.now();
+    // lastShotTime = performance.now(); // Remove lastShotTime if not used
 
     // **Update sphere index**
     sphereIdx = (sphereIdx + 1) % spheres.length;

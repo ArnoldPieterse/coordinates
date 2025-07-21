@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 // Mathematical Visualizer - Real-time visualization of mathematical effects
 // Shows fractal patterns, quantum states, complex number relationships, and fine structure constant effects
 
@@ -616,8 +617,6 @@ class MathematicalVisualizer {
             } else {
                 // Return to original position with mathematical oscillation
                 const targetPos = particle.originalPosition.clone();
-                const currentPos = particle.position;
-                
                 particle.position.lerp(targetPos, deltaTime * this.ALPHA);
             }
             
@@ -848,13 +847,14 @@ class MathematicalVisualizer {
     // Helper method for mathematical transformations
     applyMathematicalTransform(position, transformType = 'quantum') {
         switch (transformType) {
-            case 'quantum':
+            case 'quantum': {
                 // Apply quantum superposition effects to position
                 const superposition = Math.sin(this.ALPHA * position.length * 137);
                 return new this.THREE.Vector2(
                     position.x + superposition * 0.1,
                     position.y + superposition * 0.1
                 );
+            }
             default:
                 return position;
         }

@@ -92,7 +92,6 @@ export class VoxelTree {
             const start = this.trunkPath[trunkIdx];
             // Outward direction
             const angle = this.randomBetween(0, Math.PI * 2);
-            const up = new THREE.Vector3(0, 1, 0);
             const dir = new THREE.Vector3(
                 Math.cos(angle) * this.randomBetween(0.7, 1),
                 this.randomBetween(0.3, 0.7),

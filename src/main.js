@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { io } from 'socket.io-client';
 import MathematicalEngine from './mathematical-engine.js';
-import MathematicalVisualizer from './mathematical-visualizer.js';
 import MathematicalAI from './mathematical-ai.js';
 import FlowDiagramVisualizer from './flow-diagram-visualizer.js';
 import UniversalObjectGenerator from '../universal-object-generator.js';
@@ -15,7 +14,6 @@ class MultiplayerPlanetaryShooter {
     constructor() {
         this.mathEngine = new MathematicalEngine();
         this.mathEngine.initializeTHREE(THREE);
-        this.mathematicalVisualizer = null;
         this.mathematicalAI = new MathematicalAI(this.mathEngine);
         this.aiAnalysis = {
             lastAnalysis: null,
@@ -84,7 +82,7 @@ class MultiplayerPlanetaryShooter {
             jupiter: { name: 'Jupiter', gravity: -50 * this.mathEngine.SQRT_TEN.x, skyColor: 0xFF8C00, groundColor: 0xDAA520, obstacles: 20, position: new THREE.Vector3(0, 0, 200), mathematicalInfluence: this.mathEngine.ALPHA, alphaEffect: this.mathEngine.ALPHA, sqrtTenEffect: this.mathEngine.SQRT_TEN.x, sqrtPointOneEffect: this.mathEngine.SQRT_POINT_ONE.x },
             venus: { name: 'Venus', gravity: -25 * this.mathEngine.ALPHA, skyColor: 0xFFB6C1, groundColor: 0xF4A460, obstacles: 12, position: new THREE.Vector3(0, 0, -200), mathematicalInfluence: this.mathEngine.SQRT_TEN.x, alphaEffect: this.mathEngine.ALPHA, sqrtTenEffect: this.mathEngine.SQRT_TEN.x, sqrtPointOneEffect: this.mathEngine.SQRT_POINT_ONE.x }
         };
-        for (const [planetId, planet] of Object.entries(this.planetData)) { this.mathEngine.calculateMathematicalPlanetEffects(planet, { position: new THREE.Vector3() }); }
+        for (const [, planet] of Object.entries(this.planetData)) { this.mathEngine.calculateMathematicalPlanetEffects(planet, { position: new THREE.Vector3() }); }
         this.rocket = null;
         this.isInRocket = false;
         this.rocketTarget = null;
@@ -120,7 +118,7 @@ class MultiplayerPlanetaryShooter {
         this.climbingLadder = null;
         this.climbingSpeed = 3;
         this.isClimbing = false;
-        this.physicsConstants = { gravity: -30, airResistance: 0.99, bounceEnergyLoss: 0.7, friction: 0.8, magneticForce: 5.0, windForce: 2.0, timeDilationFactor: 0.5, ballBounce: 0.8, boxFriction: 0.95, ladderClimbSpeed: 3.0, softBodySpringStiffness: 100.0, softBodyDamping: 0.8, softBodyRestLength: 1.0, softBodyMass: 1.0 };
+        this.physicsConstants = { gravity: -30, airResistance: 0.99, bounceEnergyLoss: 0.7, friction: 0.8, magneticForce: 5.0, windForce: 2.0, ballBounce: 0.8, boxFriction: 0.95, ladderClimbSpeed: 3.0, softBodySpringStiffness: 100.0, softBodyDamping: 0.8, softBodyRestLength: 1.0, softBodyMass: 1.0 };
         this.gravityWells = [];
         this.particleSystems = {
             explosion: { count: 50, life: 2.0, speed: 10, gravity: -20, colors: [0xFF4500, 0xFF8C00, 0xFFFF00, 0xFF0000], sizes: [0.1, 0.05, 0.02] },
@@ -411,7 +409,7 @@ class MultiplayerPlanetaryShooter {
         requestAnimationFrame(() => this.animate());
         const deltaTime = this.clock.getDelta();
         if (this.player) { this.updatePlayer(deltaTime); }
-        if (this.cameraControls) { this.updateCamera(deltaTime); }
+        if (this.cameraControls) { this.updateCamera(); }
         this.updateBullets(deltaTime);
         this.updateReload(deltaTime);
         this.updateDash(deltaTime);
@@ -487,7 +485,7 @@ class MultiplayerPlanetaryShooter {
             if (bullet.position.length() > 500) { this.scene.remove(bullet); this.bullets.splice(i, 1); }
         }
     }
-    updateCamera(deltaTime) {
+    updateCamera() {
         if (this.cameraMode === 'firstPerson') {
             this.camera.position.copy(this.player.position);
             this.camera.position.y += 1.6;
@@ -615,9 +613,9 @@ class MultiplayerPlanetaryShooter {
             }
         });
         
-        this.socket.on('playerHit', ({ targetId, damage, weapon }) => {
+        this.socket.on('playerHit', ({ targetId, damage }) => {
             if (targetId === this.playerId) {
-                this.takeDamage(damage, weapon);
+                this.takeDamage(damage);
             }
         });
     }
@@ -638,12 +636,10 @@ class MultiplayerPlanetaryShooter {
             this.players.delete(id);
         }
     }
-    takeDamage(damage, weapon) {
+    takeDamage(damage) {
         if (this.isDead || this.isInvulnerable) return;
-
         this.playerHealth -= damage;
         this.updateHealthBar();
-
         if (this.playerHealth <= 0) {
             this.playerHealth = 0;
             this.die();
@@ -672,7 +668,7 @@ class MultiplayerPlanetaryShooter {
             this.healthBar.style.width = `${(this.playerHealth / this.maxHealth) * 100}%`;
         }
     }
-    addChatMessage(sender, message, isSystem = false) {
+    addChatMessage() {
         // Implementation for chat
     }
     updateWeaponUI() {
