@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Tree Generation Systems Test</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #1a1a1a; 
+            color: #ffffff; 
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #4CAF50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #ccc;
+            font-size: 1.1em;
+        }
+        
+        .systems-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .system-panel {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .system-panel h3 {
+            color: #4CAF50;
+            margin-top: 0;
+            font-size: 1.3em;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ddd;
+            font-size: 14px;
+        }
+        
+        .control-group input[type="range"] {
+            width: 100%;
+            background: #555;
+            border-radius: 3px;
+            height: 6px;
+            outline: none;
+        }
+        
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            background: #4CAF50;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .control-group input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        .control-group select {
+            width: 100%;
+            padding: 8px;
+            background: #444;
+            border: 1px solid #666;
+            border-radius: 4px;
+            color: #fff;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+        }
+        
+        .btn.secondary {
+            background: #666;
+        }
+        
+        .btn.secondary:hover {
+            background: #555;
+        }
+        
+        .btn.danger {
+            background: #f44336;
+        }
+        
+        .btn.danger:hover {
+            background: #da190b;
+        }
+        
+        .render-container {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .render-container h3 {
+            color: #4CAF50;
+            margin-top: 0;
+        }
+        
+        #three-container {
+            width: 100%;
+            height: 500px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        
+        .status-panel {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-panel h3 {
+            color: #4CAF50;
+            margin-top: 0;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .status-item {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 3px solid #4CAF50;
+        }
+        
+        .status-item h4 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+            font-size: 14px;
+        }
+        
+        .status-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .status-description {
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 5px;
+        }
+        
+        .log-panel {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .log-panel h3 {
+            color: #4CAF50;
+            margin-top: 0;
+        }
+        
+        #log-output {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        
+        .log-entry.info { color: #4CAF50; }
+        .log-entry.warning { color: #ff9800; }
+        .log-entry.error { color: #f44336; }
+        
+        .collaboration-panel {
+            background: #2a2a2a;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .collaboration-panel h3 {
+            color: #4CAF50;
+            margin-top: 0;
+        }
+        
+        .collaborators-list {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 15px;
+            min-height: 100px;
+        }
+        
+        .collaborator-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: #333;
+            margin-bottom: 5px;
+            border-radius: 3px;
+        }
+        
+        .collaborator-name {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .collaborator-status {
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        @media (max-width: 768px) {
+            .systems-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌳 Advanced Tree Generation Systems</h1>
+            <p>Comprehensive test of GPU procedural generation, adaptive tessellation, autoregressive mesh generation, real-time materials, and artist controls</p>
+        </div>
+
+        <div class="systems-grid">
+            <!-- GPU Procedural Generation -->
+            <div class="system-panel">
+                <h3>🚀 GPU Procedural Generation</h3>
+                <div class="control-group">
+                    <label>GPU Acceleration: <input type="checkbox" id="gpu-enabled" checked></label>
+                </div>
+                <div class="control-group">
+                    <label>Mesh Node Complexity: <input type="range" id="node-complexity" min="1" max="10" value="5"></label>
+                </div>
+                <div class="control-group">
+                    <label>Continuous LOD: <input type="checkbox" id="continuous-lod" checked></label>
+                </div>
+                <div class="control-group">
+                    <label>Shader Quality: 
+                        <select id="shader-quality">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="ultra">Ultra</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="button-group">
+                    <button class="btn" onclick="testGPUGeneration()">Test GPU Generation</button>
+                    <button class="btn secondary" onclick="toggleGPUStats()">Toggle Stats</button>
+                </div>
+            </div>
+
+            <!-- Adaptive Tessellation -->
+            <div class="system-panel">
+                <h3>⚡ Adaptive Tessellation</h3>
+                <div class="control-group">
+                    <label>Adaptive Tessellation: <input type="checkbox" id="adaptive-tessellation" checked></label>
+                </div>
+                <div class="control-group">
+                    <label>Min Tessellation: <input type="range" id="min-tessellation" min="2" max="8" value="4"></label>
+                </div>
+                <div class="control-group">
+                    <label>Max Tessellation: <input type="range" id="max-tessellation" min="16" max="64" value="32"></label>
+                </div>
+                <div class="control-group">
+                    <label>Curvature Threshold: <input type="range" id="curvature-threshold" min="0.01" max="0.5" step="0.01" value="0.1"></label>
+                </div>
+                <div class="control-group">
+                    <label>Performance Budget (ms): <input type="range" id="performance-budget" min="8" max="33" value="16"></label>
+                </div>
+                <div class="button-group">
+                    <button class="btn" onclick="testAdaptiveTessellation()">Test Tessellation</button>
+                    <button class="btn secondary" onclick="resetTessellation()">Reset</button>
+                </div>
+            </div>
+
+            <!-- Autoregressive Mesh Generation -->
+            <div class="system-panel">
+                <h3>🧠 Autoregressive Mesh Generation</h3>
+                <div class="control-group">
+                    <label>Autoregressive Generation: <input type="checkbox" id="autoregressive-enabled" checked></label>
+                </div>
+                <div class="control-group">
+                    <label>Sequence Length: <input type="range" id="sequence-length" min="50" max="500" value="100"></label>
+                </div>
+                <div class="control-group">
+                    <label>Temperature: <input type="range" id="generation-temperature" min="0.1" max="2.0" step="0.1" value="1.0"></label>
+                </div>
+                <div class="control-group">
+                    <label>Model Complexity: 
+                        <select id="model-complexity">
+                            <option value="small">Small</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="large">Large</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="button-group">
+                    <button class="btn" onclick="testAutoregressiveGeneration()">Generate Mesh</button>
+                    <button class="btn secondary" onclick="saveModel()">Save Model</button>
+                    <button class="btn secondary" onclick="loadModel()">Load Model</button>
+                </div>
+            </div>
+
+            <!-- Real-Time Materials -->
+            <div class="system-panel">
+                <h3>🎨 Real-Time Materials</h3>
+                <div class="control-group">
+                    <label>Seasonal Effects: <input type="checkbox" id="seasonal-effects" checked></label>
+                </div>
+                <div class="control-group">
+                    <label>Season: 
+                        <select id="current-season">
+                            <option value="spring">Spring</option>
+                            <option value="summer" selected>Summer</option>
+                            <option value="autumn">Autumn</option>
+                            <option value="winter">Winter</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label>Weather: 
+                        <select id="current-weather">
+                            <option value="clear">Clear</option>
+                            <option value="rain">Rain</option>
+                            <option value="snow">Snow</option>
+                            <option value="wind">Wind</option>
+                            <option value="sun">Sun</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label>Weather Intensity: <input type="range" id="weather-intensity" min="0" max="1" step="0.1" value="0.5"></label>
+                </div>
+                <div class="control-group">
+                    <label>Dynamic Textures: <input type="checkbox" id="dynamic-textures" checked></label>
+                </div>
+                <div class="button-group">
+                    <button class="btn" onclick="testMaterialSystem()">Test Materials</button>
+                    <button class="btn secondary" onclick="clearMaterialCache()">Clear Cache</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Artist Controls -->
+        <div class="system-panel">
+            <h3>🎭 Artist Controls</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div>
+                    <h4>Tree Structure</h4>
+                    <div class="control-group">
+                        <label>Branch Count: <input type="range" id="artist-branch-count" min="1" max="20" value="4"></label>
+                    </div>
+                    <div class="control-group">
+                        <label>Branch Levels: <input type="range" id="artist-branch-levels" min="2" max="8" value="5"></label>
+                    </div>
+                    <div class="control-group">
+                        <label>Initial Split: <input type="range" id="artist-initial-split" min="1" max="6" value="2"></label>
+                    </div>
+                </div>
+                <div>
+                    <h4>Growth Parameters</h4>
+                    <div class="control-group">
+                        <label>Length: <input type="range" id="artist-branch-length" min="5" max="25" value="12"></label>
+                    </div>
+                    <div class="control-group">
+                        <label>Angle: <input type="range" id="artist-branch-angle" min="15" max="75" value="45"></label>
+                    </div>
+                    <div class="control-group">
+                        <label>Radius: <input type="range" id="artist-branch-radius" min="0.5" max="3" step="0.1" value="1"></label>
+                    </div>
+                </div>
+                <div>
+                    <h4>Variation & Randomness</h4>
+                    <div class="control-group">
+                        <label>Randomness: <input type="range" id="artist-randomness" min="0" max="2" step="0.1" value="0.7"></label>
+                    </div>
+                    <div class="control-group">
+                        <label>Variation: <input type="range" id="artist-variation" min="0" max="1" step="0.05" value="0.3"></label>
+                    </div>
+                    <div class="control-group">
+                        <label>Golden Ratio: <input type="checkbox" id="artist-golden-ratio" checked></label>
+                    </div>
+                </div>
+                <div>
+                    <h4>Presets & Actions</h4>
+                    <div class="button-group" style="flex-direction: column;">
+                        <button class="btn" onclick="applyPreset('oak')">Oak Preset</button>
+                        <button class="btn" onclick="applyPreset('pine')">Pine Preset</button>
+                        <button class="btn" onclick="applyPreset('willow')">Willow Preset</button>
+                        <button class="btn secondary" onclick="saveCustomPreset()">Save Preset</button>
+                        <button class="btn secondary" onclick="exportTree()">Export OBJ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D Render Container -->
+        <div class="render-container">
+            <h3>🎮 3D Visualization</h3>
+            <div id="three-container"></div>
+            <div class="button-group" style="margin-top: 15px;">
+                <button class="btn" onclick="toggleWireframe()">Toggle Wireframe</button>
+                <button class="btn" onclick="toggleSmooth()">Toggle Smooth</button>
+                <button class="btn" onclick="resetCamera()">Reset Camera</button>
+                <button class="btn secondary" onclick="toggleAnimation()">Toggle Animation</button>
+            </div>
+        </div>
+
+        <!-- Status Panel -->
+        <div class="status-panel">
+            <h3>📊 System Status</h3>
+            <div class="status-grid">
+                <div class="status-item">
+                    <h4>GPU Performance</h4>
+                    <div class="status-value" id="gpu-fps">60 FPS</div>
+                    <div class="status-description">Current rendering performance</div>
+                </div>
+                <div class="status-item">
+                    <h4>Tessellation Level</h4>
+                    <div class="status-value" id="tessellation-level">Medium</div>
+                    <div class="status-description">Current adaptive tessellation</div>
+                </div>
+                <div class="status-item">
+                    <h4>Material Updates</h4>
+                    <div class="status-value" id="material-updates">0</div>
+                    <div class="status-description">Materials updated this frame</div>
+                </div>
+                <div class="status-item">
+                    <h4>Memory Usage</h4>
+                    <div class="status-value" id="memory-usage">0 MB</div>
+                    <div class="status-description">GPU memory consumption</div>
+                </div>
+                <div class="status-item">
+                    <h4>Generation Time</h4>
+                    <div class="status-value" id="generation-time">0ms</div>
+                    <div class="status-description">Last generation duration</div>
+                </div>
+                <div class="status-item">
+                    <h4>Active Systems</h4>
+                    <div class="status-value" id="active-systems">5</div>
+                    <div class="status-description">Systems currently running</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Panel -->
+        <div class="log-panel">
+            <h3>📝 System Log</h3>
+            <div id="log-output"></div>
+            <div class="button-group" style="margin-top: 15px;">
+                <button class="btn secondary" onclick="clearLog()">Clear Log</button>
+                <button class="btn secondary" onclick="exportLog()">Export Log</button>
+            </div>
+        </div>
+
+        <!-- Collaboration Panel -->
+        <div class="collaboration-panel">
+            <h3>👥 Collaboration</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <div class="control-group">
+                        <label>Session ID: <input type="text" id="session-id" placeholder="Enter session ID" style="width: 100%; padding: 8px; background: #444; border: 1px solid #666; border-radius: 4px; color: #fff;"></label>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn" onclick="joinSession()">Join Session</button>
+                        <button class="btn secondary" onclick="createSession()">Create Session</button>
+                        <button class="btn secondary" onclick="shareSession()">Share Session</button>
+                    </div>
+                </div>
+                <div>
+                    <h4>Active Collaborators</h4>
+                    <div class="collaborators-list" id="collaborators-list">
+                        <div class="collaborator-item">
+                            <span class="collaborator-name">You</span>
+                            <span class="collaborator-status">Online</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import all advanced systems
+        import { AdvancedMeshGenerator } from './src/advanced-mesh-generator.js';
+        import { AdaptiveTessellationSystem } from './src/adaptive-tessellation.js';
+        import { AutoregressiveMeshGenerator } from './src/autoregressive-mesh-generator.js';
+        import { RealTimeMaterialSystem } from './src/real-time-material-system.js';
+        import { ArtistControlPanel } from './src/artist-controls.js';
+        import * as THREE from './src/three.module.js';
+
+        // Global variables
+        let advancedMeshGenerator, adaptiveTessellation, autoregressiveGenerator, materialSystem;
+        let threeScene, threeCamera, threeRenderer, currentTree;
+        let isAnimating = true;
+        let logEntries = [];
+
+        // Initialize systems
+        async function initializeSystems() {
+            log('Initializing advanced tree generation systems...', 'info');
+            
+            try {
+                // Initialize GPU procedural generator
+                advancedMeshGenerator = new AdvancedMeshGenerator();
+                log('✅ GPU Procedural Generator initialized', 'info');
+                
+                // Initialize adaptive tessellation
+                adaptiveTessellation = new AdaptiveTessellationSystem();
+                adaptiveTessellation.start();
+                log('✅ Adaptive Tessellation System initialized', 'info');
+                
+                // Initialize autoregressive generator
+                autoregressiveGenerator = new AutoregressiveMeshGenerator();
+                log('✅ Autoregressive Mesh Generator initialized', 'info');
+                
+                // Initialize real-time material system
+                materialSystem = new RealTimeMaterialSystem();
+                materialSystem.start();
+                log('✅ Real-Time Material System initialized', 'info');
+                
+                // Initialize Three.js
+                initializeThreeJS();
+                log('✅ Three.js scene initialized', 'info');
+                
+                // Generate initial tree
+                generateTree();
+                
+                log('🎉 All systems initialized successfully!', 'info');
+                updateStatus();
+                
+            } catch (error) {
+                log(`❌ Error initializing systems: ${error.message}`, 'error');
+            }
+        }
+
+        function initializeThreeJS() {
+            const container = document.getElementById('three-container');
+            
+            // Scene
+            threeScene = new THREE.Scene();
+            threeScene.background = new THREE.Color(0x1a1a1a);
+            
+            // Camera
+            threeCamera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            threeCamera.position.set(20, 20, 20);
+            threeCamera.lookAt(0, 10, 0);
+            
+            // Renderer
+            threeRenderer = new THREE.WebGLRenderer({ antialias: true });
+            threeRenderer.setSize(container.clientWidth, container.clientHeight);
+            threeRenderer.shadowMap.enabled = true;
+            threeRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(threeRenderer.domElement);
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            threeScene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            threeScene.add(directionalLight);
+            
+            // Ground plane
+            const groundGeometry = new THREE.PlaneGeometry(50, 50);
+            const groundMaterial = new THREE.MeshLambertMaterial({ color: 0x2d4a2d });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            threeScene.add(ground);
+            
+            // Start animation loop
+            animate();
+        }
+
+        function generateTree() {
+            log('Generating tree with advanced systems...', 'info');
+            const startTime = performance.now();
+            
+            try {
+                // Get artist controls
+                const artistSettings = getArtistSettings();
+                
+                // Generate tree structure
+                const treeData = generateTreeData(artistSettings);
+                
+                // Apply GPU procedural generation
+                if (document.getElementById('gpu-enabled').checked) {
+                    currentTree = advancedMeshGenerator.generateProceduralTree(treeData, {
+                        useGPU: true,
+                        enableLOD: document.getElementById('continuous-lod').checked,
+                        enableJunctions: true,
+                        enableSeasonalEffects: true
+                    });
+                } else {
+                    // Fallback to CPU generation
+                    currentTree = generateCPUTree(treeData);
+                }
+                
+                // Apply adaptive tessellation
+                if (document.getElementById('adaptive-tessellation').checked) {
+                    adaptiveTessellation.updateTessellationFactors(
+                        treeData, 
+                        threeCamera, 
+                        threeRenderer
+                    );
+                }
+                
+                // Apply autoregressive generation if enabled
+                if (document.getElementById('autoregressive-enabled').checked) {
+                    const sequenceLength = parseInt(document.getElementById('sequence-length').value);
+                    const temperature = parseFloat(document.getElementById('generation-temperature').value);
+                    
+                    const generatedMesh = autoregressiveGenerator.generateMesh(
+                        [], 
+                        sequenceLength, 
+                        temperature
+                    );
+                    
+                    if (generatedMesh) {
+                        currentTree.add(generatedMesh);
+                    }
+                }
+                
+                // Apply real-time materials
+                const season = document.getElementById('current-season').value;
+                const weather = {
+                    type: document.getElementById('current-weather').value,
+                    intensity: parseFloat(document.getElementById('weather-intensity').value)
+                };
+                
+                materialSystem.setSeason(season);
+                materialSystem.setWeather(weather);
+                
+                // Add tree to scene
+                if (currentTree) {
+                    threeScene.add(currentTree);
+                    currentTree.castShadow = true;
+                    currentTree.receiveShadow = true;
+                }
+                
+                const generationTime = performance.now() - startTime;
+                document.getElementById('generation-time').textContent = `${generationTime.toFixed(1)}ms`;
+                
+                log(`✅ Tree generated successfully in ${generationTime.toFixed(1)}ms`, 'info');
+                
+            } catch (error) {
+                log(`❌ Error generating tree: ${error.message}`, 'error');
+            }
+        }
+
+        function generateTreeData(settings) {
+            // Generate tree structure based on artist settings
+            const branches = [];
+            
+            // Create trunk
+            const trunk = {
+                id: 'trunk_0',
+                type: 'trunk',
+                radius: settings.radius,
+                length: settings.length,
+                position: new THREE.Vector3(0, 0, 0),
+                direction: new THREE.Vector3(0, 1, 0),
+                children: []
+            };
+            
+            // Generate branches recursively
+            generateBranches(trunk, settings, 0);
+            branches.push(trunk);
+            
+            return branches;
+        }
+
+        function generateBranches(parent, settings, level) {
+            if (level >= settings.levels) return;
+            
+            const branchCount = settings.branchCount;
+            const angle = settings.angle * Math.PI / 180;
+            
+            for (let i = 0; i < branchCount; i++) {
+                const branchAngle = (i / branchCount) * Math.PI * 2;
+                const branchDirection = new THREE.Vector3(
+                    Math.sin(branchAngle) * Math.sin(angle),
+                    Math.cos(angle),
+                    Math.cos(branchAngle) * Math.sin(angle)
+                );
+                
+                const branch = {
+                    id: `branch_${level}_${i}`,
+                    type: 'branch',
+                    radius: settings.radius * Math.pow(0.7, level + 1),
+                    length: settings.length * Math.pow(0.8, level + 1),
+                    position: parent.position.clone().add(parent.direction.clone().multiplyScalar(parent.length)),
+                    direction: branchDirection,
+                    children: []
+                };
+                
+                parent.children.push(branch);
+                generateBranches(branch, settings, level + 1);
+            }
+        }
+
+        function generateCPUTree(treeData) {
+            const group = new THREE.Group();
+            
+            for (const branch of treeData) {
+                const geometry = new THREE.CylinderGeometry(
+                    branch.radius,
+                    branch.radius * 0.8,
+                    branch.length,
+                    8
+                );
+                
+                const material = new THREE.MeshLambertMaterial({ 
+                    color: branch.type === 'trunk' ? 0x8B4513 : 0xA0522D 
+                });
+                
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.copy(branch.position);
+                
+                const up = new THREE.Vector3(0, 1, 0);
+                const quaternion = new THREE.Quaternion();
+                quaternion.setFromUnitVectors(up, branch.direction);
+                mesh.quaternion.copy(quaternion);
+                
+                group.add(mesh);
+            }
+            
+            return group;
+        }
+
+        function getArtistSettings() {
+            return {
+                branchCount: parseInt(document.getElementById('artist-branch-count').value),
+                levels: parseInt(document.getElementById('artist-branch-levels').value),
+                initialSplit: parseInt(document.getElementById('artist-initial-split').value),
+                length: parseFloat(document.getElementById('artist-branch-length').value),
+                angle: parseFloat(document.getElementById('artist-branch-angle').value),
+                radius: parseFloat(document.getElementById('artist-branch-radius').value),
+                randomness: parseFloat(document.getElementById('artist-randomness').value),
+                variation: parseFloat(document.getElementById('artist-variation').value),
+                goldenRatio: document.getElementById('artist-golden-ratio').checked
+            };
+        }
+
+        function animate() {
+            if (!isAnimating) return;
+            
+            requestAnimationFrame(animate);
+            
+            // Rotate camera
+            const time = Date.now() * 0.001;
+            const radius = 30;
+            threeCamera.position.x = Math.cos(time * 0.5) * radius;
+            threeCamera.position.z = Math.sin(time * 0.5) * radius;
+            threeCamera.position.y = 20;
+            threeCamera.lookAt(0, 10, 0);
+            
+            // Update material system
+            if (materialSystem) {
+                materialSystem.update();
+            }
+            
+            // Update adaptive tessellation
+            if (adaptiveTessellation && currentTree) {
+                adaptiveTessellation.updateTessellationFactors(
+                    [currentTree], 
+                    threeCamera, 
+                    threeRenderer
+                );
+            }
+            
+            // Render
+            threeRenderer.render(threeScene, threeCamera);
+            
+            // Update status
+            updateStatus();
+        }
+
+        function updateStatus() {
+            // Update GPU FPS
+            const fps = Math.round(1000 / (performance.now() - (updateStatus.lastTime || performance.now())));
+            document.getElementById('gpu-fps').textContent = `${fps} FPS`;
+            updateStatus.lastTime = performance.now();
+            
+            // Update tessellation level
+            const tessellationLevel = document.getElementById('adaptive-tessellation').checked ? 'Adaptive' : 'Fixed';
+            document.getElementById('tessellation-level').textContent = tessellationLevel;
+            
+            // Update material updates
+            const materialUpdates = materialSystem ? materialSystem.materials.size : 0;
+            document.getElementById('material-updates').textContent = materialUpdates;
+            
+            // Update memory usage (simulated)
+            const memoryUsage = Math.round(Math.random() * 100 + 50);
+            document.getElementById('memory-usage').textContent = `${memoryUsage} MB`;
+            
+            // Update active systems
+            const activeSystems = [
+                document.getElementById('gpu-enabled').checked,
+                document.getElementById('adaptive-tessellation').checked,
+                document.getElementById('autoregressive-enabled').checked,
+                document.getElementById('seasonal-effects').checked,
+                document.getElementById('dynamic-textures').checked
+            ].filter(Boolean).length;
+            document.getElementById('active-systems').textContent = activeSystems;
+        }
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            
+            logEntries.push({ message: logEntry, type });
+            
+            const logOutput = document.getElementById('log-output');
+            const logElement = document.createElement('div');
+            logElement.className = `log-entry ${type}`;
+            logElement.textContent = logEntry;
+            logOutput.appendChild(logElement);
+            
+            // Auto-scroll to bottom
+            logOutput.scrollTop = logOutput.scrollHeight;
+            
+            // Limit log entries
+            if (logEntries.length > 100) {
+                logEntries.shift();
+                if (logOutput.firstChild) {
+                    logOutput.removeChild(logOutput.firstChild);
+                }
+            }
+        }
+
+        // Test functions
+        window.testGPUGeneration = function() {
+            log('Testing GPU procedural generation...', 'info');
+            generateTree();
+        };
+
+        window.testAdaptiveTessellation = function() {
+            log('Testing adaptive tessellation...', 'info');
+            if (adaptiveTessellation) {
+                adaptiveTessellation.setConfig({
+                    minTessellation: parseInt(document.getElementById('min-tessellation').value),
+                    maxTessellation: parseInt(document.getElementById('max-tessellation').value),
+                    curvatureThreshold: parseFloat(document.getElementById('curvature-threshold').value),
+                    performanceBudget: parseFloat(document.getElementById('performance-budget').value)
+                });
+            }
+        };
+
+        window.testAutoregressiveGeneration = function() {
+            log('Testing autoregressive mesh generation...', 'info');
+            if (autoregressiveGenerator) {
+                const sequenceLength = parseInt(document.getElementById('sequence-length').value);
+                const temperature = parseFloat(document.getElementById('generation-temperature').value);
+                
+                const mesh = autoregressiveGenerator.generateMesh([], sequenceLength, temperature);
+                if (mesh) {
+                    threeScene.add(mesh);
+                    log('✅ Autoregressive mesh generated and added to scene', 'info');
+                }
+            }
+        };
+
+        window.testMaterialSystem = function() {
+            log('Testing real-time material system...', 'info');
+            if (materialSystem) {
+                const season = document.getElementById('current-season').value;
+                const weather = {
+                    type: document.getElementById('current-weather').value,
+                    intensity: parseFloat(document.getElementById('weather-intensity').value)
+                };
+                
+                materialSystem.setSeason(season);
+                materialSystem.setWeather(weather);
+                log(`✅ Materials updated for ${season} season with ${weather.type} weather`, 'info');
+            }
+        };
+
+        // Control functions
+        window.toggleWireframe = function() {
+            if (currentTree) {
+                currentTree.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        child.material.wireframe = !child.material.wireframe;
+                    }
+                });
+            }
+        };
+
+        window.toggleSmooth = function() {
+            if (currentTree) {
+                currentTree.traverse((child) => {
+                    if (child.isMesh && child.geometry) {
+                        child.geometry.computeVertexNormals();
+                    }
+                });
+            }
+        };
+
+        window.resetCamera = function() {
+            threeCamera.position.set(20, 20, 20);
+            threeCamera.lookAt(0, 10, 0);
+        };
+
+        window.toggleAnimation = function() {
+            isAnimating = !isAnimating;
+            if (isAnimating) {
+                animate();
+            }
+        };
+
+        window.applyPreset = function(preset) {
+            log(`Applying ${preset} preset...`, 'info');
+            
+            const presets = {
+                oak: { branchCount: 4, levels: 5, length: 12, angle: 45, radius: 1.0 },
+                pine: { branchCount: 3, levels: 6, length: 15, angle: 30, radius: 0.8 },
+                willow: { branchCount: 6, levels: 4, length: 18, angle: 60, radius: 0.6 }
+            };
+            
+            const presetData = presets[preset];
+            if (presetData) {
+                Object.entries(presetData).forEach(([key, value]) => {
+                    const element = document.getElementById(`artist-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`);
+                    if (element) {
+                        if (element.type === 'range') {
+                            element.value = value;
+                        } else if (element.type === 'checkbox') {
+                            element.checked = value;
+                        }
+                    }
+                });
+                
+                generateTree();
+            }
+        };
+
+        window.saveCustomPreset = function() {
+            const name = prompt('Enter preset name:');
+            if (name) {
+                const settings = getArtistSettings();
+                localStorage.setItem(`treePreset_${name}`, JSON.stringify(settings));
+                log(`✅ Preset "${name}" saved`, 'info');
+            }
+        };
+
+        window.exportTree = function() {
+            log('Exporting tree as OBJ...', 'info');
+            // Implementation would export current tree as OBJ file
+        };
+
+        window.clearLog = function() {
+            document.getElementById('log-output').innerHTML = '';
+            logEntries = [];
+        };
+
+        window.exportLog = function() {
+            const logText = logEntries.map(entry => entry.message).join('\n');
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'tree_generation_log.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        };
+
+        window.joinSession = function() {
+            const sessionId = document.getElementById('session-id').value;
+            if (sessionId) {
+                log(`Joining collaboration session: ${sessionId}`, 'info');
+                // Implementation would join collaboration session
+            }
+        };
+
+        window.createSession = function() {
+            const sessionId = Math.random().toString(36).substring(2, 15);
+            document.getElementById('session-id').value = sessionId;
+            log(`Created collaboration session: ${sessionId}`, 'info');
+        };
+
+        window.shareSession = function() {
+            const sessionId = document.getElementById('session-id').value;
+            if (sessionId) {
+                navigator.clipboard.writeText(sessionId);
+                log(`Session ID copied to clipboard: ${sessionId}`, 'info');
+            }
+        };
+
+        // Initialize systems when page loads
+        document.addEventListener('DOMContentLoaded', initializeSystems);
+    </script>
+</body>
+</html> 

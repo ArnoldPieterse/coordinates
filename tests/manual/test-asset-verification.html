@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Verification Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #4CAF50; }
+        .error { background: #f44336; }
+        .info { background: #2196F3; }
+        #console-output {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Asset Verification Test</h1>
+    
+    <div id="test-results"></div>
+    
+    <div class="test-result info">
+        <h3>Console Output</h3>
+        <div id="console-output"></div>
+    </div>
+
+    <div id="app">
+        <div class="test-result error">
+            <h3>React App Mount Point</h3>
+            <p>If you see this, React hasn't mounted yet.</p>
+        </div>
+    </div>
+
+    <script>
+        const resultsDiv = document.getElementById('test-results');
+        const consoleOutput = document.getElementById('console-output');
+
+        function log(message) {
+            consoleOutput.textContent += message + '\n';
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+
+        // Test 1: Check if assets exist
+        async function testAssets() {
+            log('🔍 Testing asset availability...');
+            
+            try {
+                const jsResponse = await fetch('./assets/main-BL-6mf7f.js');
+                log(`JS Status: ${jsResponse.status} ${jsResponse.statusText}`);
+                
+                const cssResponse = await fetch('./assets/main-C9wvIkUM.css');
+                log(`CSS Status: ${cssResponse.status} ${cssResponse.statusText}`);
+                
+                if (jsResponse.ok && cssResponse.ok) {
+                    addResult('✅ Assets found and accessible', 'success');
+                    log('✅ Assets are accessible');
+                } else {
+                    addResult('❌ Assets not accessible', 'error');
+                    log('❌ Assets are not accessible');
+                }
+            } catch (error) {
+                addResult('❌ Asset test failed', 'error');
+                log('❌ Asset test error: ' + error.message);
+            }
+        }
+
+        // Test 2: Load the actual React app
+        async function loadReactApp() {
+            log('🚀 Loading React app...');
+            
+            try {
+                // Load CSS
+                const cssLink = document.createElement('link');
+                cssLink.rel = 'stylesheet';
+                cssLink.href = './assets/main-C9wvIkUM.css';
+                document.head.appendChild(cssLink);
+                log('✅ CSS loaded');
+                
+                // Load JS
+                const script = document.createElement('script');
+                script.type = 'module';
+                script.src = './assets/main-BL-6mf7f.js';
+                script.onload = () => {
+                    log('✅ JavaScript loaded successfully');
+                    addResult('✅ React app loaded', 'success');
+                };
+                script.onerror = (error) => {
+                    log('❌ JavaScript load error: ' + error);
+                    addResult('❌ React app failed to load', 'error');
+                };
+                document.head.appendChild(script);
+                
+            } catch (error) {
+                log('❌ Load error: ' + error.message);
+                addResult('❌ Load failed', 'error');
+            }
+        }
+
+        // Run tests
+        window.addEventListener('load', async () => {
+            log('🚀 Starting asset verification...');
+            await testAssets();
+            await loadReactApp();
+        });
+
+        // Capture console messages
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+
+        console.log = (...args) => {
+            originalLog.apply(console, args);
+            log('LOG: ' + args.join(' '));
+        };
+
+        console.error = (...args) => {
+            originalError.apply(console, args);
+            log('ERROR: ' + args.join(' '));
+        };
+
+        console.warn = (...args) => {
+            originalWarn.apply(console, args);
+            log('WARN: ' + args.join(' '));
+        };
+    </script>
+</body>
+</html> 

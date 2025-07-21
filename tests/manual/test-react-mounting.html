@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Mounting Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-container {
+            border: 2px solid #333;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success { border-color: #4CAF50; }
+        .error { border-color: #f44336; }
+        .info { border-color: #2196F3; }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #45a049; }
+        #console-output {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌌 React App Mounting Test</h1>
+    
+    <div class="test-container info">
+        <h3>Test Status</h3>
+        <div id="test-status">Initializing...</div>
+    </div>
+
+    <div class="test-container">
+        <h3>Manual Tests</h3>
+        <button onclick="testAssetLoading()">Test Asset Loading</button>
+        <button onclick="testReactMounting()">Test React Mounting</button>
+        <button onclick="testNavigation()">Test Navigation</button>
+        <button onclick="clearConsole()">Clear Console</button>
+    </div>
+
+    <div class="test-container">
+        <h3>Console Output</h3>
+        <div id="console-output"></div>
+    </div>
+
+    <div id="app">
+        <div class="test-container error">
+            <h3>React App Should Mount Here</h3>
+            <p>If you see this message, React is not mounting properly.</p>
+        </div>
+    </div>
+
+    <script>
+        // Capture console output
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        const consoleOutput = document.getElementById('console-output');
+        const testStatus = document.getElementById('test-status');
+
+        function logToConsole(type, ...args) {
+            const timestamp = new Date().toLocaleTimeString();
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            consoleOutput.textContent += `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = (...args) => {
+            originalLog.apply(console, args);
+            logToConsole('log', ...args);
+        };
+
+        console.error = (...args) => {
+            originalError.apply(console, args);
+            logToConsole('error', ...args);
+        };
+
+        console.warn = (...args) => {
+            originalWarn.apply(console, args);
+            logToConsole('warn', ...args);
+        };
+
+        function updateTestStatus(message, type = 'info') {
+            testStatus.textContent = message;
+            testStatus.className = type;
+        }
+
+        function clearConsole() {
+            consoleOutput.textContent = '';
+        }
+
+        async function testAssetLoading() {
+            updateTestStatus('Testing asset loading...', 'info');
+            
+            try {
+                // Test CSS loading
+                const cssResponse = await fetch('./assets/main-C9wvIkUM.css');
+                console.log('CSS Status:', cssResponse.status, cssResponse.statusText);
+                
+                // Test JS loading
+                const jsResponse = await fetch('./assets/main-BL-6mf7f.js');
+                console.log('JS Status:', jsResponse.status, jsResponse.statusText);
+                
+                if (cssResponse.ok && jsResponse.ok) {
+                    updateTestStatus('✅ Assets loaded successfully', 'success');
+                } else {
+                    updateTestStatus('❌ Asset loading failed', 'error');
+                }
+            } catch (error) {
+                console.error('Asset loading test failed:', error);
+                updateTestStatus('❌ Asset loading test failed', 'error');
+            }
+        }
+
+        function testReactMounting() {
+            updateTestStatus('Testing React mounting...', 'info');
+            
+            // Check if React is available
+            if (typeof React === 'undefined') {
+                console.error('React is not loaded');
+                updateTestStatus('❌ React not loaded', 'error');
+                return;
+            }
+
+            // Check if ReactDOM is available
+            if (typeof ReactDOM === 'undefined') {
+                console.error('ReactDOM is not loaded');
+                updateTestStatus('❌ ReactDOM not loaded', 'error');
+                return;
+            }
+
+            console.log('React version:', React.version);
+            console.log('ReactDOM version:', ReactDOM.version);
+            
+            // Check if root element exists
+            const root = document.getElementById('app');
+            if (!root) {
+                console.error('App element not found');
+                updateTestStatus('❌ App element not found', 'error');
+                return;
+            }
+
+            console.log('App element found:', root);
+            updateTestStatus('✅ React environment ready', 'success');
+        }
+
+        function testNavigation() {
+            updateTestStatus('Testing navigation...', 'info');
+            
+            // Check if navigation elements exist
+            const navElements = document.querySelectorAll('nav, .navbar, .navigation');
+            console.log('Navigation elements found:', navElements.length);
+            
+            if (navElements.length > 0) {
+                updateTestStatus('✅ Navigation elements found', 'success');
+            } else {
+                updateTestStatus('❌ No navigation elements found', 'error');
+            }
+        }
+
+        // Auto-run tests on page load
+        window.addEventListener('load', async () => {
+            console.log('🚀 Page loaded, running tests...');
+            
+            setTimeout(() => {
+                testAssetLoading();
+            }, 1000);
+            
+            setTimeout(() => {
+                testReactMounting();
+            }, 2000);
+            
+            setTimeout(() => {
+                testNavigation();
+            }, 3000);
+        });
+
+        // Listen for any script loading errors
+        window.addEventListener('error', (event) => {
+            console.error('Script error:', event.error);
+            updateTestStatus('❌ Script error detected', 'error');
+        });
+    </script>
+
+    <!-- Load the actual React app -->
+    <script type="module" src="./assets/main-BL-6mf7f.js"></script>
+    <link rel="stylesheet" href="./assets/main-C9wvIkUM.css">
+</body>
+</html> 
