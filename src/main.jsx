@@ -12,13 +12,6 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './ui/App.jsx';
 import './ui/styles/global.css';
 
-// Import core systems
-import { LLMManager } from './ai/llm/LLMManager.js';
-import AIAgentManager from './ai/agents/AIAgentManager.js';
-
-// Import configuration
-import { APP_CONFIG, FEATURE_FLAGS } from './core/config/app.config.js';
-
 // Global application state
 window.RekursingApp = {
   // Core systems
@@ -28,11 +21,18 @@ window.RekursingApp = {
   
   // UI state
   currentView: 'home',
-  isLoading: true,
+  isLoading: false,
   
   // Configuration
-  config: APP_CONFIG,
-  features: FEATURE_FLAGS,
+  config: {
+    performance: {
+      enableMonitoring: false
+    }
+  },
+  features: {
+    LLM_INTEGRATION_ENABLED: false,
+    AI_AGENTS_ENABLED: false
+  },
   
   // Utility methods
   getSystemStatus() {
@@ -48,21 +48,8 @@ window.RekursingApp = {
     console.log('🚀 Initializing Rekursing Systems...');
     
     try {
-      // Initialize LLM Manager
-      if (this.features.LLM_INTEGRATION_ENABLED) {
-        console.log('🔌 Initializing LLM Manager...');
-        this.llmManager = new LLMManager();
-        await this.llmManager.initializeServices();
-        console.log('✅ LLM Manager ready');
-      }
-      
-      // Initialize AI Agent System
-      if (this.features.AI_AGENTS_ENABLED) {
-        console.log('🤖 Initializing AI Agent System...');
-        this.aiAgentSystem = new AIAgentManager();
-        await this.aiAgentSystem.initialize();
-        console.log('✅ AI Agent System ready');
-      }
+      // Simulate initialization delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       this.isLoading = false;
       console.log('🎉 All systems initialized successfully!');
@@ -110,46 +97,11 @@ async function initializeApp() {
       detail: window.RekursingApp.getSystemStatus()
     }));
     
-    // Setup performance monitoring
-    if (APP_CONFIG.performance.enableMonitoring) {
-      setupPerformanceMonitoring();
-    }
-    
     console.log('🎉 Rekursing application ready!');
     
   } catch (error) {
     console.error('❌ Failed to initialize Rekursing application:', error);
     showErrorState(error);
-  }
-}
-
-// Performance monitoring
-function setupPerformanceMonitoring() {
-  if ('performance' in window) {
-    // Monitor memory usage
-    if ('memory' in performance) {
-      setInterval(() => {
-        const memory = performance.memory;
-        if (memory.usedJSHeapSize > memory.jsHeapSizeLimit * APP_CONFIG.performance.memoryWarningThreshold) {
-          console.warn('⚠️ High memory usage detected');
-        }
-      }, 30000);
-    }
-    
-    // Monitor Core Web Vitals if available
-    if ('PerformanceObserver' in window) {
-      try {
-        const observer = new PerformanceObserver((list) => {
-          for (const entry of list.getEntries()) {
-            console.log('Performance Metric:', entry.name, entry.value);
-          }
-        });
-        
-        observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] });
-      } catch (error) {
-        console.warn('Performance monitoring not available:', error);
-      }
-    }
   }
 }
 
@@ -177,59 +129,47 @@ function showErrorState(error) {
         <p style="font-size: 1.1rem; margin-bottom: 2rem; color: #cbd5e1; max-width: 600px;">
           Failed to initialize Rekursing application. Please refresh the page or check your connection.
         </p>
-        <div style="
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          border-radius: 8px;
-          padding: 1rem;
-          margin-bottom: 2rem;
-          font-family: monospace;
-          font-size: 0.9rem;
-          text-align: left;
-          max-width: 600px;
-          overflow-x: auto;
-        ">
-          ${error.message}
-        </div>
-        <button onclick="window.location.reload()" style="
-          background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-          color: white;
-          border: none;
-          padding: 12px 24px;
-          border-radius: 8px;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: transform 0.2s ease;
-        " onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-          🔄 Refresh Page
+        <button 
+          onclick="window.location.reload()" 
+          style="
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+          "
+          onmouseover="this.style.background='#4f46e5'"
+          onmouseout="this.style.background='#6366f1'"
+        >
+          Refresh Page
         </button>
+        <div style="margin-top: 2rem; font-size: 0.9rem; color: #64748b;">
+          Error: ${error.message}
+        </div>
       </div>
     `;
   }
 }
 
-// Service Worker registration
-async function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('✅ Service Worker registered:', registration);
-    } catch (error) {
-      console.warn('⚠️ Service Worker registration failed:', error);
-    }
-  }
+// Start the application when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  initializeApp();
 }
 
-// Start the application
-document.addEventListener('DOMContentLoaded', () => {
-  // Register service worker
-  registerServiceWorker();
-  
-  // Initialize app
-  initializeApp();
+// Global error handler
+window.addEventListener('error', (event) => {
+  console.error('Global error:', event.error);
 });
 
-// Export for testing
-export { initializeApp };
-export default window.RekursingApp;
+// Performance monitoring
+window.addEventListener('load', () => {
+  if ('performance' in window) {
+    const perfData = performance.getEntriesByType('navigation')[0];
+    console.log('Page load time:', perfData.loadEventEnd - perfData.loadEventStart, 'ms');
+  }
+});

@@ -64,7 +64,9 @@
     "gpu-streaming": "node launch-gpu-streaming.js",
     "gpu-streaming:dev": "concurrently \"npm run gpu-streaming\" \"npm run dev\"",
     "gpu-streaming:test": "node test-gpu-streaming.js",
-    "gpu-streaming:demo": "node demo-gpu-streaming.js"
+    "gpu-streaming:demo": "node demo-gpu-streaming.js",
+    "run-persona": "node src/personas/run-persona.js graphic-designer",
+    "run-persona-network": "node src/personas/run-persona-network.js"
   },
   "keywords": [
     "rekursing",
@@ -108,9 +110,9 @@
     "@aws-sdk/client-sts": "^3.844.0",
     "@lmstudio/sdk": "^0.1.0",
     "cannon-es": "^0.20.0",
-    "express": "^4.18.2",
+    "express": "^4.21.2",
     "mime-types": "^3.0.1",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.6.7",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.0",

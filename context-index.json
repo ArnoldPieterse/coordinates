@@ -1394,84 +1394,87 @@
       "id": "src\\main.jsx",
       "path": "src\\main.jsx",
       "type": "code",
-      "size": 7077,
-      "modified": "2025-07-21T04:18:07.059Z",
+      "size": 4921,
+      "modified": "2025-07-21T06:36:38.843Z",
       "metadata": {
-        "lines": 236,
+        "lines": 176,
         "hasComments": true,
         "hasImports": true,
-        "hasExports": true,
+        "hasExports": false,
         "hasTests": false,
         "hasDocs": true,
-        "lastModified": "2025-07-21T04:18:07.059Z",
+        "lastModified": "2025-07-21T06:36:38.843Z",
         "keywords": [
           "initializeApp",
-          "setupPerformanceMonitoring",
           "showErrorState",
-          "registerServiceWorker",
           "container",
           "root",
-          "memory",
-          "observer",
-          "entry",
-          "registration"
+          "perfData",
+          "react",
+          "react-dom/client",
+          "react-router-dom",
+          "./ui/App.jsx"
         ]
       },
-      "content": "/**\r\n * Rekursing - Unified Application Entry Point\r\n * Recursive AI Gaming System\r\n * \r\n * This is the single, unified entry point for the Rekursing application.\r\n * It integrates React UI, AI systems, and game components efficiently.\r\n */\r\n\r\nimport React from 'react';\r\nimport { createRoot } from 'react-dom/client';\r\nimport { BrowserRouter } from 'react-router-dom';\r\nimport App from './ui/App.jsx';\r\nimport './ui/styles/global.css';\r\n\r\n// Import core systems\r\nimport { LLMManager } from './ai/llm/LLMManager.js';\r\nimport AIAgentManager from './ai/agents/AIAgentManager.js';\r\n\r\n// Import configuration\r\nimport { APP_CONFIG, FEATURE_FLAGS } from './core/config/app.config.js';\r\n\r\n// Global application state\r\nwindow.RekursingApp = {\r\n  // Core systems\r\n  llmManager: null,\r\n  aiAgentSystem: null,\r\n  gameSystem: null,\r\n  \r\n  // UI state\r\n  currentView: 'home',\r\n  isLoading: true,\r\n  \r\n  // Configuration\r\n  config: APP_CONFIG,\r\n  features: FEATURE_FLAGS,\r\n  \r\n  // Utility methods\r\n  getSystemStat"
+      "content": "/**\r\n * Rekursing - Unified Application Entry Point\r\n * Recursive AI Gaming System\r\n * \r\n * This is the single, unified entry point for the Rekursing application.\r\n * It integrates React UI, AI systems, and game components efficiently.\r\n */\r\n\r\nimport React from 'react';\r\nimport { createRoot } from 'react-dom/client';\r\nimport { BrowserRouter } from 'react-router-dom';\r\nimport App from './ui/App.jsx';\r\nimport './ui/styles/global.css';\r\n\r\n// Global application state\r\nwindow.RekursingApp = {\r\n  // Core systems\r\n  llmManager: null,\r\n  aiAgentSystem: null,\r\n  gameSystem: null,\r\n  \r\n  // UI state\r\n  currentView: 'home',\r\n  isLoading: false,\r\n  \r\n  // Configuration\r\n  config: {\r\n    performance: {\r\n      enableMonitoring: false\r\n    }\r\n  },\r\n  features: {\r\n    LLM_INTEGRATION_ENABLED: false,\r\n    AI_AGENTS_ENABLED: false\r\n  },\r\n  \r\n  // Utility methods\r\n  getSystemStatus() {\r\n    return {\r\n      llmManager: !!this.llmManager,\r\n      aiAgentSystem: !!this.aiAgentSystem,\r\n      isLoading: this.i"
     },
     {
       "id": "src\\ui\\App.jsx",
       "path": "src\\ui\\App.jsx",
       "type": "code",
-      "size": 6046,
-      "modified": "2025-07-21T04:51:02.220Z",
+      "size": 7656,
+      "modified": "2025-07-21T07:08:20.626Z",
       "metadata": {
-        "lines": 173,
+        "lines": 225,
         "hasComments": true,
         "hasImports": true,
         "hasExports": true,
         "hasTests": false,
         "hasDocs": false,
-        "lastModified": "2025-07-21T04:51:02.220Z",
+        "lastModified": "2025-07-21T07:08:20.626Z",
         "keywords": [
           "App",
+          "AppContext",
+          "useAppContext",
+          "context",
           "initializeApp",
-          "connection",
-          "stats",
-          "handleRekursingReady",
-          "setupRealtimeUpdates",
-          "statsInterval",
-          "healthInterval",
-          "healthy",
-          "appContext"
+          "loadUserPreferences",
+          "saved",
+          "prefs",
+          "saveUserPreferences",
+          "updated"
         ]
       },
-      "content": "import React, { useState, useEffect } from 'react';\r\nimport { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';\r\nimport NavBar from './components/NavBar';\r\nimport Home from './pages/Home';\r\nimport Play from './pages/Play';\r\nimport AIAgentDashboard from './pages/AIAgentDashboard';\r\nimport GenLab from './pages/GenLab';\r\nimport Docs from './pages/Docs';\r\nimport Tools from './pages/Tools';\r\nimport Settings from './pages/Settings';\r\nimport SocialAI from './pages/SocialAI';\r\nimport ContextDashboard from './pages/ContextDashboard';\r\nimport unifiedService from '../core/services/unifiedService';\r\nimport './styles/global.css';\r\n\r\nexport default function App() {\r\n  const [systemStatus, setSystemStatus] = useState('initializing');\r\n  const [connectionStatus, setConnectionStatus] = useState({});\r\n  const [systemStats, setSystemStats] = useState({});\r\n\r\n  // Initialize the application\r\n  useEffect(() => {\r\n    const initializeApp = async () => {\r\n      try {\r\n        setSys"
+      "content": "import React, { useState, useEffect, createContext, useContext } from 'react';\r\nimport { Routes, Route, Navigate } from 'react-router-dom';\r\nimport NavBar from './components/NavBar';\r\nimport Home from './pages/Home';\r\nimport './styles/global.css';\r\n\r\n// Create global context\r\nexport const AppContext = createContext();\r\n\r\nexport const useAppContext = () => {\r\n  const context = useContext(AppContext);\r\n  if (!context) {\r\n    throw new Error('useAppContext must be used within an AppProvider');\r\n  }\r\n  return context;\r\n};\r\n\r\nexport default function App() {\r\n  const [systemStatus, setSystemStatus] = useState('ready');\r\n  const [systemStats, setSystemStats] = useState({\r\n    agents: { total: 5, active: 3 },\r\n    players: { total: 12, online: 8 },\r\n    jobs: { total: 15 }\r\n  });\r\n  const [userPreferences, setUserPreferences] = useState({\r\n    theme: 'dark',\r\n    language: 'en',\r\n    notifications: true,\r\n    autoSave: true\r\n  });\r\n  const [notifications, setNotifications] = useState([]);\r\n  c"
     },
     {
       "id": "src\\ui\\components\\NavBar.jsx",
       "path": "src\\ui\\components\\NavBar.jsx",
       "type": "code",
-      "size": 1754,
-      "modified": "2025-07-21T04:51:24.631Z",
+      "size": 4312,
+      "modified": "2025-07-21T06:25:00.988Z",
       "metadata": {
-        "lines": 52,
-        "hasComments": false,
+        "lines": 124,
+        "hasComments": true,
         "hasImports": true,
         "hasExports": true,
         "hasTests": false,
         "hasDocs": false,
-        "lastModified": "2025-07-21T04:51:24.631Z",
+        "lastModified": "2025-07-21T06:25:00.988Z",
         "keywords": [
           "NavBar",
           "location",
           "navItems",
-          "function",
+          "toggleTheme",
+          "newTheme",
+          "toggleMobileMenu",
+          "closeMobileMenu",
           "react",
-          "react-router-dom"
+          "react-router-dom",
+          "../App"
         ]
       },
-      "content": "import React from 'react';\r\nimport { Link, useLocation } from 'react-router-dom';\r\nimport './NavBar.css';\r\n\r\nexport default function NavBar() {\r\n  const location = useLocation();\r\n\r\n  const navItems = [\r\n    { path: '/', label: 'Home', icon: '🏠' },\r\n    { path: '/play', label: 'Play', icon: '🎮' },\r\n    { path: '/ai-dashboard', label: 'AI Agents', icon: '🤖' },\r\n    { path: '/genlab', label: 'GenLab', icon: '🧬' },\r\n    { path: '/social-ai', label: 'Social AI', icon: '��' },\r\n    { path: '/context', label: 'Context', icon: '🧠' },\r\n    { path: '/tools', label: 'Tools', icon: '🛠️' },\r\n    { path: '/docs', label: 'Docs', icon: '📚' },\r\n    { path: '/settings', label: 'Settings', icon: '⚙️' }\r\n  ];\r\n\r\n  return (\r\n    <nav className=\"navbar\">\r\n      <div className=\"navbar-container\">\r\n        <div className=\"navbar-brand\">\r\n          <Link to=\"/\" className=\"brand-link\">\r\n            <span className=\"brand-icon\">🌌</span>\r\n            <span className=\"brand-text\">Rekursing</span>\r\n       "
+      "content": "import React, { useState } from 'react';\r\nimport { Link, useLocation } from 'react-router-dom';\r\nimport { useAppContext } from '../App';\r\nimport './NavBar.css';\r\n\r\nconst NavBar = () => {\r\n  const { systemStatus, userPreferences, updatePreferences } = useAppContext();\r\n  const location = useLocation();\r\n  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);\r\n\r\n  const navItems = [\r\n    { path: '/', label: '🏠 Home', icon: '🏠' },\r\n    { path: '/trading', label: '📈 Trading', icon: '📈' },\r\n    { path: '/ai-dashboard', label: '🤖 AI Agents', icon: '🤖' },\r\n    { path: '/genlab', label: '🧪 GenLab', icon: '🧪' },\r\n    { path: '/social-ai', label: '💬 Social AI', icon: '💬' },\r\n    { path: '/context', label: '🧠 Context', icon: '🧠' },\r\n    { path: '/tools', label: '🛠️ Tools', icon: '🛠️' },\r\n    { path: '/docs', label: '📚 Docs', icon: '📚' },\r\n    { path: '/settings', label: '⚙️ Settings', icon: '⚙️' }\r\n  ];\r\n\r\n  const toggleTheme = () => {\r\n    const newTheme = userPreferen"
     },
     {
       "id": "src\\ui\\pages\\AIAgentDashboard.jsx",
@@ -1572,23 +1575,26 @@
       "id": "src\\ui\\pages\\Home.jsx",
       "path": "src\\ui\\pages\\Home.jsx",
       "type": "code",
-      "size": 923,
-      "modified": "2025-07-21T04:36:21.288Z",
+      "size": 10657,
+      "modified": "2025-07-21T06:24:22.378Z",
       "metadata": {
-        "lines": 26,
-        "hasComments": false,
+        "lines": 306,
+        "hasComments": true,
         "hasImports": true,
         "hasExports": true,
         "hasTests": false,
         "hasDocs": false,
-        "lastModified": "2025-07-21T04:36:21.288Z",
+        "lastModified": "2025-07-21T06:24:22.378Z",
         "keywords": [
           "Home",
-          "function",
-          "react"
+          "features",
+          "quickActions",
+          "react",
+          "react-router-dom",
+          "../App"
         ]
       },
-      "content": "import React from 'react';\r\n\r\nexport default function Home({ appContext }) {\r\n  return (\r\n    <div className=\"home-page\">\r\n      <div className=\"hero-section\">\r\n        <h1>🌌 Welcome to Rekursing</h1>\r\n        <p>Recursive AI Gaming System</p>\r\n        <div className=\"hero-stats\">\r\n          <div className=\"stat\">\r\n            <span className=\"stat-number\">{appContext?.getAgentCount() || 0}</span>\r\n            <span className=\"stat-label\">AI Agents</span>\r\n          </div>\r\n          <div className=\"stat\">\r\n            <span className=\"stat-number\">{appContext?.getPlayerCount() || 0}</span>\r\n            <span className=\"stat-label\">Players</span>\r\n          </div>\r\n          <div className=\"stat\">\r\n            <span className=\"stat-number\">{appContext?.getJobCount() || 0}</span>\r\n            <span className=\"stat-label\">Active Jobs</span>\r\n          </div>\r\n        </div>\r\n      </div>\r\n    </div>\r\n  );\r\n} "
+      "content": "import React from 'react';\r\nimport { Link } from 'react-router-dom';\r\nimport { useAppContext } from '../App';\r\nimport './Home.css';\r\n\r\nconst Home = () => {\r\n  const { systemStatus, systemStats } = useAppContext();\r\n\r\n  const features = [\r\n    {\r\n      icon: '🤖',\r\n      title: 'AI-Powered Trading',\r\n      description: 'Advanced transformer models for intelligent market analysis and signal generation',\r\n      link: '/trading',\r\n      color: 'var(--accent)'\r\n    },\r\n    {\r\n      icon: '🎮',\r\n      title: 'Interactive Gaming',\r\n      description: 'Immersive gaming experience with AI agents and dynamic environments',\r\n      link: '/play',\r\n      color: 'var(--success)'\r\n    },\r\n    {\r\n      icon: '🧠',\r\n      title: 'Context Management',\r\n      description: 'Persistent context system with knowledge graphs and memory management',\r\n      link: '/context',\r\n      color: 'var(--info)'\r\n    },\r\n    {\r\n      icon: '💬',\r\n      title: 'Social AI',\r\n      description: 'AI-powered social interactio"
     },
     {
       "id": "src\\ui\\pages\\Play.jsx",
@@ -2054,6 +2060,93 @@
         ]
       },
       "content": "/**\r\n * Coordinates - Service Worker\r\n * Provides offline functionality and caching for the public website\r\n * IDX-SW-001: Service worker implementation\r\n */\r\n\r\nconst CACHE_NAME = 'coordinates-v1.0.0';\r\nconst STATIC_CACHE = 'coordinates-static-v1.0.0';\r\nconst DYNAMIC_CACHE = 'coordinates-dynamic-v1.0.0';\r\n\r\n// Files to cache immediately\r\nconst STATIC_FILES = [\r\n    '/',\r\n    '/css/main.css',\r\n    '/css/game-launcher.css',\r\n    '/js/main.js',\r\n    '/js/game-launcher.js',\r\n    '/assets/favicon.ico',\r\n    '/assets/apple-touch-icon.png',\r\n    '/robots.txt',\r\n    '/sitemap.xml'\r\n];\r\n\r\n// API endpoints to cache\r\nconst API_CACHE = [\r\n    '/api/status',\r\n    '/api/players',\r\n    '/api/servers'\r\n];\r\n\r\n// ===== INSTALL EVENT =====\r\nself.addEventListener('install', (event) => {\r\n    console.log('🚀 Service Worker installing...');\r\n    \r\n    event.waitUntil(\r\n        caches.open(STATIC_CACHE)\r\n            .then((cache) => {\r\n                console.log('📦 Caching static files...');\r\n             "
+    },
+    {
+      "id": "src\\game\\mechanics\\DataLoader.js",
+      "path": "src\\game\\mechanics\\DataLoader.js",
+      "type": "code",
+      "size": 7112,
+      "modified": "2025-07-21T05:42:59.234Z",
+      "metadata": {
+        "lines": 206,
+        "hasComments": true,
+        "hasImports": false,
+        "hasExports": true,
+        "hasTests": false,
+        "hasDocs": false,
+        "lastModified": "2025-07-21T05:42:59.234Z",
+        "keywords": [
+          "DataLoader",
+          "response",
+          "csvText",
+          "data",
+          "lines",
+          "headers",
+          "values",
+          "row",
+          "basePrice",
+          "startTime"
+        ]
+      },
+      "content": "/**\r\n * Data Loader for Transformer Trading System\r\n * Handles loading and processing of financial data from various sources\r\n */\r\n\r\nexport class DataLoader {\r\n    constructor() {\r\n        this.dataCache = new Map();\r\n        this.processedData = [];\r\n    }\r\n\r\n    // Load EURUSD sample data from CSV\r\n    async loadEURUSDSampleData() {\r\n        try {\r\n            console.log('📊 Loading EURUSD sample data...');\r\n            \r\n            const response = await fetch('/src/data/eurusd_sample.csv');\r\n            if (!response.ok) {\r\n                throw new Error(`Failed to load CSV: ${response.status}`);\r\n            }\r\n            \r\n            const csvText = await response.text();\r\n            const data = this.parseCSV(csvText);\r\n            \r\n            console.log(`✅ Loaded ${data.length} EURUSD data points`);\r\n            return data;\r\n            \r\n        } catch (error) {\r\n            console.error('❌ Failed to load EURUSD data:', error);\r\n            // Fallback to generated"
+    },
+    {
+      "id": "src\\game\\mechanics\\TransformerTrading.js",
+      "path": "src\\game\\mechanics\\TransformerTrading.js",
+      "type": "code",
+      "size": 27326,
+      "modified": "2025-07-21T05:43:34.167Z",
+      "metadata": {
+        "lines": 860,
+        "hasComments": true,
+        "hasImports": true,
+        "hasExports": true,
+        "hasTests": false,
+        "hasDocs": false,
+        "lastModified": "2025-07-21T05:43:34.167Z",
+        "keywords": [
+          "TransformerTrading",
+          "softmax",
+          "savedModel",
+          "weights",
+          "scale",
+          "value",
+          "range",
+          "indicators",
+          "bb",
+          "macd"
+        ]
+      },
+      "content": "/**\r\n * Transformer Trading System - Advanced AI-powered trading\r\n * Integrates transformer models with technical analysis for enhanced trading decisions\r\n * Based on concepts from Transformers_Trading_01 repository\r\n */\r\n\r\nimport { MeanReversionRSI } from './MeanReversionRSI.js';\r\nimport { DataLoader } from './DataLoader.js';\r\n\r\nexport class TransformerTrading {\r\n  constructor() {\r\n    this.meanReversionRSI = new MeanReversionRSI();\r\n    this.dataLoader = new DataLoader();\r\n    this.model = null;\r\n    this.scaler = null;\r\n    this.featureColumns = [\r\n      'open', 'high', 'low', 'close', 'volume',\r\n      'rsi', 'bb_high', 'bb_low', 'ma_20', 'ma_20_slope',\r\n      'macd', 'macd_signal', 'macd_histogram',\r\n      'stoch_k', 'stoch_d', 'atr'\r\n    ];\r\n    this.sequenceLength = 60; // Number of time steps to look back\r\n    this.predictionLength = 5; // Number of future steps to predict\r\n    this.isModelLoaded = false;\r\n    this.trainingData = [];\r\n    this.validationData = [];\r\n    this.proc"
+    },
+    {
+      "id": "src\\ui\\pages\\TradingDashboard.jsx",
+      "path": "src\\ui\\pages\\TradingDashboard.jsx",
+      "type": "code",
+      "size": 20299,
+      "modified": "2025-07-21T05:54:40.979Z",
+      "metadata": {
+        "lines": 518,
+        "hasComments": true,
+        "hasImports": true,
+        "hasExports": true,
+        "hasTests": false,
+        "hasDocs": false,
+        "lastModified": "2025-07-21T05:54:40.979Z",
+        "keywords": [
+          "TradingDashboard",
+          "loadInitialData",
+          "data",
+          "stats",
+          "modelStats",
+          "chartPoints",
+          "trainModel",
+          "generateSignals",
+          "newSignals",
+          "getSignalColor"
+        ]
+      },
+      "content": "import React, { useState, useEffect } from 'react';\r\nimport { useAppContext } from '../App';\r\nimport './TradingDashboard.css';\r\n\r\nconst TradingDashboard = () => {\r\n  const { transformerTrading, addNotification } = useAppContext();\r\n  const [isLoading, setIsLoading] = useState(false);\r\n  const [dataLoaded, setDataLoaded] = useState(false);\r\n  const [modelTrained, setModelTrained] = useState(false);\r\n  const [signals, setSignals] = useState([]);\r\n  const [dataStats, setDataStats] = useState(null);\r\n  const [modelStats, setModelStats] = useState(null);\r\n  const [activeTab, setActiveTab] = useState('overview');\r\n  const [chartData, setChartData] = useState([]);\r\n\r\n  useEffect(() => {\r\n    if (transformerTrading) {\r\n      loadInitialData();\r\n    }\r\n  }, [transformerTrading]);\r\n\r\n  const loadInitialData = async () => {\r\n    try {\r\n      setIsLoading(true);\r\n      \r\n      // Load real data\r\n      const data = await transformerTrading.loadRealData();\r\n      setDataLoaded(true);\r\n      \r\n      "
     }
   ],
   "docs": [
@@ -3314,6 +3407,57 @@
         "lastModified": "2025-07-21T04:53:32.692Z"
       },
       "content": "# sw\n\n## Overview\nAuto-generated documentation for `public\\sw.js`\n\n## File Information\n- **Path**: `public\\sw.js`\n- **Type**: code\n- **Size**: 9158 bytes\n- **Last Modified**: Mon Jul 14 2025 14:58:39 GMT+1000 (Australian Eastern Standard Time)\n\n## Keywords\n- `handleStaticFile`\n- `handleAPIRequest`\n- `handleDynamicRequest`\n- `isStaticFile`\n- `isAPIRequest`\n- `performBackgroundSync`\n- `cleanupOldCaches`\n- `CACHE_NAME`\n- `STATIC_CACHE`\n- `DYNAMIC_CACHE`\n\n## Dependencies\n- No dependencies detected\n\n## Usage\n```javascript\n// TODO: Add usage examples\n```\n\n---\n*Generated by ContextAutomation*\n"
+    },
+    {
+      "id": "docs\\code\\game\\mechanics\\DataLoader.md",
+      "path": "docs\\code\\game\\mechanics\\DataLoader.md",
+      "type": "docs",
+      "size": 579,
+      "modified": "2025-07-21T06:03:38.946Z",
+      "metadata": {
+        "lines": 34,
+        "hasComments": true,
+        "hasImports": false,
+        "hasExports": false,
+        "hasTests": false,
+        "hasDocs": true,
+        "lastModified": "2025-07-21T06:03:38.946Z"
+      },
+      "content": "# DataLoader\n\n## Overview\nAuto-generated documentation for `src\\game\\mechanics\\DataLoader.js`\n\n## File Information\n- **Path**: `src\\game\\mechanics\\DataLoader.js`\n- **Type**: code\n- **Size**: 7112 bytes\n- **Last Modified**: Mon Jul 21 2025 15:42:59 GMT+1000 (Australian Eastern Standard Time)\n\n## Keywords\n- `DataLoader`\n- `response`\n- `csvText`\n- `data`\n- `lines`\n- `headers`\n- `values`\n- `row`\n- `basePrice`\n- `startTime`\n\n## Dependencies\n- `src\\game\\mechanics\\TransformerTrading.js`\n\n## Usage\n```javascript\n// TODO: Add usage examples\n```\n\n---\n*Generated by ContextAutomation*\n"
+    },
+    {
+      "id": "docs\\code\\game\\mechanics\\TransformerTrading.md",
+      "path": "docs\\code\\game\\mechanics\\TransformerTrading.md",
+      "type": "docs",
+      "size": 663,
+      "modified": "2025-07-21T06:03:38.948Z",
+      "metadata": {
+        "lines": 36,
+        "hasComments": true,
+        "hasImports": false,
+        "hasExports": false,
+        "hasTests": false,
+        "hasDocs": true,
+        "lastModified": "2025-07-21T06:03:38.948Z"
+      },
+      "content": "# TransformerTrading\n\n## Overview\nAuto-generated documentation for `src\\game\\mechanics\\TransformerTrading.js`\n\n## File Information\n- **Path**: `src\\game\\mechanics\\TransformerTrading.js`\n- **Type**: code\n- **Size**: 27326 bytes\n- **Last Modified**: Mon Jul 21 2025 15:43:34 GMT+1000 (Australian Eastern Standard Time)\n\n## Keywords\n- `TransformerTrading`\n- `softmax`\n- `savedModel`\n- `weights`\n- `scale`\n- `value`\n- `range`\n- `indicators`\n- `bb`\n- `macd`\n\n## Dependencies\n- `src\\game\\mechanics\\MeanReversionRSI.js`\n- `src\\game\\mechanics\\DataLoader.js`\n- `src\\ui\\App.jsx`\n\n## Usage\n```javascript\n// TODO: Add usage examples\n```\n\n---\n*Generated by ContextAutomation*\n"
+    },
+    {
+      "id": "docs\\code\\ui\\pages\\TradingDashboard.md",
+      "path": "docs\\code\\ui\\pages\\TradingDashboard.md",
+      "type": "docs",
+      "size": 623,
+      "modified": "2025-07-21T06:03:38.951Z",
+      "metadata": {
+        "lines": 35,
+        "hasComments": true,
+        "hasImports": false,
+        "hasExports": false,
+        "hasTests": false,
+        "hasDocs": true,
+        "lastModified": "2025-07-21T06:03:38.951Z"
+      },
+      "content": "# TradingDashboard\n\n## Overview\nAuto-generated documentation for `src\\ui\\pages\\TradingDashboard.jsx`\n\n## File Information\n- **Path**: `src\\ui\\pages\\TradingDashboard.jsx`\n- **Type**: code\n- **Size**: 20299 bytes\n- **Last Modified**: Mon Jul 21 2025 15:54:40 GMT+1000 (Australian Eastern Standard Time)\n\n## Keywords\n- `TradingDashboard`\n- `loadInitialData`\n- `data`\n- `stats`\n- `modelStats`\n- `chartPoints`\n- `trainModel`\n- `generateSignals`\n- `newSignals`\n- `getSignalColor`\n\n## Dependencies\n- `src\\ui\\App.jsx`\n- `src\\ui\\App.jsx`\n\n## Usage\n```javascript\n// TODO: Add usage examples\n```\n\n---\n*Generated by ContextAutomation*\n"
     }
   ],
   "tests": [],
@@ -4073,18 +4217,18 @@
       "id": "src\\ui\\components\\NavBar.css",
       "path": "src\\ui\\components\\NavBar.css",
       "type": "other",
-      "size": 3161,
-      "modified": "2025-07-21T04:35:58.314Z",
+      "size": 7432,
+      "modified": "2025-07-21T05:59:06.124Z",
       "metadata": {
-        "lines": 186,
+        "lines": 413,
         "hasComments": true,
         "hasImports": false,
         "hasExports": false,
         "hasTests": false,
-        "hasDocs": true,
-        "lastModified": "2025-07-21T04:35:58.314Z"
+        "hasDocs": false,
+        "lastModified": "2025-07-21T05:59:06.124Z"
       },
-      "content": "/* NavBar Component Styles */\r\n\r\n.navbar {\r\n  background: rgba(15, 23, 42, 0.95);\r\n  backdrop-filter: blur(10px);\r\n  -webkit-backdrop-filter: blur(10px);\r\n  border-bottom: 1px solid rgba(255, 255, 255, 0.1);\r\n  position: sticky;\r\n  top: 0;\r\n  z-index: 1000;\r\n  padding: 0.5rem 0;\r\n}\r\n\r\n.navbar-container {\r\n  max-width: 1200px;\r\n  margin: 0 auto;\r\n  padding: 0 2rem;\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n}\r\n\r\n.navbar-brand {\r\n  display: flex;\r\n  align-items: center;\r\n}\r\n\r\n.brand-link {\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 0.75rem;\r\n  text-decoration: none;\r\n  color: #f8fafc;\r\n  font-weight: 700;\r\n  font-size: 1.25rem;\r\n  transition: transform 0.2s ease;\r\n}\r\n\r\n.brand-link:hover {\r\n  transform: translateY(-1px);\r\n}\r\n\r\n.brand-icon {\r\n  font-size: 1.5rem;\r\n  background: linear-gradient(135deg, #6366f1, #8b5cf6);\r\n  -webkit-background-clip: text;\r\n  -webkit-text-fill-color: transparent;\r\n  background-clip: text;\r\n}\r\n\r\n.brand-text {\r\n  backgr"
+      "content": "/* Navigation Bar Styles */\r\n\r\n.navbar {\r\n  background: rgba(255, 255, 255, 0.1);\r\n  backdrop-filter: blur(10px);\r\n  -webkit-backdrop-filter: blur(10px);\r\n  border-bottom: 1px solid var(--border);\r\n  padding: 1rem 2rem;\r\n  position: sticky;\r\n  top: 0;\r\n  z-index: 1000;\r\n  transition: var(--transition);\r\n}\r\n\r\n.navbar-content {\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: space-between;\r\n  max-width: 1400px;\r\n  margin: 0 auto;\r\n}\r\n\r\n/* Brand */\r\n.navbar-brand {\r\n  font-size: 1.5rem;\r\n  font-weight: 700;\r\n  color: var(--text-primary);\r\n  display: flex;\r\n  align-items: center;\r\n  gap: 0.75rem;\r\n  text-decoration: none;\r\n  transition: var(--transition);\r\n}\r\n\r\n.navbar-brand:hover {\r\n  color: var(--accent);\r\n  transform: translateY(-1px);\r\n}\r\n\r\n.navbar-brand .logo {\r\n  width: 40px;\r\n  height: 40px;\r\n  background: linear-gradient(45deg, var(--accent), var(--accent-hover));\r\n  border-radius: var(--border-radius);\r\n  display: flex;\r\n  align-items: center;\r\n  justify-content: cen"
     },
     {
       "id": "src\\ui\\pages\\ContextDashboard.css",
@@ -4141,18 +4285,18 @@
       "id": "src\\ui\\styles\\global.css",
       "path": "src\\ui\\styles\\global.css",
       "type": "other",
-      "size": 3148,
-      "modified": "2025-07-05T01:40:23.289Z",
+      "size": 14940,
+      "modified": "2025-07-21T05:52:43.210Z",
       "metadata": {
-        "lines": 157,
+        "lines": 709,
         "hasComments": true,
         "hasImports": false,
         "hasExports": false,
         "hasTests": false,
         "hasDocs": true,
-        "lastModified": "2025-07-05T01:40:23.289Z"
+        "lastModified": "2025-07-21T05:52:43.210Z"
       },
-      "content": "/* IDX-DOC-00: For index reference format, see INDEX_DESCRIBER.md */\r\n/* IDX-STYLE-01: Main Stylesheet */\r\n/* Basic styles for the Multiplayer Planetary Shooter */\r\n\r\nbody {\r\n    margin: 0;\r\n    padding: 0;\r\n    font-family: Arial, sans-serif;\r\n    overflow: hidden;\r\n    background: #000;\r\n}\r\n\r\n#game-container {\r\n    position: absolute;\r\n    top: 0;\r\n    left: 0;\r\n    width: 100%;\r\n    height: 100%;\r\n}\r\n\r\n#ui-container {\r\n    position: absolute;\r\n    top: 0;\r\n    left: 0;\r\n    width: 100%;\r\n    height: 100%;\r\n    pointer-events: none;\r\n    z-index: 1000;\r\n}\r\n\r\n#connection-status {\r\n    position: absolute;\r\n    top: 10px;\r\n    right: 10px;\r\n    color: white;\r\n    background: rgba(0, 0, 0, 0.7);\r\n    padding: 5px 10px;\r\n    border-radius: 5px;\r\n    font-size: 12px;\r\n    pointer-events: auto;\r\n}\r\n\r\n#player-stats {\r\n    position: absolute;\r\n    top: 10px;\r\n    left: 10px;\r\n    color: white;\r\n    background: rgba(0, 0, 0, 0.7);\r\n    padding: 10px;\r\n    border-radius: 5px;\r\n    font-size: 14"
+      "content": "/* Rekursing UI - Global Styles */\r\n\r\n/* CSS Variables for Theming */\r\n:root {\r\n  /* Light Theme */\r\n  --light-bg-primary: #ffffff;\r\n  --light-bg-secondary: #f8f9fa;\r\n  --light-bg-tertiary: #e9ecef;\r\n  --light-text-primary: #212529;\r\n  --light-text-secondary: #6c757d;\r\n  --light-text-muted: #adb5bd;\r\n  --light-border: #dee2e6;\r\n  --light-accent: #007bff;\r\n  --light-accent-hover: #0056b3;\r\n  --light-success: #28a745;\r\n  --light-warning: #ffc107;\r\n  --light-error: #dc3545;\r\n  --light-info: #17a2b8;\r\n\r\n  /* Dark Theme */\r\n  --dark-bg-primary: #0d1117;\r\n  --dark-bg-secondary: #161b22;\r\n  --dark-bg-tertiary: #21262d;\r\n  --dark-text-primary: #f0f6fc;\r\n  --dark-text-secondary: #8b949e;\r\n  --dark-text-muted: #484f58;\r\n  --dark-border: #30363d;\r\n  --dark-accent: #58a6ff;\r\n  --dark-accent-hover: #79c0ff;\r\n  --dark-success: #3fb950;\r\n  --dark-warning: #d29922;\r\n  --dark-error: #f85149;\r\n  --dark-info: #58a6ff;\r\n\r\n  /* Common */\r\n  --border-radius: 8px;\r\n  --border-radius-lg: 12px;\r\n  --border-rad"
     },
     {
       "id": "public\\css\\game-launcher.css",
@@ -4262,6 +4406,40 @@
         ]
       },
       "content": "<!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>Offline - Coordinates | Rekursing.com</title>\r\n    <meta name=\"description\" content=\"You're currently offline. Check your connection and try again.\">\r\n    \r\n    <!-- Favicon -->\r\n    <link rel=\"icon\" type=\"image/x-icon\" href=\"/assets/favicon.ico\">\r\n    \r\n    <!-- Styles -->\r\n    <link rel=\"stylesheet\" href=\"/css/main.css\">\r\n    \r\n    <!-- Fonts -->\r\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\r\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\r\n    <link href=\"https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap\" rel=\"stylesheet\">\r\n    \r\n    <style>\r\n        .offline-page {\r\n            min-height: 100vh;\r\n            background: var(--background-dark);\r\n            display: flex;\r\n            align-items: center;\r\n          "
+    },
+    {
+      "id": "src\\ui\\pages\\Home.css",
+      "path": "src\\ui\\pages\\Home.css",
+      "type": "other",
+      "size": 12600,
+      "modified": "2025-07-21T05:58:29.043Z",
+      "metadata": {
+        "lines": 692,
+        "hasComments": true,
+        "hasImports": false,
+        "hasExports": false,
+        "hasTests": false,
+        "hasDocs": false,
+        "lastModified": "2025-07-21T05:58:29.043Z"
+      },
+      "content": "/* Home Page Styles */\r\n\r\n.home-page {\r\n  max-width: 1400px;\r\n  margin: 0 auto;\r\n  padding: 0;\r\n}\r\n\r\n/* Hero Section */\r\n.hero-section {\r\n  padding: 4rem 0;\r\n  margin-bottom: 4rem;\r\n  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);\r\n  border-radius: var(--border-radius-xl);\r\n  border: 1px solid var(--border);\r\n  overflow: hidden;\r\n  position: relative;\r\n}\r\n\r\n.hero-section::before {\r\n  content: '';\r\n  position: absolute;\r\n  top: 0;\r\n  left: 0;\r\n  right: 0;\r\n  bottom: 0;\r\n  background: radial-gradient(circle at 30% 20%, rgba(88, 166, 255, 0.1) 0%, transparent 50%),\r\n              radial-gradient(circle at 70% 80%, rgba(40, 167, 69, 0.1) 0%, transparent 50%);\r\n  pointer-events: none;\r\n}\r\n\r\n.hero-content {\r\n  display: grid;\r\n  grid-template-columns: 1fr 1fr;\r\n  gap: 4rem;\r\n  align-items: center;\r\n  padding: 0 2rem;\r\n  position: relative;\r\n  z-index: 1;\r\n}\r\n\r\n.hero-text {\r\n  max-width: 600px;\r\n}\r\n\r\n.hero-title {\r\n  font-size: 3.5rem;\r\n  font-weight: 700"
+    },
+    {
+      "id": "src\\ui\\pages\\TradingDashboard.css",
+      "path": "src\\ui\\pages\\TradingDashboard.css",
+      "type": "other",
+      "size": 9718,
+      "modified": "2025-07-21T05:55:27.638Z",
+      "metadata": {
+        "lines": 551,
+        "hasComments": true,
+        "hasImports": false,
+        "hasExports": false,
+        "hasTests": false,
+        "hasDocs": false,
+        "lastModified": "2025-07-21T05:55:27.638Z"
+      },
+      "content": "/* Trading Dashboard Styles */\r\n\r\n.trading-dashboard {\r\n  max-width: 1400px;\r\n  margin: 0 auto;\r\n  padding: 0;\r\n}\r\n\r\n.dashboard-header {\r\n  text-align: center;\r\n  margin-bottom: 2rem;\r\n  padding: 2rem;\r\n  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);\r\n  border-radius: var(--border-radius-xl);\r\n  border: 1px solid var(--border);\r\n}\r\n\r\n.dashboard-header h1 {\r\n  margin-bottom: 0.5rem;\r\n  background: linear-gradient(45deg, var(--accent), var(--accent-hover));\r\n  -webkit-background-clip: text;\r\n  -webkit-text-fill-color: transparent;\r\n  background-clip: text;\r\n}\r\n\r\n.dashboard-header p {\r\n  color: var(--text-secondary);\r\n  font-size: 1.1rem;\r\n  margin: 0;\r\n}\r\n\r\n/* Quick Actions */\r\n.quick-actions {\r\n  display: flex;\r\n  gap: 1rem;\r\n  margin-bottom: 2rem;\r\n  flex-wrap: wrap;\r\n  justify-content: center;\r\n}\r\n\r\n.quick-actions .btn {\r\n  min-width: 140px;\r\n  justify-content: center;\r\n}\r\n\r\n/* Dashboard Tabs */\r\n.dashboard-tabs {\r\n  display: flex;\r\n  gap: 0.5re"
     }
   ]
 }

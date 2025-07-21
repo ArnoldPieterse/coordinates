@@ -1,39 +1,12 @@
 {
-  "CallerReference": "1752478720336",
-  "Comment": "Distribution for rekursing.com",
-  "DefaultCacheBehavior": {
-    "TargetOriginId": "S3Origin",
-    "ViewerProtocolPolicy": "redirect-to-https",
-    "AllowedMethods": {
-      "Quantity": 2,
-      "Items": [
-        "GET",
-        "HEAD"
-      ],
-      "CachedMethods": {
-        "Quantity": 2,
-        "Items": [
-          "GET",
-          "HEAD"
-        ]
-      }
-    },
-    "ForwardedValues": {
-      "QueryString": false,
-      "Cookies": {
-        "Forward": "none"
-      }
-    },
-    "MinTTL": 0,
-    "DefaultTTL": 86400,
-    "MaxTTL": 31536000
-  },
-  "Enabled": true,
+  "CallerReference": "rekursing-distribution-1753077718866",
+  "Comment": "Rekursing AI Gaming Platform",
+  "DefaultRootObject": "index.html",
   "Origins": {
     "Quantity": 1,
     "Items": [
       {
-        "Id": "S3Origin",
+        "Id": "S3-rekursing.com",
         "DomainName": "rekursing.com.s3-website-us-east-1.amazonaws.com",
         "CustomOriginConfig": {
           "HTTPPort": 80,
@@ -43,10 +16,33 @@
       }
     ]
   },
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "S3-rekursing.com",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "TrustedSigners": {
+      "Enabled": false,
+      "Quantity": 0
+    },
+    "ForwardedValues": {
+      "QueryString": false,
+      "Cookies": {
+        "Forward": "none"
+      }
+    },
+    "MinTTL": 0,
+    "Compress": true
+  },
   "Aliases": {
     "Quantity": 1,
     "Items": [
       "rekursing.com"
     ]
-  }
+  },
+  "ViewerCertificate": {
+    "ACMCertificateArn": "arn:aws:acm:us-east-1:908027422378:certificate/8f6fe847-730e-4cc2-8db6-3b38832490ae",
+    "SSLSupportMethod": "sni-only",
+    "MinimumProtocolVersion": "TLSv1.2_2021"
+  },
+  "PriceClass": "PriceClass_100",
+  "Enabled": true
 }

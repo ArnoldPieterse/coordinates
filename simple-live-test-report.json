@@ -1,0 +1,153 @@
+{
+  "summary": {
+    "total": 23,
+    "passed": 13,
+    "failed": 10,
+    "successRate": "56.5"
+  },
+  "results": [
+    {
+      "test": "Live Site Status",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-07-21T06:10:14.239Z"
+    },
+    {
+      "test": "Live Site Content",
+      "passed": true,
+      "details": "Content length: 8048 bytes",
+      "timestamp": "2025-07-21T06:10:14.240Z"
+    },
+    {
+      "test": "Live Site HTML",
+      "passed": true,
+      "details": "Valid HTML document",
+      "timestamp": "2025-07-21T06:10:14.240Z"
+    },
+    {
+      "test": "Live Site Title",
+      "passed": true,
+      "details": "Contains \"Rekursing\" in content",
+      "timestamp": "2025-07-21T06:10:14.240Z"
+    },
+    {
+      "test": "Local Preview Status",
+      "passed": true,
+      "details": "Status: 200",
+      "timestamp": "2025-07-21T06:10:14.248Z"
+    },
+    {
+      "test": "Local Preview Content",
+      "passed": true,
+      "details": "Content length: 8048 bytes",
+      "timestamp": "2025-07-21T06:10:14.248Z"
+    },
+    {
+      "test": "Local Preview HTML",
+      "passed": true,
+      "details": "Valid HTML document",
+      "timestamp": "2025-07-21T06:10:14.249Z"
+    },
+    {
+      "test": "Local Preview Title",
+      "passed": true,
+      "details": "Contains \"Rekursing\" in content",
+      "timestamp": "2025-07-21T06:10:14.249Z"
+    },
+    {
+      "test": "React App",
+      "passed": false,
+      "details": "React root element found",
+      "timestamp": "2025-07-21T06:10:14.360Z"
+    },
+    {
+      "test": "Navigation",
+      "passed": false,
+      "details": "Navigation component found",
+      "timestamp": "2025-07-21T06:10:14.360Z"
+    },
+    {
+      "test": "Main Content",
+      "passed": false,
+      "details": "Main content area found",
+      "timestamp": "2025-07-21T06:10:14.360Z"
+    },
+    {
+      "test": "CSS Loading",
+      "passed": true,
+      "details": "CSS files referenced",
+      "timestamp": "2025-07-21T06:10:14.360Z"
+    },
+    {
+      "test": "JavaScript Loading",
+      "passed": true,
+      "details": "JavaScript files referenced",
+      "timestamp": "2025-07-21T06:10:14.360Z"
+    },
+    {
+      "test": "Modern Features",
+      "passed": false,
+      "details": "Modern UI system found",
+      "timestamp": "2025-07-21T06:10:14.360Z"
+    },
+    {
+      "test": "Trading Page Status",
+      "passed": false,
+      "details": "Status: 404",
+      "timestamp": "2025-07-21T06:10:14.463Z"
+    },
+    {
+      "test": "Trading Dashboard",
+      "passed": false,
+      "details": "Trading dashboard found",
+      "timestamp": "2025-07-21T06:10:14.463Z"
+    },
+    {
+      "test": "AI Trading",
+      "passed": false,
+      "details": "AI trading content found",
+      "timestamp": "2025-07-21T06:10:14.463Z"
+    },
+    {
+      "test": "Responsive CSS",
+      "passed": false,
+      "details": "Media queries found",
+      "timestamp": "2025-07-21T06:10:14.564Z"
+    },
+    {
+      "test": "Mobile Support",
+      "passed": true,
+      "details": "Viewport meta tag found",
+      "timestamp": "2025-07-21T06:10:14.564Z"
+    },
+    {
+      "test": "Touch Support",
+      "passed": false,
+      "details": "Touch-friendly features found",
+      "timestamp": "2025-07-21T06:10:14.564Z"
+    },
+    {
+      "test": "Load Time",
+      "passed": true,
+      "details": "Load time: 104ms",
+      "timestamp": "2025-07-21T06:10:14.668Z"
+    },
+    {
+      "test": "Content Size",
+      "passed": true,
+      "details": "Content size: 8048 bytes",
+      "timestamp": "2025-07-21T06:10:14.669Z"
+    },
+    {
+      "test": "Compression",
+      "passed": false,
+      "details": "Compression: none",
+      "timestamp": "2025-07-21T06:10:14.669Z"
+    }
+  ],
+  "timestamp": "2025-07-21T06:10:14.672Z",
+  "urls": {
+    "live": "https://www.rekursing.com",
+    "local": "http://localhost:4173"
+  }
+}
