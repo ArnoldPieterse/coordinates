@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # AI Model Runner Service
+  ai-model-runner:
+    image: docker/model-runner:latest
+    container_name: coordinates-ai-runner
+    ports:
+      - "8080:8080"
+    environment:
+      - MODEL_RUNNER_PORT=8080
+      - MODEL_RUNNER_LOG_LEVEL=info
+    volumes:
+      - ./ai-models:/models
+      - ./ai-config:/config
+    restart: unless-stopped
+    networks:
+      - ai-network
+
+  # Simple AI Assistant Service
+  ai-assistant:
+    build:
+      context: ./src/ai/assistant
+      dockerfile: Dockerfile
+    container_name: coordinates-ai-assistant
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - AI_MODEL_RUNNER_URL=http://ai-model-runner:8080
+      - AI_ASSISTANT_PORT=3001
+      - AI_ASSISTANT_LOG_LEVEL=info
+    volumes:
+      - ./src/ai/assistant:/app
+      - ./ai-data:/app/data
+    depends_on:
+      - ai-model-runner
+    restart: unless-stopped
+    networks:
+      - ai-network
+
+  # AI API Gateway
+  ai-gateway:
+    build:
+      context: ./src/ai/gateway
+      dockerfile: Dockerfile
+    container_name: coordinates-ai-gateway
+    ports:
+      - "3002:3002"
+    environment:
+      - AI_ASSISTANT_URL=http://ai-assistant:3001
+      - AI_MODEL_RUNNER_URL=http://ai-model-runner:8080
+      - GATEWAY_PORT=3002
+    depends_on:
+      - ai-assistant
+    restart: unless-stopped
+    networks:
+      - ai-network
+
+  # Redis for AI caching and session management
+  ai-redis:
+    image: redis:7-alpine
+    container_name: coordinates-ai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ai-redis-data:/data
+    restart: unless-stopped
+    networks:
+      - ai-network
+
+  # AI Monitoring and Logging
+  ai-monitor:
+    image: grafana/grafana:latest
+    container_name: coordinates-ai-monitor
+    ports:
+      - "3003:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ai-grafana-data:/var/lib/grafana
+      - ./ai-monitoring/grafana:/etc/grafana/provisioning
+    restart: unless-stopped
+    networks:
+      - ai-network
+
+volumes:
+  ai-redis-data:
+  ai-grafana-data:
+
+networks:
+  ai-network:
+    driver: bridge 

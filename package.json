@@ -1,21 +1,19 @@
 {
   "name": "rekursing-ai-gaming",
-  "version": "1.0.0",
-  "description": "Revolutionary multiplayer planetary shooter where AI systems recursively learn and improve from every player interaction, built with Three.js, mathematical physics integration, and recursive AI systems",
+  "version": "1.4.0",
+  "description": "Revolutionary multiplayer planetary shooter where AI systems recursively learn and improve from every player interaction, built with Three.js, mathematical physics integration, recursive AI systems, and trending GitHub integrations",
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "test": "jest",
     "build": "vite build",
     "preview": "vite preview",
     "server": "node server.js",
     "start": "concurrently \"npx kill-port 3001 && npm run server\" \"npm run dev\"",
     "start:prod": "node server.js",
-    "test": "node api-test-suite.js",
     "test:api": "node api-test-suite.js",
     "test:watch": "nodemon api-test-suite.js",
     "test:coverage": "echo \"No coverage tool configured\" && exit 0",
-    "lint": "echo \"No linter configured\" && exit 0",
     "lint:fix": "echo \"No linter configured\" && exit 0",
     "audit": "npm audit",
     "audit:fix": "npm audit fix",
@@ -68,7 +66,9 @@
     "run-persona": "node src/personas/run-persona.js graphic-designer",
     "run-persona-network": "node src/personas/run-persona-network.js",
     "test:widgets": "node test-widget-system.js",
-    "test:notifications": "node test-notification-system.js"
+    "test:notifications": "node test-notification-system.js",
+    "trending:integrations": "node run-project-manager-meeting-simple.js",
+    "trending:test": "node tests/integration/trending-integrations.test.js"
   },
   "keywords": [
     "rekursing",
@@ -83,7 +83,9 @@
     "vite",
     "react",
     "javascript",
-    "es6"
+    "es6",
+    "trending-github",
+    "ai-integrations"
   ],
   "author": "Your Name <your.email@example.com>",
   "license": "MIT",
@@ -113,20 +115,35 @@
     "@lmstudio/sdk": "^0.1.0",
     "cannon-es": "^0.20.0",
     "express": "^4.21.2",
+    "gsap": "^3.12.7",
+    "lil-gui": "^0.20.0",
     "mime-types": "^3.0.1",
     "node-fetch": "^2.6.7",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.0",
     "socket.io": "^4.7.4",
-    "socket.io-client": "^4.7.4",
-    "three": "^0.158.0",
-    "vite-plugin-node-polyfills": "^0.23.0"
+    "socket.io-client": "^4.8.1",
+    "three": "^0.173.0",
+    "three-mesh-bvh": "^0.9.0",
+    "uuid": "^11.1.0",
+    "vite": "^6.3.5",
+    "vite-plugin-node-polyfills": "^0.24.0",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "@eslint/js": "^9.31.0",
     "@vitejs/plugin-react": "^4.6.0",
+    "babel-jest": "^30.0.4",
     "concurrently": "^8.2.2",
+    "eslint": "^9.31.0",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.3.0",
+    "jest": "^30.0.4",
+    "jest-environment-jsdom": "^30.0.4",
     "puppeteer": "^24.10.2",
-    "vite": "^6.3.5"
+    "typescript-eslint": "^8.37.0"
   }
 }

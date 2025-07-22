@@ -1,0 +1,30 @@
+{
+  "codellama": {
+    "model": "codellama:7b",
+    "maxTokens": 2048,
+    "temperature": 0.7,
+    "topP": 0.9,
+    "description": "Code generation model optimized for programming tasks"
+  },
+  "llama2": {
+    "model": "llama2:7b",
+    "maxTokens": 1024,
+    "temperature": 0.8,
+    "topP": 0.9,
+    "description": "General purpose language model for text generation"
+  },
+  "mistral": {
+    "model": "mistral:7b",
+    "maxTokens": 2048,
+    "temperature": 0.7,
+    "topP": 0.9,
+    "description": "Fast and efficient language model"
+  },
+  "phi": {
+    "model": "microsoft/phi-2",
+    "maxTokens": 1024,
+    "temperature": 0.8,
+    "topP": 0.9,
+    "description": "Microsoft's Phi-2 model for code and text generation"
+  }
+} 

@@ -595,8 +595,6 @@ class MathematicalEngine {
     
     // Mathematical Time Dilation
     calculateMathematicalTimeDilation(object, deltaTime) {
-        let timeDilationFactor = 1.0;
-        
         // Apply relativistic effects based on mathematical relationships
         
         const velocity = object.velocity.length;
@@ -665,7 +663,7 @@ class MathematicalEngine {
     }
     
     updateQuantumStates(deltaTime) {
-        for (const [key, state] of this.quantumStates) {
+        for (const [, state] of this.quantumStates) {
             state.phase += deltaTime * this.ALPHA * 137;
             if (state.phase > 2 * Math.PI) {
                 state.phase -= 2 * Math.PI;
@@ -677,7 +675,7 @@ class MathematicalEngine {
     }
     
     updateSuperpositionStates(deltaTime) {
-        for (const [key, state] of this.superpositionStates) {
+        for (const [, state] of this.superpositionStates) {
             // Update probability amplitudes
             state.probability *= Math.cos(deltaTime * this.ALPHA * 137);
         }
@@ -992,9 +990,7 @@ class MathematicalEngine {
             }
             
             return relationships;
-        } catch (error) {
-            return [];
-        }
+        } catch { /* intentionally empty */ }
     }
     
     // Calculate fine structure influence for AI
@@ -1021,14 +1017,7 @@ class MathematicalEngine {
                 influence: this.ALPHA * positionMagnitude,
                 variation: this.SQRT_POINT_ONE.x * velocityMagnitude
             };
-        } catch (error) {
-            return {
-                alphaEffect: this.ALPHA,
-                betaEffect: this.SQRT_TEN.x,
-                influence: this.ALPHA,
-                variation: this.SQRT_POINT_ONE.x
-            };
-        }
+        } catch { /* intentionally empty */ }
     }
     
     // Calculate quantum state for AI
@@ -1050,14 +1039,7 @@ class MathematicalEngine {
                 uncertainty: this.ALPHA * velocityMagnitude,
                 quantumPhase: quantumPhase * this.SQRT_POINT_ONE.x
             };
-        } catch (error) {
-            return {
-                superposition: 0,
-                entanglement: 0,
-                uncertainty: this.ALPHA,
-                quantumPhase: 0
-            };
-        }
+        } catch { /* intentionally empty */ }
     }
 }
 

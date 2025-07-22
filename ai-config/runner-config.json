@@ -1,0 +1,21 @@
+{
+  "server": {
+    "port": 8080,
+    "host": "0.0.0.0",
+    "logLevel": "info"
+  },
+  "models": {
+    "defaultModel": "codellama",
+    "autoLoad": false,
+    "maxConcurrentModels": 2
+  },
+  "security": {
+    "enableAuth": false,
+    "allowedOrigins": ["*"]
+  },
+  "performance": {
+    "maxTokens": 4096,
+    "timeout": 30000,
+    "retryAttempts": 3
+  }
+} 
