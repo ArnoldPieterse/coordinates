@@ -1,111 +1,106 @@
 const express = require('express');
+const bodyParser = require('body-parser');
 const cors = require('cors');
-const path = require('path');
+const { Server } = require('socket.io');
+const http = require('http');
+const axios = require('axios');
+const jwt = require('jsonwebtoken'); // Add at top
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+app.use(cors());
+app.use(bodyParser.json());
 
-// Middleware
-app.use(cors({
-  origin: ['https://rekursing.com', 'http://localhost:3000'],
-  credentials: true
-}));
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'dist')));
+// LM Studio API base URL
+const LM_STUDIO_URL = 'http://10.3.129.26:1234/v1/chat/completions';
+const LM_MODEL = 'your-model-name'; // Replace with your LM Studio model name
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+// AI action endpoint: summarize group chat using LM Studio
+app.post('/api/group/summarize', async (req, res) => {
+  const { history } = req.body;
+  try {
+    const prompt = `Summarize the following group chat:\n${history.map(m => m.sender + ': ' + m.content).join('\n')}`;
+    const lmRes = await axios.post(LM_STUDIO_URL, {
+      model: LM_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 100,
+    });
+    res.json({ result: lmRes.data.choices[0].message.content });
+  } catch (e) {
+    res.json({ result: 'LM Studio summarization failed.' });
+  }
 });
 
-// API Routes
-app.get('/api/llm/status', (req, res) => {
-  res.json({
-    success: true,
-    status: {
-      totalProviders: 3,
-      activeStreams: 2,
-      totalRevenue: 0.003,
-      averageLatency: 150,
-      totalPlugins: 0,
-      connectedPlugins: 0
+// AI action endpoint: schedule (now using LM Studio)
+app.post('/api/group/schedule', async (req, res) => {
+  const { history } = req.body;
+  try {
+    const prompt = `Based on the following group chat, suggest a good time for a group meeting and explain why.\n${history.map(m => m.sender + ': ' + m.content).join('\n')}`;
+    const lmRes = await axios.post(LM_STUDIO_URL, {
+      model: LM_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 100,
+    });
+    res.json({ result: lmRes.data.choices[0].message.content });
+  } catch (e) {
+    res.json({ result: 'LM Studio scheduling failed.' });
+  }
+});
+
+// --- AUTHENTICATION ---
+// Simple login endpoint (for demo; replace with real user DB in prod)
+app.post('/api/login', (req, res) => {
+  const { username } = req.body;
+  if (!username) return res.status(400).json({ error: 'Username required' });
+  // In production, validate user credentials here
+  const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1d' });
+  res.json({ token });
+});
+
+// JWT auth middleware
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.sendStatus(401);
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+}
+
+// Example protected route
+app.get('/api/me', authenticateToken, (req, res) => {
+  res.json({ user: req.user });
+});
+
+// --- PRESENCE ---
+let onlineUsers = {};
+
+// WebSocket server for real-time chat
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: '*' } });
+
+io.on('connection', (socket) => {
+  socket.on('joinGroup', (groupId) => socket.join(groupId));
+  socket.on('leaveGroup', (groupId) => socket.leave(groupId));
+  socket.on('groupMessage', ({ groupId, msg }) => {
+    io.to(groupId).emit('groupMessage', msg);
+  });
+
+  // User presence
+  socket.on('userOnline', (username) => {
+    onlineUsers[username] = true;
+    io.emit('presenceUpdate', Object.keys(onlineUsers));
+    socket.username = username;
+  });
+  socket.on('disconnect', () => {
+    if (socket.username) {
+      delete onlineUsers[socket.username];
+      io.emit('presenceUpdate', Object.keys(onlineUsers));
     }
   });
 });
 
-app.get('/api/llm/models', (req, res) => {
-  res.json({
-    success: true,
-    models: ['llama-3-70b', 'gpt-4', 'gemini-pro', 'mistral-7b']
-  });
-});
-
-app.post('/api/llm/inference', (req, res) => {
-  const { prompt, model, userId } = req.body;
-  
-  // Simulate inference response
-  const response = {
-    success: true,
-    response: `[Production] Response to: "${prompt}" (Model: ${model})`,
-    model: model,
-    cost: 0.0001,
-    latency: 150,
-    provider: 'rekursing-gpu-network',
-    source: 'production',
-    adInjected: true
-  };
-  
-  res.json(response);
-});
-
-app.get('/api/analytics/revenue', (req, res) => {
-  res.json({
-    success: true,
-    analytics: {
-      total: 0.003,
-      today: 0.003,
-      yesterday: 0,
-      topAds: [
-        { id: 'ad1', category: 'technology', revenue: 0.001 },
-        { id: 'ad2', category: 'ai', revenue: 0.001 },
-        { id: 'ad3', category: 'gaming', revenue: 0.001 }
-      ]
-    }
-  });
-});
-
-app.get('/api/plugin/stats', (req, res) => {
-  res.json({
-    success: true,
-    stats: {
-      totalPlugins: 0,
-      connectedPlugins: 0,
-      totalUsers: 0,
-      totalGPUs: 0,
-      totalRevenue: 0
-    }
-  });
-});
-
-// Plugin routes
-app.post('/api/plugin/register', (req, res) => {
-  const { gpuInfo, lmStudioUrl, pricing, capabilities } = req.body;
-  
-  res.json({
-    success: true,
-    pluginId: 'plugin_' + Date.now(),
-    connectionToken: 'token_' + Math.random().toString(36).substr(2, 9)
-  });
-});
-
-// Serve frontend
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`🚀 Rekursing GPU Streaming Platform running on port ${PORT}`);
-  console.log(`🌐 Production URL: https://rekursing.com`);
-  console.log(`🔌 Plugin System: Ready`);
-  console.log(`💰 Revenue Tracking: Active`);
-}); 
+const PORT = 4000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`)); 
