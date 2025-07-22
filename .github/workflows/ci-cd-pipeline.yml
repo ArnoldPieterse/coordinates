@@ -38,6 +38,12 @@ jobs:
       
     - name: Run tests
       run: npm test
+
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+
+    - name: Run Playwright E2E tests
+      run: npx playwright test tests/integration/rekursing-auth-presence.spec.js
       
     - name: Run performance tests
       run: npm run test:performance
