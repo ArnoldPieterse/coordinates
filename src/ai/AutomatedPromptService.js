@@ -7,7 +7,6 @@
 import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
 import winston from 'winston';
-import fetch from 'node-fetch';
 
 class AutomatedPromptService extends EventEmitter {
     constructor(config = {}) {
@@ -88,10 +87,15 @@ class AutomatedPromptService extends EventEmitter {
      */
     async checkLLMStatus() {
         try {
-            const response = await fetch(`${this.config.llmUrl}/v1/models`, {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+            
+            const response = await fetch(`${this.config.llmUrl}/models`, {
                 method: 'GET',
-                timeout: this.config.timeout
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
             
             if (response.ok) {
                 const models = await response.json();
@@ -429,14 +433,19 @@ class AutomatedPromptService extends EventEmitter {
             stream: false
         };
         
-        const response = await fetch(`${this.config.llmUrl}/v1/chat/completions`, {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+        
+        const response = await fetch(`${this.config.llmUrl}/chat/completions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(requestBody),
-            timeout: this.config.timeout
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
             throw new Error(`LLM API error: ${response.status} ${response.statusText}`);
