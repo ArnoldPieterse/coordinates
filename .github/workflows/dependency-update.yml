@@ -2,12 +2,20 @@ name: Dependency Update
 
 on:
   schedule:
-    # Run every Monday at 9 AM UTC
-    - cron: '0 9 * * 1'
+    - cron: '0 2 * * 1'  # Every Monday at 2 AM
   workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+
+concurrency:
+  group: dependency-update
+  cancel-in-progress: true
 
 jobs:
-  update-dependencies:
+  check-dependencies:
     runs-on: ubuntu-latest
     
     steps:
@@ -17,7 +25,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: '18'
         cache: 'npm'
         
     - name: Install dependencies
@@ -26,39 +34,141 @@ jobs:
     - name: Check for outdated dependencies
       run: npm outdated
       
+    - name: Run security audit
+      run: npm audit --audit-level=moderate
+      
+    - name: Generate dependency report
+      run: |
+        echo "Generating dependency update report..."
+        npm run deps:report
+        
+    - name: Upload dependency report
+      uses: actions/upload-artifact@v4
+      with:
+        name: dependency-report
+        path: reports/dependencies/
+        
+  update-dependencies:
+    runs-on: ubuntu-latest
+    needs: check-dependencies
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
     - name: Update dependencies
       run: |
+        echo "Updating dependencies..."
         npm update
         npm audit fix
         
-    - name: Run tests
-      run: npm test
-      
-    - name: Build project
-      run: npm run build
-      
-    - name: Create Pull Request
+    - name: Run tests after update
+      run: |
+        echo "Running tests after dependency update..."
+        npm test
+        npm run test:integration
+        
+    - name: Run security check
+      run: |
+        echo "Running security check after update..."
+        npm audit --audit-level=moderate
+        
+    - name: Create pull request
       uses: peter-evans/create-pull-request@v5
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: 'chore: update dependencies'
         title: 'chore: update dependencies'
         body: |
-          ## 🔄 Dependency Updates
+          Automated dependency update
           
-          This PR updates the project dependencies to their latest versions.
-          
-          ### Changes
-          - Updated npm packages to latest versions
+          ## Changes
+          - Updated outdated packages
           - Fixed security vulnerabilities
-          - Improved performance and stability
+          - All tests passing
+          - Security audit passed
           
-          ### Testing
-          - [x] All tests pass
-          - [x] Build successful
+          ## Testing
+          - [x] Unit tests passing
+          - [x] Integration tests passing
+          - [x] Security audit passed
           - [x] No breaking changes detected
           
-          ### Notes
-          Please review the changes and test thoroughly before merging.
+          ## Next Steps
+          - Review changes
+          - Merge if approved
+          - Monitor for any issues
         branch: dependency-update
-        delete-branch: true 
+        delete-branch: true
+        labels: |
+          dependencies
+          automated
+          security
+        
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: update-dependencies
+    if: always()
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run comprehensive security scan
+      run: |
+        echo "Running comprehensive security scan..."
+        npm audit --audit-level=low
+        npm run security:scan
+        
+    - name: Check for known vulnerabilities
+      run: |
+        echo "Checking for known vulnerabilities..."
+        npm run vuln:check
+        
+    - name: Generate security report
+      run: |
+        echo "Generating security report..."
+        npm run security:report
+        
+    - name: Upload security report
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-scan-report
+        path: reports/security/
+        
+  notify-update:
+    runs-on: ubuntu-latest
+    needs: [update-dependencies, security-scan]
+    if: always()
+    
+    steps:
+    - name: Notify dependency update status
+      run: |
+        echo "Dependency update process completed"
+        # Add notification logic here (Slack, email, etc.)
+        
+    - name: Update dependency status
+      run: |
+        echo "Updating dependency status..."
+        npm run deps:status:update 
