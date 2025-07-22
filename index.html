@@ -3,13 +3,60 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FPS | Organized</title>
-    <!-- JS -->
-    <script type="module" src="./src/main_modular.js"></script>
-    <link rel="stylesheet" href="./styles/style.css" />
+    <title>Rekursing - Recursive AI Gaming</title>
+    <meta name="description" content="Advanced AI-powered recursive gaming platform" />
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.rekursing.com; style-src 'self' 'unsafe-inline' https://www.rekursing.com; img-src 'self' https://www.rekursing.com data:; connect-src 'self' https://api.anthropic.com https://api.openai.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests;">
+    
+    <!-- Prevent mixed content -->
+    <meta http-equiv="upgrade-insecure-requests" content="1">
+    
+    <!-- Styles -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #1a1a1a;
+        color: #ffffff;
+      }
+      
+      #root {
+        min-height: 100vh;
+      }
+      
+      /* Loading animation */
+      .loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid #333;
+        border-top: 3px solid #00ff00;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
-    <!-- <h1>Test</h1> -->
-    <div id="container"></div>
+    <div id="root">
+      <div class="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+    
+    <!-- React App -->
+    <script type="module" src="./src/main.jsx"></script>
   </body>
 </html>
