@@ -16,6 +16,9 @@ import { Resizer } from "./systems/resizer";
 import { createPhysics, STEPS_PER_FRAME } from "./systems/physics";
 import { setupControls } from "./systems/controls";
 
+// Import financial system
+import FinancialSystem from './financial/FinancialSystem.js';
+
 const clock = new THREE.Clock();
 const scene = createScene();
 const { camera, animations } = createCamera(scene); // Destructure to get the camera instance and animations
@@ -46,11 +49,17 @@ const applyControls = setupControls(
   playerDirection
 );
 
+// Initialize financial system
+const financialSystem = new FinancialSystem(gameEngine);
+
 // Load World
 loadWorld(scene, worldOctree);
 
 // Add Background Sound Effects
 addBgMusic();
+
+// Add financial system to global scope for debugging
+window.financialSystem = financialSystem;
 
 // Animation Loop
 
